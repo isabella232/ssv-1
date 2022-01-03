@@ -42,9 +42,9 @@ type Message interface {
 
 type QuorumCounter interface {
 	// FullQuorumReached returns true if at least 2f+1 signatures present
-	FullQuorumReached() bool
+	FullQuorumReached(nodes []Node) bool
 	// PartialQuorumReached returns true if at least f+1 signatures present
-	PartialQuorumReached() bool
+	PartialQuorumReached(nodes []Node) bool
 }
 
 type SignedMessage interface {
@@ -57,8 +57,10 @@ type SignedMessage interface {
 	GetSignature() []byte
 	// GetSignerIds returns the ids of signers (according to node configuration)
 	GetSignerIds() []NodeID
-	// IsValidSignature returns true if signature is valid (agaist message and signers)
-	IsValidSignature() bool
+	// IsValidSignature returns true if signature is valid (against message and signers)
+	IsValidSignature(nodes []Node) bool
+	// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
+	Aggregate(signedMsg SignedMessage) error
 }
 
 type ProposalData interface {
