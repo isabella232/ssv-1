@@ -40,16 +40,8 @@ type Message interface {
 	GetRoundChangeData() RoundChangeData
 }
 
-type QuorumCounter interface {
-	// FullQuorumReached returns true if at least 2f+1 signatures present
-	FullQuorumReached(nodes []Node) bool
-	// PartialQuorumReached returns true if at least f+1 signatures present
-	PartialQuorumReached(nodes []Node) bool
-}
-
 type SignedMessage interface {
 	MessageEncoder
-	QuorumCounter
 
 	// GetMessage returns the message for which this signature is for
 	GetMessage() Message
@@ -57,6 +49,8 @@ type SignedMessage interface {
 	GetSignature() []byte
 	// GetSignerIds returns the ids of signers (according to node configuration)
 	GetSignerIds() []NodeID
+	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
+	MatchedSigners(ids []NodeID) bool
 	// IsValidSignature returns true if signature is valid (against message and signers)
 	IsValidSignature(nodes []Node) bool
 	// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
@@ -66,8 +60,10 @@ type SignedMessage interface {
 type ProposalData interface {
 	// GetData returns the data for which this QBFT instance tries to decide, can be any arbitrary data
 	GetData() []byte
-	// GetRoundChangeJustification returns a signed message with quorum as justification for the change round
-	GetRoundChangeJustification()
+	// GetRoundChangeJustification returns a signed message with quorum as justification for the round change
+	GetRoundChangeJustification() []SignedMessage
+	// GetPrepareJustification returns a signed message with quorum as justification for a prepared round change
+	GetPrepareJustification() []SignedMessage
 }
 
 type PrepareData interface {
@@ -89,4 +85,10 @@ type RoundChangeData interface {
 	// GetRoundChangeJustification returns an aggregated signed prepare message for the last prepared state
 	// Should NOT be included in digest
 	GetRoundChangeJustification() SignedMessage
+}
+
+// ValueCheck is an interface which validates the pre-prepare value passed to the node.
+// It's kept minimal to allow the implementation to have all the check logic.
+type ValueCheck interface {
+	Check(value []byte) error
 }

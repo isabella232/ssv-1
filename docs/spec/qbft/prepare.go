@@ -17,7 +17,7 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 		state.GetInstanceIdentifier(),
 		state.GetConfig().GetNodes(),
 	)
-	if validPrepares.FullQuorumReached(state.GetConfig().GetNodes()) {
+	if state.GetConfig().HasQuorum([]SignedMessage{validPrepares}) {
 		return validPrepares
 	}
 	return nil
@@ -33,7 +33,7 @@ func validPreparesForHeightRoundAndDigest(
 	iterator := prepareMsgContainer.Iterator()
 	var aggregatedPrepareMsg SignedMessage
 	for signedMsg := iterator.Next(); signedMsg != nil; {
-		if err := validSignedPrepareForHeightRoundAndDigest(signedMsg, height, round, identifier, nodes); err == nil {
+		if err := validSignedPrepareForHeightRoundAndValue(signedMsg, height, round, identifier, nodes); err == nil {
 			if aggregatedPrepareMsg == nil {
 				aggregatedPrepareMsg = signedMsg
 			} else {
@@ -44,23 +44,25 @@ func validPreparesForHeightRoundAndDigest(
 	return aggregatedPrepareMsg
 }
 
-func validSignedPrepareForHeightRoundAndDigest(
-	signedMsg SignedMessage,
+// validSignedPrepareForHeightRoundAndValue known in dafny spec as validSignedPrepareForHeightRoundAndDigest
+// https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
+func validSignedPrepareForHeightRoundAndValue(
+	signedPrepare SignedMessage,
 	height uint64,
 	round Round,
-	identifier []byte,
+	value []byte,
 	nodes []Node) error {
-	if signedMsg.GetMessage().GetHeight() != height {
+	if signedPrepare.GetMessage().GetHeight() != height {
 		return errors.New("msg height wrong")
 	}
-	if signedMsg.GetMessage().GetRound() != round {
+	if signedPrepare.GetMessage().GetRound() != round {
 		return errors.New("msg round wrong")
 	}
-	if bytes.Compare(signedMsg.GetMessage().GetInstanceIdentifier(), identifier) != 0 {
+	if bytes.Compare(signedPrepare.GetMessage().GetPrepareData().GetData(), value) != 0 {
 		return errors.New("msg identifier wrong")
 	}
-	if !signedMsg.IsValidSignature(nodes) {
-		return errors.New("msg signature invalid")
+	if !signedPrepare.IsValidSignature(nodes) {
+		return errors.New("prepare msg signature invalid")
 	}
 	return nil
 }
