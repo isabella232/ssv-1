@@ -2,30 +2,48 @@ package qbft
 
 import "github.com/pkg/errors"
 
-func UponProposal(state State, proposeMsgContainer MsgContainer) {
+func uponProposal(state State, signedProposal SignedMessage) error {
+	valCheck := state.GetConfig().GetValueCheck()
+	if err := isValidProposal(state, signedProposal, valCheck); err != nil {
+		return errors.New("proposal invalid")
+	}
 
+	newRound := signedProposal.GetMessage().GetRound()
+
+	prepare := createPrepare(state, newRound, signedProposal.GetMessage().GetProposalData().GetData())
+	if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(prepare); err != nil {
+		return errors.Wrap(err, "failed to broadcast prepare message")
+	}
+
+	state.SetProposalAcceptedForCurrentRound(signedProposal)
+	if signedProposal.GetMessage().GetRound() > state.GetRound() {
+		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.GetMessage().GetRound())
+	}
+	state.SetRound(newRound)
+
+	return nil
 }
 
-func isValidProposal(state State, msg SignedMessage, valCheck ValueCheck) error {
-	if msg.GetMessage().GetType() != ProposalType {
+func isValidProposal(state State, signedProposal SignedMessage, valCheck ValueCheck) error {
+	if signedProposal.GetMessage().GetType() != ProposalType {
 		return errors.New("msg type is not proposal")
 	}
-	if msg.GetMessage().GetHeight() != state.GetHeight() {
+	if signedProposal.GetMessage().GetHeight() != state.GetHeight() {
 		return errors.New("proposal height is wrong")
 	}
 	if err := isProposalJustification(
 		state,
-		msg,
+		signedProposal,
 		state.GetHeight(),
-		msg.GetMessage().GetRound(),
+		signedProposal.GetMessage().GetRound(),
 		proposer(state),
 		valCheck,
 	); err != nil {
 		return errors.Wrap(err, "proposal not justified")
 	}
 
-	if (state.GetProposalAcceptedForCurrentRound() == nil && msg.GetMessage().GetRound() == state.GetRound()) ||
-		(state.GetProposalAcceptedForCurrentRound() != nil && msg.GetMessage().GetRound() > state.GetRound()) {
+	if (state.GetProposalAcceptedForCurrentRound() == nil && signedProposal.GetMessage().GetRound() == state.GetRound()) ||
+		(state.GetProposalAcceptedForCurrentRound() != nil && signedProposal.GetMessage().GetRound() > state.GetRound()) {
 		return nil
 	}
 	return errors.New("proposal is not valid with current state")
@@ -110,5 +128,20 @@ func isProposalJustification(
 }
 
 func proposer(state State) NodeID {
+	panic("implement")
+}
+
+func createPrepare(state State, newRound Round, value []byte) SignedMessage {
+	/**
+	Prepare(
+	                    signPrepare(
+	                        UnsignedPrepare(
+	                            |current.blockchain|,
+	                            newRound,
+	                            digest(m.proposedBlock)),
+	                        current.id
+	                        )
+	                );
+	*/
 	panic("implement")
 }

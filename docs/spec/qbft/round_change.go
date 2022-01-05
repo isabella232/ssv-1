@@ -2,7 +2,7 @@ package qbft
 
 import "github.com/pkg/errors"
 
-func CreateRoundChange(state State) SignedMessage {
+func createRoundChange(state State) SignedMessage {
 	/**
 	RoundChange(
 	           signRoundChange(

@@ -2,11 +2,16 @@ package qbft
 
 import "github.com/pkg/errors"
 
-func UponTimout(state State, net Network) error {
-	state.SetRound(state.GetRound() + 1)
-	roundChange := CreateRoundChange(state)
+type Timer interface {
+	// TimeoutForRound will reset running timer if exists and will start a new timer for a specific round
+	TimeoutForRound(round Round)
+}
 
-	if err := net.BroadcastSignedMessage(roundChange); err != nil {
+func UponTimout(state State) error {
+	state.SetRound(state.GetRound() + 1)
+	roundChange := createRoundChange(state)
+
+	if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(roundChange); err != nil {
 		return errors.Wrap(err, "failed to broadcast round change message")
 	}
 

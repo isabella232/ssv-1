@@ -18,6 +18,12 @@ type Config interface {
 	HasQuorum([]SignedMessage) bool
 	// HasPartialQuorum returns true if at least f+1 signatures present
 	HasPartialQuorum([]SignedMessage) bool
+	// GetValueCheck returns value check instance
+	GetValueCheck() ValueCheck
+	// GetNetwork returns network instance
+	GetNetwork() Network
+	// GetTimer returns round timer
+	GetTimer() Timer
 }
 
 type State interface {
