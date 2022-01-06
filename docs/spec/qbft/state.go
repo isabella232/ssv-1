@@ -37,10 +37,14 @@ type State interface {
 	GetHeight() uint64
 	// GetConfig returns instance config
 	GetConfig() Config
-	// GetLastPreparedRound returns the highest prepared round, NoRound if not prepared
+	// GetLastPreparedRound returns the latest prepared round, NoRound if not prepared
 	GetLastPreparedRound() Round
-	// GetLastPreparedValue returns the highest prepared value, nil if not prepared
+	// SetLastPreparedRound sets the latest prepared round
+	SetLastPreparedRound(round Round)
+	// GetLastPreparedValue returns the latest prepared value, nil if not prepared
 	GetLastPreparedValue() []byte
+	// SetLastPreparedValue sets the latest prepared value
+	SetLastPreparedValue(value []byte)
 
 	// GetProposalAcceptedForCurrentRound returns the set proposal for current round, nil if not set
 	GetProposalAcceptedForCurrentRound() SignedMessage

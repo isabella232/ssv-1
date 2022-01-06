@@ -2,10 +2,13 @@ package qbft
 
 import "github.com/pkg/errors"
 
-func uponProposal(state State, signedProposal SignedMessage) error {
+func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer MsgContainer) error {
 	valCheck := state.GetConfig().GetValueCheck()
 	if err := isValidProposal(state, signedProposal, valCheck); err != nil {
 		return errors.New("proposal invalid")
+	}
+	if !proposeMsgContainer.AddIfDoesntExist(signedProposal) {
+		return nil // uponProposal was already called
 	}
 
 	newRound := signedProposal.GetMessage().GetRound()

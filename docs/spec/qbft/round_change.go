@@ -19,25 +19,6 @@ func createRoundChange(state State) SignedMessage {
 	panic("implement")
 }
 
-func getSetOfRoundChangeSenders(state State, roundChangeMsgContainer MsgContainer) []NodeID {
-	m := make(map[NodeID]NodeID)
-	iterator := roundChangeMsgContainer.Iterator()
-	for signedMsg := iterator.Next(); signedMsg != nil; {
-		for _, signer := range signedMsg.GetSignerIds() {
-			if _, found := m[signer]; !found {
-				m[signer] = signer
-			}
-		}
-	}
-
-	// flatten to slice
-	ret := make([]NodeID, 0)
-	for _, v := range m {
-		ret = append(ret, v)
-	}
-	return ret
-}
-
 func validRoundChange(state State, signedMsg SignedMessage, height uint64, round Round) error {
 	if signedMsg.GetMessage().GetType() != RoundChangeType {
 		return errors.New("round change msg type is wrong")

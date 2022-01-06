@@ -5,19 +5,58 @@ import (
 	"github.com/pkg/errors"
 )
 
+func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
+	if state.GetProposalAcceptedForCurrentRound() == nil {
+		return errors.New("not proposal accepted for prepare")
+	}
+
+	if err := validSignedPrepareForHeightRoundAndValue(
+		signedPrepare,
+		state.GetHeight(),
+		state.GetRound(),
+		state.GetProposalAcceptedForCurrentRound().GetMessage().GetProposalData().GetData(),
+		state.GetConfig().GetNodes(),
+	); err != nil {
+		return errors.Wrap(err, "invalid prepare msg")
+	}
+
+	if !prepareMsgContainer.AddIfDoesntExist(signedPrepare) {
+		return nil // uponPrepare was already called
+	}
+
+	if !state.GetConfig().HasQuorum(prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())) {
+		return nil // no quorum yet
+	}
+
+	if didSendCommitForHeightAndRound(state, commitMsgContainer) {
+		return nil // already moved to commit stage
+	}
+
+	proposedValue := state.GetProposalAcceptedForCurrentRound().GetMessage().GetProposalData().GetData()
+	commitMsg := createCommit(state, proposedValue)
+	if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(commitMsg); err != nil {
+		return errors.Wrap(err, "failed to broadcast commit message")
+	}
+
+	state.SetLastPreparedValue(proposedValue)
+	state.SetLastPreparedRound(state.GetRound())
+	return nil
+}
+
 func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) SignedMessage {
 	if state.GetLastPreparedValue() == nil {
 		return nil
 	}
 
+	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
 	validPrepares := validPreparesForHeightRoundAndDigest(
-		prepareMsgContainer,
+		prepareMsgs,
 		state.GetHeight(),
 		state.GetLastPreparedRound(),
-		state.GetInstanceIdentifier(),
+		state.GetLastPreparedValue(),
 		state.GetConfig().GetNodes(),
 	)
-	if state.GetConfig().HasQuorum([]SignedMessage{validPrepares}) {
+	if state.GetConfig().HasQuorum(prepareMsgs) {
 		return validPrepares
 	}
 	return nil
@@ -25,15 +64,14 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 
 // validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific height and round
 func validPreparesForHeightRoundAndDigest(
-	prepareMsgContainer MsgContainer,
+	prepareMessages []SignedMessage,
 	height uint64,
 	round Round,
-	identifier []byte,
+	value []byte,
 	nodes []Node) SignedMessage {
-	iterator := prepareMsgContainer.Iterator()
 	var aggregatedPrepareMsg SignedMessage
-	for signedMsg := iterator.Next(); signedMsg != nil; {
-		if err := validSignedPrepareForHeightRoundAndValue(signedMsg, height, round, identifier, nodes); err == nil {
+	for _, signedMsg := range prepareMessages {
+		if err := validSignedPrepareForHeightRoundAndValue(signedMsg, height, round, value, nodes); err == nil {
 			if aggregatedPrepareMsg == nil {
 				aggregatedPrepareMsg = signedMsg
 			} else {
