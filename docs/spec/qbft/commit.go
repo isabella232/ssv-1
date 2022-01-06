@@ -1,5 +1,42 @@
 package qbft
 
+import (
+	"bytes"
+	"github.com/pkg/errors"
+)
+
+// uponCommit returns true if a quorum of commit messages was received.
+func uponCommit(state State, signedCommit SignedMessage, commitMsgContainer MsgContainer) (bool, error) {
+	if err := validateCommit(
+		signedCommit,
+		state.GetHeight(),
+		state.GetRound(),
+		state.GetConfig().GetNodes(),
+	); err != nil {
+		return false, errors.Wrap(err, "commit msg invalid")
+	}
+	if !commitMsgContainer.AddIfDoesntExist(signedCommit) {
+		return false, nil // uponCommit was already called
+	}
+
+	if commitQuorumForValue(state, signedCommit, commitMsgContainer, signedCommit.GetMessage().GetCommitData().GetData()) {
+		return true, nil
+	}
+	return false, nil
+}
+
+func commitQuorumForValue(state State, signedCommit SignedMessage, commitMsgContainer MsgContainer, value []byte) bool {
+	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	valueFiltered := make([]SignedMessage, 0)
+	for _, msg := range commitMsgs {
+		if bytes.Equal(msg.GetMessage().GetCommitData().GetData(), value) {
+			valueFiltered = append(valueFiltered, msg)
+		}
+	}
+
+	return state.GetConfig().HasQuorum(valueFiltered)
+}
+
 // didSendCommitForHeightAndRound returns true if sent commit msg for specific height and round
 func didSendCommitForHeightAndRound(state State, commitMsgContainer MsgContainer) bool {
 	/**
@@ -28,4 +65,25 @@ func createCommit(state State, value []byte) SignedMessage {
 	                    );
 	*/
 	panic("implement")
+}
+
+func validateCommit(
+	signedCommit SignedMessage,
+	height uint64,
+	round Round,
+	nodes []Node,
+) error {
+	if signedCommit.GetMessage().GetType() != CommitType {
+		return errors.New("commit msg type is wrong")
+	}
+	if signedCommit.GetMessage().GetHeight() != height {
+		return errors.New("commit height is wrong")
+	}
+	if signedCommit.GetMessage().GetRound() != round {
+		return errors.New("commit round is wrong")
+	}
+	if !signedCommit.IsValidSignature(nodes) {
+		return errors.New("commit msg signature invalid")
+	}
+	return nil
 }
