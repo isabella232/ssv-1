@@ -34,13 +34,18 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck ValueCh
 	if signedProposal.GetMessage().GetHeight() != state.GetHeight() {
 		return errors.New("proposal height is wrong")
 	}
+	if !signedProposal.MatchedSigners([]NodeID{proposer(state)}) {
+		return errors.New("proposal leader invalid")
+	}
 	if err := isProposalJustification(
 		state,
-		signedProposal,
+		signedProposal.GetMessage().GetProposalData().GetRoundChangeJustification(),
+		signedProposal.GetMessage().GetProposalData().GetPrepareJustification(),
 		state.GetHeight(),
 		signedProposal.GetMessage().GetRound(),
-		proposer(state),
+		signedProposal.GetMessage().GetProposalData().GetData(),
 		valCheck,
+		signedProposal.GetSignerIds()[0],
 	); err != nil {
 		return errors.Wrap(err, "proposal not justified")
 	}
@@ -53,33 +58,24 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck ValueCh
 }
 
 // isProposalJustification returns nil if the signed proposal msg is justified
-// roundChangeMsgContainer MUST contain only relevant msgs (identifier, height and round)
-// roundChangeMsgContainer MUST contain only relevant msgs (identifier, height and round)
 func isProposalJustification(
 	state State,
-	signedProposal SignedMessage,
+	roundChangeMsgs []SignedMessage,
+	prepareMsgs []SignedMessage,
 	height uint64,
 	round Round,
-	leaderID NodeID,
+	value []byte,
 	valCheck ValueCheck,
+	roundLeader NodeID,
 ) error {
-	roundChangeMsgs := signedProposal.GetMessage().GetProposalData().GetRoundChangeJustification()
-	prepareMsgs := signedProposal.GetMessage().GetProposalData().GetPrepareJustification()
-
-	if !signedProposal.MatchedSigners([]NodeID{leaderID}) {
-		return errors.New("proposal leader invalid")
-	}
-	if err := valCheck.Check(signedProposal.GetMessage().GetProposalData().GetData()); err != nil {
+	if err := valCheck.Check(value); err != nil {
 		return errors.Wrap(err, "proposal value invalid")
-	}
-	if signedProposal.GetMessage().GetRound() != round {
-		return errors.New("proposal round is wrong")
-	}
-	if signedProposal.GetMessage().GetHeight() != height {
-		return errors.New("proposal height is wrong")
 	}
 
 	if round == FirstRound {
+		if proposer(state) != roundLeader {
+			return errors.New("round leader is wrong")
+		}
 		return nil
 	} else {
 		if !state.GetConfig().HasQuorum(roundChangeMsgs) {
@@ -103,6 +99,9 @@ func isProposalJustification(
 		}
 
 		if !previouslyPreparedF() {
+			if proposer(state) != roundLeader {
+				return errors.New("round leader is wrong")
+			}
 			return nil
 		} else {
 			if !state.GetConfig().HasQuorum(prepareMsgs) {
@@ -134,17 +133,18 @@ func proposer(state State) NodeID {
 	panic("implement")
 }
 
-func createPrepare(state State, newRound Round, value []byte) SignedMessage {
+func createProposal(state State) SignedMessage {
 	/**
-	Prepare(
-	                    signPrepare(
-	                        UnsignedPrepare(
-	                            |current.blockchain|,
-	                            newRound,
-	                            digest(m.proposedBlock)),
-	                        current.id
-	                        )
-	                );
+	  	Proposal(
+	                        signProposal(
+	                            UnsignedProposal(
+	                                |current.blockchain|,
+	                                newRound,
+	                                digest(block)),
+	                            current.id),
+	                        block,
+	                        extractSignedRoundChanges(roundChanges),
+	                        extractSignedPrepares(prepares));
 	*/
-	panic("implement")
+	panic("implementation")
 }

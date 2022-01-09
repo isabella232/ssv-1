@@ -2,7 +2,96 @@ package qbft
 
 import "github.com/pkg/errors"
 
-func createRoundChange(state State) SignedMessage {
+func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMsgContainer, prepareMsgContainer MsgContainer, valCheck ValueCheck) error {
+	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
+		return errors.Wrap(err, "round change msg invalid")
+	}
+	if !roundChangeMsgContainer.AddIfDoesntExist(signedRoundChange) {
+		return nil // uponCommit was already called
+	}
+
+	if hasReceivedProposalJustification(state, signedRoundChange, roundChangeMsgContainer, valCheck) {
+		// TODO - check if i'm the proposer?
+		proposal := createProposal(state)
+		if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(proposal); err != nil {
+			return errors.Wrap(err, "failed to broadcast proposal message")
+		}
+
+		state.SetRound(111) // TODO - what is the value of newRound from the spec?
+		state.SetProposalAcceptedForCurrentRound(nil)
+	} else if hasReceivedPartialQuorum(state, roundChangeMsgContainer) {
+		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.GetMessage().GetHeight(), signedRoundChange.GetMessage().GetRound()))
+
+		roundChange := createRoundChange(state, newRound)
+		if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(roundChange); err != nil {
+			return errors.Wrap(err, "failed to broadcast round change message")
+		}
+
+		state.SetRound(newRound)
+		state.SetProposalAcceptedForCurrentRound(nil)
+	}
+	return nil
+}
+
+func hasReceivedPartialQuorum(state State, roundChangeMsgContainer MsgContainer) bool {
+	rc := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	return state.GetConfig().HasPartialQuorum(rc)
+}
+
+func hasReceivedProposalJustification(
+	state State,
+	signedRoundChange SignedMessage,
+	roundChangeMsgContainer MsgContainer,
+	valCheck ValueCheck,
+) bool {
+	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	prepares := signedRoundChange.GetMessage().GetRoundChangeData().GetRoundChangeJustification()
+	return isReceivedProposalJustification(
+		state,
+		roundChanges,
+		prepares,
+		signedRoundChange.GetMessage().GetRound(),
+		signedRoundChange.GetMessage().GetRoundChangeData().GetNextProposalData(),
+		valCheck,
+	) != nil
+}
+
+func isReceivedProposalJustification(
+	state State,
+	roundChanges, prepares []SignedMessage,
+	newRound Round,
+	value []byte,
+	valCheck ValueCheck,
+) error {
+	/**
+			&& roundChanges <= receivedRoundChanges(current)
+	        && prepares <= receivedPrepares(current)
+	TODO - not sure what does this check?
+	*/
+
+	if err := isProposalJustification(
+		state,
+		roundChanges,
+		prepares,
+		state.GetHeight(),
+		state.GetRound(),
+		value,
+		valCheck,
+		proposer(state),
+	); err != nil {
+		return errors.Wrap(err, "round change ")
+	}
+
+	noPrevProposal := state.GetProposalAcceptedForCurrentRound() == nil && state.GetRound() == newRound
+	prevProposal := state.GetProposalAcceptedForCurrentRound() != nil && newRound > state.GetRound()
+
+	if !noPrevProposal && !prevProposal {
+		return errors.New("prev proposal and new round mismatch")
+	}
+	return nil
+}
+
+func createRoundChange(state State, newRound Round) SignedMessage {
 	/**
 	RoundChange(
 	           signRoundChange(
@@ -62,4 +151,8 @@ func highestPrepared(roundChanges []SignedMessage) SignedMessage {
 		}
 	}
 	return ret
+}
+
+func minRound(roundChangeMsgs []SignedMessage) Round {
+	panic("implement")
 }

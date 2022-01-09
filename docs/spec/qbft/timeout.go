@@ -9,7 +9,7 @@ type Timer interface {
 
 func UponTimout(state State) error {
 	state.SetRound(state.GetRound() + 1)
-	roundChange := createRoundChange(state)
+	roundChange := createRoundChange(state, state.GetRound())
 
 	if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(roundChange); err != nil {
 		return errors.Wrap(err, "failed to broadcast round change message")

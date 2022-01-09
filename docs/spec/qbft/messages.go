@@ -80,11 +80,9 @@ type RoundChangeData interface {
 	GetPreparedValue() []byte
 	GetPreparedRound() Round
 	// GetNextProposalData returns NOT nil byte array if the signer is the next round's proposal.
-	// Should NOT be included in digest
 	GetNextProposalData() []byte
-	// GetRoundChangeJustification returns an aggregated signed prepare message for the last prepared state
-	// Should NOT be included in digest
-	GetRoundChangeJustification() SignedMessage
+	// GetRoundChangeJustification returns signed prepare messages for the last prepared state
+	GetRoundChangeJustification() []SignedMessage
 }
 
 // ValueCheck is an interface which validates the pre-prepare value passed to the node.

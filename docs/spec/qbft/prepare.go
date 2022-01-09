@@ -107,3 +107,18 @@ func validSignedPrepareForHeightRoundAndValue(
 	}
 	return nil
 }
+
+func createPrepare(state State, newRound Round, value []byte) SignedMessage {
+	/**
+	Prepare(
+	                    signPrepare(
+	                        UnsignedPrepare(
+	                            |current.blockchain|,
+	                            newRound,
+	                            digest(m.proposedBlock)),
+	                        current.id
+	                        )
+	                );
+	*/
+	panic("implement")
+}
