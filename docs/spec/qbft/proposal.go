@@ -22,7 +22,7 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 	if signedProposal.GetMessage().GetRound() > state.GetRound() {
 		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.GetMessage().GetRound())
 	}
-	state.SetRound(newRound)
+	state.SetRound(newRound) // TODO - why do we set round here?
 
 	return nil
 }
@@ -45,7 +45,7 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck ValueCh
 		signedProposal.GetMessage().GetRound(),
 		signedProposal.GetMessage().GetProposalData().GetData(),
 		valCheck,
-		signedProposal.GetSignerIds()[0],
+		signedProposal.GetSignerIds()[0], // already verified sig so we know there is 1 signer
 	); err != nil {
 		return errors.Wrap(err, "proposal not justified")
 	}
@@ -133,7 +133,7 @@ func proposer(state State) NodeID {
 	panic("implement")
 }
 
-func createProposal(state State) SignedMessage {
+func createProposal(state State, value []byte) SignedMessage {
 	/**
 	  	Proposal(
 	                        signProposal(

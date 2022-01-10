@@ -2,7 +2,7 @@ package qbft
 
 import "github.com/pkg/errors"
 
-func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMsgContainer, prepareMsgContainer MsgContainer, valCheck ValueCheck) error {
+func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMsgContainer MsgContainer, valCheck ValueCheck) error {
 	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
 		return errors.Wrap(err, "round change msg invalid")
 	}
@@ -11,13 +11,19 @@ func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMs
 	}
 
 	if hasReceivedProposalJustification(state, signedRoundChange, roundChangeMsgContainer, valCheck) {
-		// TODO - check if i'm the proposer?
-		proposal := createProposal(state)
+		var value []byte
+		if state.GetLastPreparedValue() != nil {
+			value = state.GetLastPreparedValue()
+		} else {
+			// TODO - set to start value
+		}
+
+		proposal := createProposal(state, value)
 		if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
 
-		state.SetRound(111) // TODO - what is the value of newRound from the spec?
+		state.SetRound(111) // TODO - why do we set round? and if so, what is the value of newRound from the spec?
 		state.SetProposalAcceptedForCurrentRound(nil)
 	} else if hasReceivedPartialQuorum(state, roundChangeMsgContainer) {
 		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.GetMessage().GetHeight(), signedRoundChange.GetMessage().GetRound()))
@@ -27,7 +33,7 @@ func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMs
 			return errors.Wrap(err, "failed to broadcast round change message")
 		}
 
-		state.SetRound(newRound)
+		state.SetRound(newRound) // TODO - why do we set round?
 		state.SetProposalAcceptedForCurrentRound(nil)
 	}
 	return nil
@@ -77,7 +83,7 @@ func isReceivedProposalJustification(
 		state.GetRound(),
 		value,
 		valCheck,
-		proposer(state),
+		state.GetConfig().GetID(), // checks if this node is the leader
 	); err != nil {
 		return errors.Wrap(err, "round change ")
 	}
@@ -89,23 +95,6 @@ func isReceivedProposalJustification(
 		return errors.New("prev proposal and new round mismatch")
 	}
 	return nil
-}
-
-func createRoundChange(state State, newRound Round) SignedMessage {
-	/**
-	RoundChange(
-	           signRoundChange(
-	               UnsignedRoundChange(
-	                   |current.blockchain|,
-	                   newRound,
-	                   digestOptionalBlock(current.lastPreparedBlock),
-	                   current.lastPreparedRound),
-	           current.id),
-	           current.lastPreparedBlock,
-	           getRoundChangeJustification(current)
-	       )
-	*/
-	panic("implement")
 }
 
 func validRoundChange(state State, signedMsg SignedMessage, height uint64, round Round) error {
@@ -154,5 +143,22 @@ func highestPrepared(roundChanges []SignedMessage) SignedMessage {
 }
 
 func minRound(roundChangeMsgs []SignedMessage) Round {
+	panic("implement")
+}
+
+func createRoundChange(state State, newRound Round) SignedMessage {
+	/**
+	RoundChange(
+	           signRoundChange(
+	               UnsignedRoundChange(
+	                   |current.blockchain|,
+	                   newRound,
+	                   digestOptionalBlock(current.lastPreparedBlock),
+	                   current.lastPreparedRound),
+	           current.id),
+	           current.lastPreparedBlock,
+	           getRoundChangeJustification(current)
+	       )
+	*/
 	panic("implement")
 }
