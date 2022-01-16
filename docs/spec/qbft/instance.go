@@ -34,7 +34,7 @@ func (i *Instance) Start(value []byte) {
 		if proposer(i.state) == i.state.GetConfig().GetID() {
 			proposal := createProposal(i.state, i.startValue)
 			if err := i.state.GetConfig().GetNetwork().BroadcastSignedMessage(proposal); err != nil {
-				// TODO log
+				// TODO - log
 			}
 		}
 	})
