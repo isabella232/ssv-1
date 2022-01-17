@@ -1,26 +1,17 @@
 package ssv
 
 import (
-	"bytes"
-	"github.com/bloxapp/ssv/docs/spec/network"
+	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
-type ValidatorID []byte
-
-func (vid ValidatorID) MatchMessageID(msgID network.MessageID) bool {
-	return bytes.Equal(vid, msgID)
-}
-
-type Share interface {
-	// Sign will return a signature using the share secret key
-	Sign(data []byte) ([]byte, error)
-	// GetValidatorPubKey returns the validator public key to which the share is associated with
-	GetValidatorPubKey() []byte
-}
-
 // Validator represents an SSV ETH consensus validator share assigned, coordinates duty execution and more.
+// Every validator has a validatorID which is validator's public key.
+// Each validator has multiple DutyRunners, for each duty type.
 type Validator struct {
-	share Share
-	id    ValidatorID
-	consensusInstances
+	share       Share
+	id          ValidatorID
+	dutyRunners DutyRunners
+	signer      beacon.Signer
+	valCheck    types.ValueCheck
 }

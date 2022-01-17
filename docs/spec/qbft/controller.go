@@ -3,10 +3,11 @@ package qbft
 import (
 	"bytes"
 	"fmt"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
-type instances [HistoricalInstanceCapacity]*Instance
+type instances [HistoricalInstanceSize]*Instance
 
 func (i instances) FindInstance(height uint64) *Instance {
 	for _, inst := range i {
@@ -19,15 +20,16 @@ func (i instances) FindInstance(height uint64) *Instance {
 	return nil
 }
 
-// HistoricalInstanceCapacity represents the upper bound of instances a controller can process messages for as messages are not
+// HistoricalInstanceSize represents the upper bound of instances a controller can process messages for as messages are not
 // guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
-const HistoricalInstanceCapacity int = 5
+const HistoricalInstanceSize int = 5
 
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
 type Controller struct {
 	identifier []byte
-	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
+	// storedInstances stores the last HistoricalInstanceSize in an array for message processing purposes.
 	storedInstances instances
+	valCheck        types.ValueCheck
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
@@ -42,15 +44,23 @@ func (c *Controller) StartNewInstance(value []byte) error {
 	return nil
 }
 
-// ProcessMsg processes a new msg
-func (c *Controller) ProcessMsg(msg SignedMessage) error {
+// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
+// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
+func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
 	if !bytes.Equal(c.GetIdentifier(), msg.GetMessage().GetInstanceIdentifier()) {
-		return errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
+		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
 	}
 
 	inst := c.storedInstances.FindInstance(msg.GetMessage().GetHeight())
 	if inst == nil {
-		return errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().GetHeight(), c.GetIdentifier()))
+		return false, nil, errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().GetHeight(), c.GetIdentifier()))
+	}
+
+	prevDecided, _ := inst.IsDecided()
+	if prevDecided {
+		if _, _, err := inst.ProcessMsg(msg); err != nil {
+			return false, nil, err
+		}
 	}
 
 	return inst.ProcessMsg(msg)
@@ -72,5 +82,18 @@ func (c *Controller) addAndStoreNewInstance() Instance {
 }
 
 func (c *Controller) canStartInstance(value []byte) error {
+	// check prev instance
+	inst := c.storedInstances.FindInstance(c.Height())
+	if inst == nil {
+		return errors.New("could not find previous instance")
+	}
+	if decided, _ := inst.IsDecided(); !decided {
+		return errors.New("previous instance hasn't decided")
+	}
+
+	// check value
+	if err := c.valCheck.Check(value); err != nil {
+		return errors.Wrap(err, "value invalid")
+	}
 	panic("implement")
 }
