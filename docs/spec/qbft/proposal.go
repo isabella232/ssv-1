@@ -22,7 +22,7 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 	if signedProposal.GetMessage().GetRound() > state.GetRound() {
 		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.GetMessage().GetRound())
 	}
-	state.SetRound(newRound) // TODO - why do we set round here?
+	state.SetRound(newRound)
 
 	return nil
 }
@@ -34,7 +34,8 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck ValueCh
 	if signedProposal.GetMessage().GetHeight() != state.GetHeight() {
 		return errors.New("proposal height is wrong")
 	}
-	if !signedProposal.MatchedSigners([]NodeID{proposer(state)}) {
+	// TODO - where do we check signedProposal sig
+	if !signedProposal.MatchedSigners([]NodeID{proposer(state, signedProposal.GetMessage().GetRound())}) {
 		return errors.New("proposal leader invalid")
 	}
 	if err := isProposalJustification(
@@ -73,7 +74,7 @@ func isProposalJustification(
 	}
 
 	if round == FirstRound {
-		if proposer(state) != roundLeader {
+		if proposer(state, round) != roundLeader {
 			return errors.New("round leader is wrong")
 		}
 		return nil
@@ -99,7 +100,7 @@ func isProposalJustification(
 		}
 
 		if !previouslyPreparedF() {
-			if proposer(state) != roundLeader {
+			if proposer(state, round) != roundLeader {
 				return errors.New("round leader is wrong")
 			}
 			return nil
@@ -129,7 +130,7 @@ func isProposalJustification(
 	}
 }
 
-func proposer(state State) NodeID {
+func proposer(state State, round Round) NodeID {
 	panic("implement")
 }
 
