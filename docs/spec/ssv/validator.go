@@ -9,6 +9,8 @@ import (
 // Every validator has a validatorID which is validator's public key.
 // Each validator has multiple DutyRunners, for each duty type.
 type Validator struct {
+	network     Network
+	beacon      beacon.Beacon
 	share       Share
 	id          ValidatorID
 	dutyRunners DutyRunners

@@ -16,7 +16,7 @@ import (
 
 // DutyExecutor represents the component that executes duties
 type DutyExecutor interface {
-	ExecuteDuty(duty *beacon.Duty) error
+	StartDuty(duty *beacon.Duty) error
 }
 
 // DutyController interface for dispatching duties execution according to slot ticker
@@ -91,10 +91,10 @@ func (dc *dutyController) CurrentSlotChan() <-chan uint64 {
 }
 
 // ExecuteDuty tries to execute the given duty
-func (dc *dutyController) ExecuteDuty(duty *beacon.Duty) error {
+func (dc *dutyController) StartDuty(duty *beacon.Duty) error {
 	if dc.executor != nil {
 		// enables to work with a custom executor, e.g. readOnlyDutyExec
-		return dc.executor.ExecuteDuty(duty)
+		return dc.executor.StartDuty(duty)
 	}
 	logger := dc.loggerWithDutyContext(dc.logger, duty)
 	pubKey := &bls.PublicKey{}
@@ -146,7 +146,7 @@ func (dc *dutyController) onDuty(duty *beacon.Duty) {
 	logger := dc.loggerWithDutyContext(dc.logger, duty)
 	if dc.shouldExecute(duty) {
 		logger.Debug("duty was sent to execution")
-		if err := dc.ExecuteDuty(duty); err != nil {
+		if err := dc.StartDuty(duty); err != nil {
 			logger.Error("could not dispatch duty", zap.Error(err))
 			return
 		}
@@ -218,7 +218,7 @@ type readOnlyDutyExec struct {
 	logger *zap.Logger
 }
 
-func (e *readOnlyDutyExec) ExecuteDuty(duty *beacon.Duty) error {
+func (e *readOnlyDutyExec) StartDuty(duty *beacon.Duty) error {
 	e.logger.Debug("skipping duty execution",
 		zap.Uint64("epoch", uint64(duty.Slot)/32),
 		zap.Uint64("slot", uint64(duty.Slot)),

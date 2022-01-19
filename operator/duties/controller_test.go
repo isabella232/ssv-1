@@ -81,7 +81,7 @@ type executorMock struct {
 	wg *sync.WaitGroup
 }
 
-func (e *executorMock) ExecuteDuty(duty *beacon.Duty) error {
+func (e *executorMock) StartDuty(duty *beacon.Duty) error {
 	require.NotNil(e.t, duty)
 	require.True(e.t, duty.Slot > 0)
 	e.wg.Done()

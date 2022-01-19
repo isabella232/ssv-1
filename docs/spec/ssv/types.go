@@ -3,7 +3,6 @@ package ssv
 import (
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/network"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 )
 
 type ValidatorID []byte
@@ -16,13 +15,6 @@ func ValidatorIDFromPubKey(pk []byte) ValidatorID {
 // MessageIDBelongs returns true if message ID belongs to validator
 func (vid ValidatorID) MessageIDBelongs(msgID network.MessageID) bool {
 	panic("implement")
-}
-
-// DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
-// Prev duty must finish before the next one can start.
-type DutyRunner struct {
-	runningDuty    beacon.Duty
-	qbftController qbft.Controller
 }
 
 // DutyRunners is a map of duty runners mapped by msg id hex.
@@ -43,4 +35,8 @@ type Share interface {
 	Sign(data []byte) ([]byte, error)
 	// GetValidatorPubKey returns the validator public key to which the share is associated with
 	GetValidatorPubKey() []byte
+}
+
+type Network interface {
+	BroadcastMessage(message network.Message) error
 }
