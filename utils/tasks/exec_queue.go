@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -31,6 +32,9 @@ type executionQueue struct {
 	errs []error
 
 	interval time.Duration
+
+	concurrent int32
+	running    int32
 }
 
 // NewExecutionQueue creates a new instance
@@ -45,6 +49,7 @@ func NewExecutionQueue(interval time.Duration) Queue {
 		visited:  &sync.Map{},
 		errs:     []error{},
 		interval: interval,
+		running:  0,
 	}
 	return &q
 }
@@ -63,11 +68,25 @@ func (eq *executionQueue) Start() {
 	eq.stopped = false
 	eq.lock.Unlock()
 
+	t := time.NewTimer(eq.interval)
+	defer t.Stop()
+	wait := func() {
+		t.Reset(eq.interval)
+		for range t.C {
+			return
+		}
+	}
+
 	for {
+		wait()
 		eq.lock.Lock()
 		if eq.stopped {
 			eq.lock.Unlock()
 			return
+		}
+		if eq.concurrent > 0 && eq.running == eq.concurrent {
+			eq.lock.Unlock()
+			continue
 		}
 		if len(eq.waiting) > 0 {
 			next := eq.waiting[0]
@@ -77,7 +96,6 @@ func (eq *executionQueue) Start() {
 			continue
 		}
 		eq.lock.Unlock()
-		time.Sleep(eq.interval)
 	}
 }
 
@@ -112,11 +130,17 @@ func (eq *executionQueue) Errors() []error {
 	eq.lock.RLock()
 	defer eq.lock.RUnlock()
 
-	return eq.errs
+	errs := make([]error, len(eq.errs))
+	copy(errs, eq.errs)
+	return errs
 }
 
 func (eq *executionQueue) exec(fn Fn) {
-	defer eq.wg.Done()
+	defer func() {
+		atomic.AddInt32(&eq.running, -1)
+		eq.wg.Done()
+	}()
+	atomic.AddInt32(&eq.running, 1)
 
 	if err := fn(); err != nil {
 		eq.lock.Lock()
@@ -131,6 +155,11 @@ func (eq *executionQueue) getWaiting() []Fn {
 	defer eq.lock.RUnlock()
 
 	return eq.waiting
+}
+
+// getRunning returns how many functions are being executed
+func (eq *executionQueue) getRunning() int32 {
+	return atomic.LoadInt32(&eq.running)
 }
 
 // isStopped returns the queue state

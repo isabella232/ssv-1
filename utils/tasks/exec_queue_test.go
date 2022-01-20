@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"sync"
 	"sync/atomic"
@@ -30,11 +31,14 @@ func TestExecQueue(t *testing.T) {
 		atomic.AddInt64(&i, 1)
 		return nil
 	})
+	q.Queue(func() error {
+		return errors.New("test-err")
+	})
 
 	q.Wait()
 	require.Equal(t, int64(1), atomic.LoadInt64(&i))
 	require.Equal(t, 0, len(q.(*executionQueue).getWaiting()))
-	require.Equal(t, 0, len(q.Errors()))
+	require.Equal(t, 1, len(q.Errors()))
 }
 
 func TestExecQueue_Stop(t *testing.T) {
