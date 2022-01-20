@@ -241,25 +241,24 @@ func (exp *exporter) handleQueryRequests(nm *api.NetworkMessage) {
 func (exp *exporter) StartEth1(syncOffset *eth1.SyncOffset) error {
 	exp.logger.Info("starting node -> eth1")
 
+	startIndex, err := exp.storage.CountValidators()
+	if err != nil {
+		return errors.Wrap(err, "could not read existing validators")
+	}
 	// sync events
-	syncErr := eth1.SyncEth1Events(exp.logger, exp.eth1Client, exp.storage, syncOffset, exp.handleEth1Event)
+	syncErr := eth1.SyncEth1Events(exp.logger, exp.eth1Client, exp.storage, syncOffset, exp.registrySyncHandler(startIndex))
 	if syncErr != nil {
 		return errors.Wrap(syncErr, "failed to sync eth1 contract events")
 	}
 	exp.logger.Info("managed to sync contract events")
 
-	// register for contract events that will arrive from eth1Client
-	errCn := exp.listenToEth1Events(exp.eth1Client.EventsFeed())
+	// subscribe to events
 	go func() {
-		// log errors while processing events
-		for err := range errCn {
-			exp.logger.Warn("could not handle eth1 event", zap.Error(err))
+		if err := exp.eth1Client.Subscribe(exp.handleEth1Event); err != nil {
+			exp.logger.Panic("could not start eth1 client", zap.Error(err))
 		}
 	}()
-	// start events stream
-	if err := exp.eth1Client.Start(); err != nil {
-		return errors.Wrap(err, "could not start eth1 client")
-	}
+
 	return nil
 }
 

@@ -60,12 +60,12 @@ func TestExporter_ListenToEth1Events(t *testing.T) {
 
 	feed := new(event.Feed)
 
-	go func() {
-		errCn := exp.listenToEth1Events(feed)
-		for err := range errCn {
-			require.NoError(t, err)
-		}
-	}()
+	//go func() {
+	//	errCn := exp.listenToEth1Events(feed)
+	//	for err := range errCn {
+	//		require.NoError(t, err)
+	//	}
+	//}()
 
 	var wg sync.WaitGroup
 	go func() {

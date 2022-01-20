@@ -5,7 +5,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"math/big"
-	"sync"
 	"time"
 )
 
@@ -17,9 +16,6 @@ const (
 
 // SyncOffset is the type of variable used for passing around the offset
 type SyncOffset = big.Int
-
-// SyncEventHandler handles a given event
-type SyncEventHandler func(Event) error
 
 // SyncOffsetStorage represents the interface for compatible storage
 type SyncOffsetStorage interface {
@@ -45,46 +41,31 @@ func HexStringToSyncOffset(shex string) *SyncOffset {
 }
 
 // SyncEth1Events sync past events
-func SyncEth1Events(logger *zap.Logger, client Client, storage SyncOffsetStorage, syncOffset *SyncOffset, handler SyncEventHandler) error {
+func SyncEth1Events(logger *zap.Logger, client Client, storage SyncOffsetStorage, syncOffset *SyncOffset, handler EventHandler) error {
 	logger.Info("syncing eth1 contract events")
-
-	cn := make(chan *Event)
-	feed := client.EventsFeed()
-	sub := feed.Subscribe(cn)
 
 	q := tasks.NewExecutionQueue(5 * time.Millisecond)
 	defer q.Stop()
 	go q.Start()
-	queue := func(e Event) {
+	queue := func(e *Event) {
 		q.Queue(func() error {
 			return handler(e)
 		})
 	}
-	// Stop once SyncEndedEvent arrives
-	var syncEndedEvent SyncEndedEvent
-	var syncWg sync.WaitGroup
-	syncWg.Add(1)
-	go func() {
-		var ok bool
-		defer syncWg.Done()
-		defer sub.Unsubscribe()
-		for event := range cn {
-			if syncEndedEvent, ok = event.Data.(SyncEndedEvent); ok {
-				return
-			}
-			logger.Debug("got new event from eth1 sync",
-				zap.Uint64("BlockNumber", event.Log.BlockNumber))
-			if handler != nil {
-				queue(*event)
-			}
-		}
-	}()
 	syncOffset = determineSyncOffset(logger, storage, syncOffset)
-	if err := client.Sync(syncOffset); err != nil {
+
+	syncResult, err := client.Sync(syncOffset, func(event *Event) error {
+		if event == nil {
+			return nil
+		}
+		logger.Debug("got new event from eth1 sync",
+			zap.Uint64("BlockNumber", event.Log.BlockNumber))
+		queue(event)
+		return nil
+	})
+	if err != nil {
 		return errors.Wrap(err, "failed to sync contract events")
 	}
-	// waiting for eth1 sync to finish
-	syncWg.Wait()
 	// waiting for all events to be processed
 	q.Wait()
 
@@ -93,18 +74,17 @@ func SyncEth1Events(logger *zap.Logger, client Client, storage SyncOffsetStorage
 		return errors.New("failed to handle all events from sync")
 	}
 
-	return upgradeSyncOffset(logger, storage, syncOffset, syncEndedEvent)
+	return upgradeSyncOffset(logger, storage, syncOffset, syncResult)
 }
 
 // upgradeSyncOffset updates the sync offset after a sync
-func upgradeSyncOffset(logger *zap.Logger, storage SyncOffsetStorage, syncOffset *SyncOffset, syncEndedEvent SyncEndedEvent) error {
-	nResults := len(syncEndedEvent.Logs)
-	if nResults > 0 {
-		if !syncEndedEvent.Success {
-			logger.Warn("could not parse all events from eth1")
-		} else if rawOffset := syncEndedEvent.Logs[nResults-1].BlockNumber; rawOffset > syncOffset.Uint64() {
-			logger.Debug("upgrading sync offset", zap.Uint64("syncOffset", rawOffset))
-			syncOffset.SetUint64(rawOffset)
+func upgradeSyncOffset(logger *zap.Logger, storage SyncOffsetStorage, syncOffset *SyncOffset, syncResult SyncResult) error {
+	if syncResult.Total > 0 {
+		if syncResult.Total != syncResult.Successful {
+			logger.Warn("could not parse all events from eth1", zap.Int("total", syncResult.Total))
+		} else if syncResult.LastBlock > syncOffset.Uint64() {
+			logger.Debug("upgrading sync offset",
+				zap.Uint64("syncOffset", syncOffset.SetUint64(syncResult.LastBlock).Uint64()))
 			if err := storage.SaveSyncOffset(syncOffset); err != nil {
 				return errors.Wrap(err, "could not upgrade sync offset")
 			}

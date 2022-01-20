@@ -16,7 +16,6 @@ import (
 	validatorstorage "github.com/bloxapp/ssv/validator/storage"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
-	"github.com/prysmaticlabs/prysm/async/event"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -49,8 +48,7 @@ type ControllerOptions struct {
 // Controller represent the validators controller,
 // it takes care of bootstrapping, updating and managing existing validators and their shares
 type Controller interface {
-	ListenToEth1Events(feed *event.Feed)
-	ProcessEth1Event(e eth1.Event) error
+	ProcessEth1Event(e *eth1.Event) error
 	StartValidators()
 	GetValidatorsIndices() []spec.ValidatorIndex
 	GetValidator(pubKey string) (*Validator, bool)
@@ -130,25 +128,8 @@ func NewController(options ControllerOptions) Controller {
 	return &ctrl
 }
 
-// ListenToEth1Events is listening to events coming from eth1 client
-func (c *controller) ListenToEth1Events(feed *event.Feed) {
-	cn := make(chan *eth1.Event)
-	sub := feed.Subscribe(cn)
-	defer sub.Unsubscribe()
-	for {
-		select {
-		case event := <-cn:
-			if err := c.ProcessEth1Event(*event); err != nil {
-				c.logger.Error("could not process event", zap.Error(err))
-			}
-		case err := <-sub.Err():
-			c.logger.Error("event feed subscription error", zap.Error(err))
-		}
-	}
-}
-
 // ProcessEth1Event handles a single event, will be called in both sync and stream events from registry contract
-func (c *controller) ProcessEth1Event(e eth1.Event) error {
+func (c *controller) ProcessEth1Event(e *eth1.Event) error {
 	if validatorAddedEvent, ok := e.Data.(abiparser.ValidatorAddedEvent); ok {
 		pubKey := hex.EncodeToString(validatorAddedEvent.PublicKey)
 		if err := c.handleValidatorAddedEvent(validatorAddedEvent); err != nil {

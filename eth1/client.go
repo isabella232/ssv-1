@@ -3,7 +3,6 @@ package eth1
 import (
 	"crypto/rsa"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/prysmaticlabs/prysm/async/event"
 	"math/big"
 	"time"
 )
@@ -21,16 +20,31 @@ type Options struct {
 
 // Event represents an eth1 event log in the system
 type Event struct {
-	Log  types.Log
+	// Log is the raw event log
+	Log types.Log
+	// Data is the parsed event
 	Data interface{}
+	// Decrypted indicates whether the share keys where decrypted during parsing
+	Decrypted bool
 }
 
-// SyncEndedEvent meant to notify an observer that the sync is over
-type SyncEndedEvent struct {
-	// Success returns true if the sync went well (all events were parsed)
-	Success bool
-	// Logs is the actual logs that we got from eth1
-	Logs []types.Log
+// SyncResult used to pass stats and results of an events sync
+type SyncResult struct {
+	// Total is the amount of total events
+	Total int
+	// Successful is the amount of successfully parsed events
+	Successful int
+	// LastBlock is the last block where the sync applies to
+	LastBlock uint64
+}
+
+// NewSyncResult creates a new SyncResult object
+func NewSyncResult(n int, nsuccess int, lastBlock uint64) SyncResult {
+	return SyncResult{
+		Total:      n,
+		Successful: nsuccess,
+		LastBlock:  lastBlock,
+	}
 }
 
 // ShareEncryptionKeyProvider is a function that returns the operator private key
@@ -38,7 +52,9 @@ type ShareEncryptionKeyProvider = func() (*rsa.PrivateKey, bool, error)
 
 // Client represents the required interface for eth1 client
 type Client interface {
-	EventsFeed() *event.Feed
-	Start() error
-	Sync(fromBlock *big.Int) error
+	Subscribe(handler EventHandler) error
+	Sync(fromBlock *big.Int, handler EventHandler) (SyncResult, error)
 }
+
+// EventHandler handles incoming event from registry contract
+type EventHandler func(*Event) error

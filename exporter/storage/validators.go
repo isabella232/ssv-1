@@ -24,12 +24,48 @@ type ValidatorsCollection interface {
 	GetValidatorInformation(validatorPubKey string) (*ValidatorInformation, bool, error)
 	SaveValidatorInformation(validatorInformation *ValidatorInformation) error
 	ListValidators(from int64, to int64) ([]ValidatorInformation, error)
+	CountValidators() (int64, error)
 }
 
 // OperatorNodeLink links a validator to an operator
 type OperatorNodeLink struct {
 	ID        uint64 `json:"nodeId"`
 	PublicKey string `json:"publicKey"`
+}
+
+// GetValidatorInformation returns information of the given validator by public key
+func (es *exporterStorage) GetValidatorInformation(validatorPubKey string) (*ValidatorInformation, bool, error) {
+	es.validatorsLock.RLock()
+	defer es.validatorsLock.RUnlock()
+
+	return es.getValidatorInformationNotSafe(validatorPubKey)
+}
+
+// SaveValidatorInformation saves validator information by its public key
+func (es *exporterStorage) SaveValidatorInformation(validatorInformation *ValidatorInformation) error {
+	es.validatorsLock.Lock()
+	defer es.validatorsLock.Unlock()
+
+	info, found, err := es.getValidatorInformationNotSafe(validatorInformation.PublicKey)
+	if err != nil {
+		return errors.Wrap(err, "could not read information from DB")
+	}
+
+	if found {
+		es.logger.Debug("validator information exist",
+			zap.String("pubKey", validatorInformation.PublicKey))
+		validatorInformation.Index = info.Index
+		// TODO: update validator information (i.e. change operator)
+		return nil
+	}
+	// if no index was provided -> calculate
+	if validatorInformation.Index == 0 {
+		validatorInformation.Index, err = es.nextIndex(validatorsPrefix())
+	}
+	if err != nil {
+		return errors.Wrap(err, "could not calculate next validator index")
+	}
+	return es.saveValidatorNotSafe(validatorInformation)
 }
 
 // ListValidators returns information of all the known validators
@@ -53,12 +89,12 @@ func (es *exporterStorage) ListValidators(from int64, to int64) ([]ValidatorInfo
 	return validators, err
 }
 
-// GetValidatorInformation returns information of the given validator by public key
-func (es *exporterStorage) GetValidatorInformation(validatorPubKey string) (*ValidatorInformation, bool, error) {
+// CountValidators returns amount of persisted validators
+func (es *exporterStorage) CountValidators() (int64, error) {
 	es.validatorsLock.RLock()
 	defer es.validatorsLock.RUnlock()
 
-	return es.getValidatorInformationNotSafe(validatorPubKey)
+	return es.db.CountByCollection(append(storagePrefix(), validatorsPrefix()...))
 }
 
 // GetValidatorInformation returns information of the given validator by public key
@@ -73,30 +109,6 @@ func (es *exporterStorage) getValidatorInformationNotSafe(validatorPubKey string
 	var vi ValidatorInformation
 	err = json.Unmarshal(obj.Value, &vi)
 	return &vi, found, err
-}
-
-// SaveValidatorInformation saves validator information by its public key
-func (es *exporterStorage) SaveValidatorInformation(validatorInformation *ValidatorInformation) error {
-	es.validatorsLock.Lock()
-	defer es.validatorsLock.Unlock()
-
-	info, found, err := es.getValidatorInformationNotSafe(validatorInformation.PublicKey)
-	if err != nil {
-		return errors.Wrap(err, "could not read information from DB")
-	}
-
-	if found {
-		es.logger.Debug("validator information exist",
-			zap.String("pubKey", validatorInformation.PublicKey))
-		validatorInformation.Index = info.Index
-		// TODO: update validator information (i.e. change operator)
-		return nil
-	}
-	validatorInformation.Index, err = es.nextIndex(validatorsPrefix())
-	if err != nil {
-		return errors.Wrap(err, "could not calculate next validator index")
-	}
-	return es.saveValidatorNotSafe(validatorInformation)
 }
 
 func (es *exporterStorage) saveValidatorNotSafe(val *ValidatorInformation) error {

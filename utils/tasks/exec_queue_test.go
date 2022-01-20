@@ -32,9 +32,10 @@ func TestExecQueue(t *testing.T) {
 		return nil
 	})
 	q.Queue(func() error {
+		require.Greaterf(t, q.(*executionQueue).getRunning(), int32(0), "should have at least 1 running task")
 		return errors.New("test-err")
 	})
-
+	<-time.After(time.Millisecond)
 	q.Wait()
 	require.Equal(t, int64(1), atomic.LoadInt64(&i))
 	require.Equal(t, 0, len(q.(*executionQueue).getWaiting()))

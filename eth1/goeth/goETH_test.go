@@ -8,7 +8,7 @@ import (
 	"github.com/bloxapp/ssv/eth1/abiparser"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/prysmaticlabs/prysm/async/event"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"strings"
@@ -44,6 +44,7 @@ func TestEth1Client_handleEvent(t *testing.T) {
 			contractAbi, err := abi.JSON(strings.NewReader(eth1.ContractABI(test.version)))
 			require.NoError(t, err)
 			require.NotNil(t, contractAbi)
+			abiParser := eth1.NewParser(ec.logger, ec.abiVersion)
 			var vLogOperatorAdded types.Log
 			err = json.Unmarshal([]byte(test.operatorAdded), &vLogOperatorAdded)
 			require.NoError(t, err)
@@ -51,36 +52,31 @@ func TestEth1Client_handleEvent(t *testing.T) {
 			err = json.Unmarshal([]byte(test.validatorAdded), &vLogValidatorAdded)
 			require.NoError(t, err)
 
-			cn := make(chan *eth1.Event)
-			sub := ec.EventsFeed().Subscribe(cn)
-			require.NoError(t, err)
 			var eventsWg sync.WaitGroup
-			go func() {
-				defer sub.Unsubscribe()
-				for event := range cn {
-					if ethEvent, ok := event.Data.(abiparser.OperatorAddedEvent); ok {
-						require.NotNil(t, ethEvent)
-						require.NotNil(t, ethEvent.PublicKey)
-						eventsWg.Done()
-						continue
-					}
-					if ethEvent, ok := event.Data.(abiparser.ValidatorAddedEvent); ok {
-						require.NotNil(t, ethEvent)
-						require.NotNil(t, ethEvent.PublicKey)
-						eventsWg.Done()
-						continue
-					}
-					panic("event data type is not founded")
-				}
-			}()
 
 			eventsWg.Add(1)
-			err = ec.handleEvent(vLogOperatorAdded, contractAbi)
+			err = ec.processEventLog(vLogOperatorAdded, contractAbi, abiParser, func(e *eth1.Event) error {
+				if ethEvent, ok := e.Data.(abiparser.OperatorAddedEvent); ok {
+					require.NotNil(t, ethEvent)
+					require.NotNil(t, ethEvent.PublicKey)
+					eventsWg.Done()
+					return nil
+				}
+				return errors.New("event data type is not founded")
+			})
 			require.NoError(t, err)
 
 			time.Sleep(10 * time.Millisecond)
 			eventsWg.Add(1)
-			err = ec.handleEvent(vLogValidatorAdded, contractAbi)
+			err = ec.processEventLog(vLogValidatorAdded, contractAbi, abiParser, func(e *eth1.Event) error {
+				if ethEvent, ok := e.Data.(abiparser.ValidatorAddedEvent); ok {
+					require.NotNil(t, ethEvent)
+					require.NotNil(t, ethEvent.PublicKey)
+					eventsWg.Done()
+					return nil
+				}
+				return errors.New("event data type is not founded")
+			})
 			require.NoError(t, err)
 
 			eventsWg.Wait()
@@ -96,7 +92,6 @@ func newEth1Client(abiVersion eth1.Version) *eth1Client {
 		shareEncryptionKeyProvider: func() (*rsa.PrivateKey, bool, error) {
 			return nil, true, nil
 		},
-		eventsFeed: new(event.Feed),
 		abiVersion: abiVersion,
 	}
 	return &ec

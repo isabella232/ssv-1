@@ -10,33 +10,12 @@ import (
 	validatorstorage "github.com/bloxapp/ssv/validator/storage"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
-	"github.com/prysmaticlabs/prysm/async/event"
 	"go.uber.org/zap"
+	"sync/atomic"
 )
 
-// ListenToEth1Events register for eth1 events
-func (exp *exporter) listenToEth1Events(eventsFeed *event.Feed) <-chan error {
-	cn := make(chan *eth1.Event)
-	sub := eventsFeed.Subscribe(cn)
-	cnErr := make(chan error, 10)
-	go func() {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case event := <-cn:
-				if err := exp.handleEth1Event(*event); err != nil {
-					cnErr <- err
-				}
-			case err := <-sub.Err():
-				cnErr <- err
-			}
-		}
-	}()
-	return cnErr
-}
-
-// ListenToEth1Events register for eth1 events
-func (exp *exporter) handleEth1Event(e eth1.Event) error {
+// handleEth1Event handles the given eth1 event
+func (exp *exporter) handleEth1Event(e *eth1.Event) error {
 	var err error = nil
 	if validatorAddedEvent, ok := e.Data.(abiparser.ValidatorAddedEvent); ok {
 		err = exp.handleValidatorAddedEvent(validatorAddedEvent)
@@ -48,41 +27,69 @@ func (exp *exporter) handleEth1Event(e eth1.Event) error {
 
 // handleValidatorAddedEvent parses the given event and sync the ibft-data of the validator
 func (exp *exporter) handleValidatorAddedEvent(event abiparser.ValidatorAddedEvent) error {
-	pubKeyHex := hex.EncodeToString(event.PublicKey)
-	logger := exp.logger.With(zap.String("eventType", "ValidatorAdded"), zap.String("pubKey", pubKeyHex))
-	logger.Info("validator added event")
-	// create a share to be used in IBFT, parsing it at first to make sure the event is valid
-	validatorShare, _, err := validator.ShareFromValidatorAddedEvent(event, "")
+	validatorShare, vi, err := exp.saveNewValidator(event, 0)
 	if err != nil {
-		return errors.Wrap(err, "could not create a share from ValidatorAddedEvent")
-	}
-	// if share was created, save information for exporting validators
-	vi, err := exp.addValidatorInformation(event)
-	if err != nil {
-		return err
-	}
-	logger.Debug("validator information was saved", zap.Any("value", *vi))
-	if err := exp.addValidatorShare(validatorShare); err != nil {
 		return errors.Wrap(err, "failed to add validator share")
 	}
-	logger.Debug("validator share was saved")
 
-	// TODO: aggregate validators in sync scenario
 	go func() {
 		n := exp.ws.BroadcastFeed().Send(api.Message{
 			Type:   api.TypeValidator,
 			Filter: api.MessageFilter{From: vi.Index, To: vi.Index},
 			Data:   []storage.ValidatorInformation{*vi},
 		})
-		logger.Debug("msg was sent on outbound feed", zap.Int("num of subscribers", n))
+		exp.logger.Debug("msg was sent on outbound feed", zap.Int("num of subscribers", n),
+			zap.String("eventType", "ValidatorAdded"),
+			zap.String("pubKey", hex.EncodeToString(event.PublicKey)))
 	}()
 
-	// triggers a sync for the given validator
 	if err = exp.triggerValidator(validatorShare.PublicKey); err != nil {
 		return errors.Wrap(err, "failed to trigger ibft sync")
 	}
 
 	return nil
+}
+
+// registrySyncHandler returns a handler for registry contract events coming from sync
+func (exp *exporter) registrySyncHandler(startIndex int64) eth1.EventHandler {
+	var counter int64
+	return func(e *eth1.Event) error {
+		var err error = nil
+		var vi *storage.ValidatorInformation
+		if validatorAddedEvent, ok := e.Data.(abiparser.ValidatorAddedEvent); ok {
+			i := atomic.AddInt64(&counter, 1)
+			_, vi, err = exp.saveNewValidator(validatorAddedEvent, i+startIndex)
+			exp.logger.Debug("new validator", zap.String("pk", hex.EncodeToString(validatorAddedEvent.PublicKey)),
+				zap.Int64("i", i), zap.Int64("index", vi.Index))
+		} else if opertaorAddedEvent, ok := e.Data.(abiparser.OperatorAddedEvent); ok {
+			err = exp.handleOperatorAddedEvent(opertaorAddedEvent)
+		}
+		return err
+	}
+}
+
+// handleValidatorAddedEvent parses the given event and sync the ibft-data of the validator
+func (exp *exporter) saveNewValidator(event abiparser.ValidatorAddedEvent, i int64) (*validatorstorage.Share, *storage.ValidatorInformation, error) {
+	pubKeyHex := hex.EncodeToString(event.PublicKey)
+	// create a share to be used in IBFT
+	share, _, err := validator.ShareFromValidatorAddedEvent(event, "")
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not create a share from ValidatorAddedEvent")
+	}
+	if err := exp.addValidatorShare(share); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to add validator share")
+	}
+	// if share was created, save information for exporting validators
+	info, err := toValidatorInformation(event)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not create validator information")
+	}
+	info.Index = i
+	if err := exp.storage.SaveValidatorInformation(info); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to save validator information")
+	}
+	exp.logger.Debug("validator information was saved", zap.Any("index", info.Index), zap.String("pubKey", pubKeyHex))
+	return share, info, nil
 }
 
 // handleOperatorAddedEvent parses the given event and saves operator information
@@ -124,7 +131,7 @@ func (exp *exporter) addValidatorShare(validatorShare *validatorstorage.Share) e
 	} else if !updated {
 		logger.Warn("could not find validator metadata")
 	} else {
-		logger.Debug("validator metadata was updated")
+		logger.Debug("validator metadata was updated", zap.Any("updated", updated))
 	}
 	if err := exp.validatorStorage.SaveValidatorShare(validatorShare); err != nil {
 		return errors.Wrap(err, "failed to save validator share")

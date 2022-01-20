@@ -92,7 +92,6 @@ func LoadABI(abiFilePath string) error {
 	if err := jsonFile.Close(); err != nil {
 		logex.GetLogger().Warn("failed to close abi json", zap.Error(err))
 	}
-
 	// assert valid JSON
 	var obj []interface{}
 	err = json.Unmarshal(raw, &obj)

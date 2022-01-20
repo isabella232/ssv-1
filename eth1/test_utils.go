@@ -19,13 +19,18 @@ func (ec *ClientMock) EventsFeed() *event.Feed {
 	return ec.Feed
 }
 
+// Subscribe subscribes to contract events
+func (ec *ClientMock) Subscribe(handler EventHandler) error {
+	return nil
+}
+
 // Start mocking client init
 func (ec *ClientMock) Start() error {
 	return nil
 }
 
 // Sync mocking events sync
-func (ec *ClientMock) Sync(fromBlock *big.Int) error {
+func (ec *ClientMock) Sync(fromBlock *big.Int, handler EventHandler) error {
 	<-time.After(ec.SyncTimeout)
 	return ec.SyncResponse
 }
