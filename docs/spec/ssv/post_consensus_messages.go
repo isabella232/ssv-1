@@ -34,8 +34,6 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg PostC
 	default:
 		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.runningDuty.Type.String())
 	}
-	dutyRunner.postConsensusState.ReconstructAttestationSig()
-
 	return nil
 }
 
