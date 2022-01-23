@@ -1,6 +1,7 @@
 package ssv
 
 import (
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/network"
 )
@@ -39,4 +40,18 @@ type Share interface {
 
 type Network interface {
 	BroadcastMessage(message network.Message) error
+}
+
+type consensusInputData struct {
+	Duty            *beacon.Duty
+	AttestationData *phase0.AttestationData
+	BlockData       *phase0.BeaconBlock
+}
+
+func (cid *consensusInputData) Marshal() []byte {
+	panic("implement")
+}
+
+func (cid *consensusInputData) UnMarshal(data []byte) error {
+	panic("implement")
 }

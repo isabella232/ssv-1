@@ -1,21 +1,9 @@
 package ssv
 
 import (
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/pkg/errors"
 )
-
-type consensusInputData interface {
-	// Marshal parses the obj to bytes
-	Marshal() []byte
-	// UnMarshal takes bytes and populates the obj
-	UnMarshal(data []byte) error
-
-	GetDuty() (*beacon.Duty, error)
-	GetAttestationData() (*phase0.AttestationData, error)
-	GetBlockData() (*phase0.BeaconBlock, error)
-}
 
 // StartDuty starts a duty for the validator
 func (v *Validator) StartDuty(duty *beacon.Duty) error {
@@ -30,15 +18,16 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 
 	dutyRunner.resetForNewDuty()
 
-	var input consensusInputData
+	input := consensusInputData{}
 	switch duty.Type {
 	case beacon.RoleTypeAttester:
-		_, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
+		attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 		if err != nil {
 			return errors.Wrap(err, "failed to get attestation data")
 		}
 
-		// TODO set input with duty and attestation data
+		input.Duty = duty
+		input.AttestationData = attData
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
 	}
