@@ -1,6 +1,9 @@
 package qbft
 
-import "github.com/pkg/errors"
+import (
+	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/pkg/errors"
+)
 
 func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer MsgContainer) error {
 	valCheck := state.GetConfig().GetValueCheck()
@@ -27,7 +30,7 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 	return nil
 }
 
-func isValidProposal(state State, signedProposal SignedMessage, valCheck ValueCheck) error {
+func isValidProposal(state State, signedProposal SignedMessage, valCheck types.ValueCheck) error {
 	if signedProposal.GetMessage().GetType() != ProposalType {
 		return errors.New("msg type is not proposal")
 	}
@@ -66,7 +69,7 @@ func isProposalJustification(
 	height uint64,
 	round Round,
 	value []byte,
-	valCheck ValueCheck,
+	valCheck types.ValueCheck,
 	roundLeader NodeID,
 ) error {
 	if err := valCheck.Check(value); err != nil {
