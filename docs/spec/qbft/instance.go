@@ -74,3 +74,7 @@ func (i *Instance) ProcessMsg(msg SignedMessage) (decided bool, decidedValue []b
 func (i *Instance) IsDecided() (bool, []byte) {
 	return i.decided.Get(), i.decidedValue.Get()
 }
+
+func (i *Instance) Height() uint64 {
+	return i.state.GetHeight()
+}
