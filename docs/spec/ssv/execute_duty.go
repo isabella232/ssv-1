@@ -16,10 +16,8 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Wrap(err, "can't start new duty")
 	}
 
-	dutyRunner.resetForNewDuty()
-
-	input := consensusInputData{}
-	switch duty.Type {
+	input := consensusData{}
+	switch dutyRunner.beaconRoleType {
 	case beacon.RoleTypeAttester:
 		attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 		if err != nil {
@@ -32,8 +30,8 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
 	}
 
-	if err := dutyRunner.qbftController.StartNewInstance(input.Marshal()); err != nil {
-		return errors.Wrap(err, "can't start new QBFT instance for duty")
+	if err := dutyRunner.StartNewInstance(input.Marshal()); err != nil {
+		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
 
 	return nil

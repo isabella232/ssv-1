@@ -7,23 +7,21 @@ import (
 )
 
 func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg PostConsensusSigMessage) error {
+	if err := v.verifyPostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
+		return errors.Wrap(err, "partial sig invalid")
+	}
+
 	postCons := dutyRunner.PostConsensusStateForHeight(sigMsg.GetHeight())
 	if postCons == nil {
 		return errors.New("PostConsensusSigMessage height doesn't match duty runner's height'")
 	}
-
-	if postCons.collectedPartialSigs[sigMsg.GetSignerID()] == nil {
-		if err := v.verifyPostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
-			return errors.Wrap(err, "partial sig invalid")
-		}
-		postCons.collectedPartialSigs[sigMsg.GetSignerID()] = sigMsg.GetSig()
-	}
+	postCons.AddPartialSig(sigMsg)
 
 	if !postCons.HasPostConsensusSigQuorum() {
 		return nil
 	}
 
-	switch dutyRunner.runningDuty.Type {
+	switch dutyRunner.beaconRoleType {
 	case beacon.RoleTypeAttester:
 		att, err := postCons.ReconstructAttestationSig()
 		if err != nil {
@@ -33,7 +31,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg PostC
 			return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
 		}
 	default:
-		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.runningDuty.Type.String())
+		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.beaconRoleType.String())
 	}
 	return nil
 }

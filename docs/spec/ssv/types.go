@@ -42,16 +42,17 @@ type Network interface {
 	BroadcastMessage(message network.Message) error
 }
 
-type consensusInputData struct {
+// consensusData holds all relevant duty and data decided on by consensus
+type consensusData struct {
 	Duty            *beacon.Duty
 	AttestationData *phase0.AttestationData
 	BlockData       *phase0.BeaconBlock
 }
 
-func (cid *consensusInputData) Marshal() []byte {
+func (cid *consensusData) Marshal() []byte {
 	panic("implement")
 }
 
-func (cid *consensusInputData) UnMarshal(data []byte) error {
+func (cid *consensusData) UnMarshal(data []byte) error {
 	panic("implement")
 }
