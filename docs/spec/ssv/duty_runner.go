@@ -64,20 +64,11 @@ func (dr *DutyRunner) resetForNewDuty() {
 }
 
 func (dr *DutyRunner) setAndSignDuty(decidedValue consensusInputData, signer beacon.Signer) error {
-	duty, err := decidedValue.GetDuty()
-	if err != nil {
-		return errors.Wrap(err, "could not get duty from decided value")
-	}
-	dr.runningDuty = duty
+	dr.runningDuty = decidedValue.Duty
 
 	switch dr.runningDuty.Type {
 	case beacon.RoleTypeAttester:
-		s, err := decidedValue.GetAttestationData()
-		if err != nil {
-			return errors.Wrap(err, "could not get attestation data from decided value")
-		}
-
-		signedAttestation, r, err := signer.SignAttestation(s, dr.runningDuty, dr.runningDuty.PubKey[:])
+		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, dr.runningDuty, dr.runningDuty.PubKey[:])
 		if err != nil {
 			return errors.Wrap(err, "failed to sign attestation")
 		}
