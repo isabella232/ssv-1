@@ -12,7 +12,7 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
 
-	if err := dutyRunner.CanStartNewInstance(); err != nil {
+	if err := dutyRunner.CanStartNewDuty(duty); err != nil {
 		return errors.Wrap(err, "can't start new duty")
 	}
 

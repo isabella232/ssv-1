@@ -15,6 +15,8 @@ type postConsensusState struct {
 	collectedPartialSigs map[qbft.NodeID][]byte
 	postConsensusSigRoot []byte
 
+	qbftHeight uint64 // post consensus for QBFT height
+
 	finished bool
 }
 
@@ -35,27 +37,41 @@ func (pcs *postConsensusState) Finished() bool {
 // DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
 // Prev duty must finish before the next one can start.
 type DutyRunner struct {
+	beaconRoleType     beacon.RoleType
+	validatorPK        []byte
 	runningDuty        *beacon.Duty
+	storage            Storage
 	postConsensusState *postConsensusState
 	qbftController     qbft.Controller
 	nodeID             qbft.NodeID
 }
 
-func (dr *DutyRunner) CanStartNewInstance() error {
-	if dr.runningDuty != nil && !dr.postConsensusState.Finished() {
-		return errors.New("duty not nil in duty runner")
+// CanStartNewDuty returns nil if:
+// - no running instance exists or
+// - a QBFT instance decided and all post consensus sigs collectd or
+// - a QBFT instance decided and 32 slots passed from decided duty
+// else returns an error
+func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
+	if dr.runningDuty != nil {
+		if dr.
+		// if 32 slots (1 epoch) passed from running duty, start a new duty
+		if dr.runningDuty.Slot+32 < duty.Slot {
+			return nil
+		}
+	}
+	if !dr.postConsensusState.Finished() {
+		return errors.New("duty post consensus is running")
 	}
 
 	return nil
 }
 
-// RunningDuty returns true if DutyRunner runs a duty
-func (dr *DutyRunner) RunningDuty() bool {
-	if dr.runningDuty == nil {
-		return false
+// PostConsensusStateForHeight returns a postConsensusState instance for a specific height
+func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *postConsensusState {
+	if dr.postConsensusState != nil && dr.postConsensusState.qbftHeight == height {
+		return dr.postConsensusState
 	}
-
-	return !dr.postConsensusState.Finished()
+	return nil
 }
 
 func (dr *DutyRunner) resetForNewDuty() {
@@ -63,7 +79,12 @@ func (dr *DutyRunner) resetForNewDuty() {
 	dr.postConsensusState = nil
 }
 
-func (dr *DutyRunner) setAndSignDuty(decidedValue consensusInputData, signer beacon.Signer) error {
+// decideRunningInstance sets the decided duty and partially signs the decided data
+func (dr *DutyRunner) decideRunningInstance(decidedValue consensusInputData, signer beacon.Signer) error {
+	if err := dr.storage.SaveHighestDecided(dr.validatorPK, dr.beaconRoleType, decidedValue); err != nil {
+		return errors.Wrap(err, "could not save decided")
+	}
+
 	dr.runningDuty = decidedValue.Duty
 
 	switch dr.runningDuty.Type {

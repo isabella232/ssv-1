@@ -11,6 +11,7 @@ import (
 type Validator struct {
 	network     Network
 	beacon      beacon.Beacon
+	storage     Storage
 	share       Share
 	id          ValidatorID
 	dutyRunners DutyRunners

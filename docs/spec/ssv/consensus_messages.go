@@ -24,7 +24,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg qbft.SignedM
 	var decidedValue consensusInputData
 	// TODO - parse decidedValueByts to decidedValue
 
-	if err := dutyRunner.setAndSignDuty(decidedValue, v.signer); err != nil {
+	if err := dutyRunner.decideRunningInstance(decidedValue, v.signer); err != nil {
 		return errors.Wrap(err, "failed to sign duty")
 	}
 

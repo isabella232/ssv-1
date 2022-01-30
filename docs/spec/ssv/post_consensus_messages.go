@@ -7,24 +7,25 @@ import (
 )
 
 func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg PostConsensusSigMessage) error {
-	if !dutyRunner.RunningDuty() {
-		return errors.New("duty runner doesn't have an active duty running")
+	postCons := dutyRunner.PostConsensusStateForHeight(sigMsg.GetHeight())
+	if postCons == nil {
+		return errors.New("PostConsensusSigMessage height doesn't match duty runner's height'")
 	}
 
-	if dutyRunner.postConsensusState.collectedPartialSigs[sigMsg.GetSignerID()] == nil {
+	if postCons.collectedPartialSigs[sigMsg.GetSignerID()] == nil {
 		if err := v.verifyPostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
 			return errors.Wrap(err, "partial sig invalid")
 		}
-		dutyRunner.postConsensusState.collectedPartialSigs[sigMsg.GetSignerID()] = sigMsg.GetSig()
+		postCons.collectedPartialSigs[sigMsg.GetSignerID()] = sigMsg.GetSig()
 	}
 
-	if !dutyRunner.postConsensusState.HasPostConsensusSigQuorum() {
+	if !postCons.HasPostConsensusSigQuorum() {
 		return nil
 	}
 
 	switch dutyRunner.runningDuty.Type {
 	case beacon.RoleTypeAttester:
-		att, err := dutyRunner.postConsensusState.ReconstructAttestationSig()
+		att, err := postCons.ReconstructAttestationSig()
 		if err != nil {
 			return errors.Wrap(err, "could not reconstruct post consensus sig")
 		}
