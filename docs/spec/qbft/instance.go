@@ -26,12 +26,14 @@ type Instance struct {
 	startValue   []byte
 }
 
-func (i *Instance) Start(value []byte) {
+func (i *Instance) Start(value []byte, height uint64) {
 	i.startOnce.Do(func() {
 		i.startValue = value
+		i.state.SetRound(FirstRound)
+		i.state.SetHeight(height)
 
 		// propose if this node is the proposer
-		if proposer(i.state) == i.state.GetConfig().GetID() {
+		if proposer(i.state, FirstRound) == i.state.GetConfig().GetID() {
 			proposal := createProposal(i.state, i.startValue)
 			if err := i.state.GetConfig().GetNetwork().BroadcastSignedMessage(proposal); err != nil {
 				// TODO - log
