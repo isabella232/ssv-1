@@ -51,7 +51,7 @@ func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
 		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
 	}
 
-	inst := c.storedInstances.FindInstance(msg.GetMessage().GetHeight())
+	inst := c.InstanceForHeight(msg.GetMessage().GetHeight())
 	if inst == nil {
 		return false, nil, errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().GetHeight(), c.GetIdentifier()))
 	}
@@ -64,6 +64,10 @@ func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
 	}
 
 	return inst.ProcessMsg(msg)
+}
+
+func (c *Controller) InstanceForHeight(height uint64) *Instance {
+	return c.storedInstances.FindInstance(height)
 }
 
 // Height returns the current running instance height or, if not started, the last decided height

@@ -6,6 +6,7 @@ import (
 )
 
 func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
+	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
 	if state.GetProposalAcceptedForCurrentRound() == nil {
 		return errors.New("not proposal accepted for prepare")
 	}
