@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +28,8 @@ const HistoricalInstanceSize int = 5
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
 type Controller struct {
 	identifier []byte
-	// storedInstances stores the last HistoricalInstanceSize in an array for message processing purposes.
+	height     *threadsafe.SafeUint64 // incremental height for instances
+	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	storedInstances instances
 	valCheck        types.ValueCheck
 }
@@ -38,8 +40,9 @@ func (c *Controller) StartNewInstance(value []byte) error {
 		return errors.Wrap(err, "can't start new QBFT instance")
 	}
 
+	c.bumpHeight()
 	newInstance := c.addAndStoreNewInstance()
-	newInstance.Start(value)
+	newInstance.Start(value, c.Height())
 
 	return nil
 }
@@ -72,7 +75,11 @@ func (c *Controller) InstanceForHeight(height uint64) *Instance {
 
 // Height returns the current running instance height or, if not started, the last decided height
 func (c *Controller) Height() uint64 {
-	panic("implement")
+	return c.height.Get()
+}
+
+func (c *Controller) bumpHeight() {
+	c.height.Set(c.height.Get() + 1)
 }
 
 // GetIdentifier returns QBFT identifier, used to identify messages

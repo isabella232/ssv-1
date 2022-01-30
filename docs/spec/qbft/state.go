@@ -35,6 +35,8 @@ type State interface {
 	SetRound(newRound Round)
 	// GetHeight returns the current height
 	GetHeight() uint64
+	// SetHeight sets the current height
+	SetHeight(height uint64) uint64
 	// GetConfig returns instance config
 	GetConfig() Config
 	// GetLastPreparedRound returns the latest prepared round, NoRound if not prepared
