@@ -8,7 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type instances [HistoricalInstanceSize]IInstance
+// HistoricalInstanceCapacity represents the upper bound of instances a controller can process messages for as messages are not
+// guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
+const HistoricalInstanceCapacity int = 5
+
+type instances [HistoricalInstanceCapacity]IInstance
 
 func (i instances) FindInstance(height uint64) IInstance {
 	for _, inst := range i {
@@ -34,10 +38,6 @@ type IController interface {
 	// GetIdentifier returns QBFT identifier, used to identify messages
 	GetIdentifier() []byte
 }
-
-// HistoricalInstanceSize represents the upper bound of instances a controller can process messages for as messages are not
-// guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
-const HistoricalInstanceSize int = 5
 
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
 type Controller struct {
