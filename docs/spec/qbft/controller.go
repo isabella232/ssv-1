@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type instances [HistoricalInstanceCapacity]IInstance
+type instances [HistoricalInstanceSize]IInstance
 
 func (i instances) FindInstance(height uint64) IInstance {
 	for _, inst := range i {
