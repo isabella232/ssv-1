@@ -94,7 +94,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 
 // PostConsensusStateForHeight returns a dutyExecutionState instance for a specific height
 func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionState {
-	if dr.dutyExecutionState != nil && dr.dutyExecutionState.qbftHeight == height {
+	if dr.dutyExecutionState != nil && dr.dutyExecutionState.runningInstance.Height() == height {
 		return dr.dutyExecutionState
 	}
 	return nil
