@@ -21,7 +21,20 @@ func (i instances) FindInstance(height uint64) *Instance {
 	return nil
 }
 
-// HistoricalInstanceSize represents the upper bound of instances a controller can process messages for as messages are not
+type IController interface {
+	// StartNewInstance will start a new QBFT instance, if can't will return error
+	StartNewInstance(value []byte) error
+	// ProcessMsg processes a new msg for a specific instance
+	ProcessMsg(msg SignedMessage) error
+	// InstanceForHeight returns an instance for a specific height, nil if not found
+	InstanceForHeight(height uint64) *Instance
+	// GetHeight returns the current running instance height or, if not started, the last decided height
+	GetHeight() uint64
+	// GetIdentifier returns QBFT identifier, used to identify messages
+	GetIdentifier() []byte
+}
+
+// HistoricalInstanceCapacity represents the upper bound of instances a controller can process messages for as messages are not
 // guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
 const HistoricalInstanceSize int = 5
 
@@ -42,7 +55,7 @@ func (c *Controller) StartNewInstance(value []byte) error {
 
 	c.bumpHeight()
 	newInstance := c.addAndStoreNewInstance()
-	newInstance.Start(value, c.Height())
+	newInstance.Start(value, c.GetHeight())
 
 	return nil
 }
@@ -73,8 +86,8 @@ func (c *Controller) InstanceForHeight(height uint64) *Instance {
 	return c.storedInstances.FindInstance(height)
 }
 
-// Height returns the current running instance height or, if not started, the last decided height
-func (c *Controller) Height() uint64 {
+// GetHeight returns the current running instance height or, if not started, the last decided height
+func (c *Controller) GetHeight() uint64 {
 	return c.height.Get()
 }
 
