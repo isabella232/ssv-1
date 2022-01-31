@@ -1,5 +1,7 @@
 package qbft
 
+import "github.com/bloxapp/ssv/docs/spec/types"
+
 type NodeID uint64
 
 type Node interface {
@@ -19,7 +21,7 @@ type Config interface {
 	// HasPartialQuorum returns true if at least f+1 signatures present
 	HasPartialQuorum([]SignedMessage) bool
 	// GetValueCheck returns value check instance
-	GetValueCheck() ValueCheck
+	GetValueCheck() types.ValueCheck
 	// GetNetwork returns network instance
 	GetNetwork() Network
 	// GetTimer returns round timer

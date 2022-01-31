@@ -7,12 +7,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type instances [HistoricalInstanceCapacity]*Instance
+type instances [HistoricalInstanceCapacity]IInstance
 
-func (i instances) FindInstance(height uint64) *Instance {
+func (i instances) FindInstance(height uint64) IInstance {
 	for _, inst := range i {
 		if inst != nil {
-			if inst.state.GetHeight() == height {
+			if inst.GetHeight() == height {
 				return inst
 			}
 		}
@@ -27,7 +27,7 @@ type IController interface {
 	// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
 	ProcessMsg(msg SignedMessage) (bool, []byte, error)
 	// InstanceForHeight returns an instance for a specific height, nil if not found
-	InstanceForHeight(height uint64) *Instance
+	InstanceForHeight(height uint64) IInstance
 	// GetHeight returns the current running instance height or, if not started, the last decided height
 	GetHeight() uint64
 	// GetIdentifier returns QBFT identifier, used to identify messages
@@ -81,7 +81,7 @@ func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
 	return inst.ProcessMsg(msg)
 }
 
-func (c *Controller) InstanceForHeight(height uint64) *Instance {
+func (c *Controller) InstanceForHeight(height uint64) IInstance {
 	return c.storedInstances.FindInstance(height)
 }
 
