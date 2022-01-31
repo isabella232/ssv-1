@@ -1,8 +1,11 @@
 package qbft
 
-import "github.com/pkg/errors"
+import (
+	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/pkg/errors"
+)
 
-func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMsgContainer MsgContainer, valCheck ValueCheck) error {
+func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMsgContainer MsgContainer, valCheck types.ValueCheck) error {
 	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
 		return errors.Wrap(err, "round change msg invalid")
 	}
@@ -48,7 +51,7 @@ func hasReceivedProposalJustification(
 	state State,
 	signedRoundChange SignedMessage,
 	roundChangeMsgContainer MsgContainer,
-	valCheck ValueCheck,
+	valCheck types.ValueCheck,
 ) bool {
 	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
 	prepares := signedRoundChange.GetMessage().GetRoundChangeData().GetRoundChangeJustification()
@@ -67,7 +70,7 @@ func isReceivedProposalJustification(
 	roundChanges, prepares []SignedMessage,
 	newRound Round,
 	value []byte,
-	valCheck ValueCheck,
+	valCheck types.ValueCheck,
 ) error {
 	/**
 			&& roundChanges <= receivedRoundChanges(current)

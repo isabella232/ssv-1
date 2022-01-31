@@ -8,6 +8,17 @@ import (
 	"sync"
 )
 
+type IInstance interface {
+	// Start will start the new instance with a specific value and height
+	Start(value []byte, height uint64)
+	// ProcessMsg will process a signed msg
+	ProcessMsg(msg SignedMessage) (decided bool, decidedValue []byte, err error)
+	// IsDecided will return true and a non-empty byte slice if instance decided.
+	IsDecided() (bool, []byte)
+	// GetHeight returns the instance's height
+	GetHeight() uint64
+}
+
 // Instance is a single QBFT instance that starts with a Start call (including a value).
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
@@ -27,6 +38,7 @@ type Instance struct {
 	startValue   []byte
 }
 
+// Start is an interface implementation
 func (i *Instance) Start(value []byte, height uint64) {
 	i.startOnce.Do(func() {
 		i.startValue = value
@@ -70,11 +82,12 @@ func (i *Instance) ProcessMsg(msg SignedMessage) (decided bool, decidedValue []b
 	return i.decided.Get(), i.decidedValue.Get(), nil
 }
 
-// IsDecided returns true and a non nil byte slice of the decided value if decided.
+// IsDecided interface implementation
 func (i *Instance) IsDecided() (bool, []byte) {
 	return i.decided.Get(), i.decidedValue.Get()
 }
 
-func (i *Instance) Height() uint64 {
+// GetHeight interface implementation
+func (i *Instance) GetHeight() uint64 {
 	return i.state.GetHeight()
 }
