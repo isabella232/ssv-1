@@ -34,7 +34,7 @@ type IController interface {
 	GetIdentifier() []byte
 }
 
-// HistoricalInstanceCapacity represents the upper bound of instances a controller can process messages for as messages are not
+// HistoricalInstanceSize represents the upper bound of instances a controller can process messages for as messages are not
 // guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
 const HistoricalInstanceSize int = 5
 
@@ -107,7 +107,7 @@ func (c *Controller) addAndStoreNewInstance() Instance {
 
 func (c *Controller) canStartInstance(value []byte) error {
 	// check prev instance
-	inst := c.storedInstances.FindInstance(c.Height())
+	inst := c.storedInstances.FindInstance(c.GetHeight())
 	if inst == nil {
 		return errors.New("could not find previous instance")
 	}
