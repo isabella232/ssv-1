@@ -47,7 +47,7 @@ type DutyRunner struct {
 	storage        Storage
 	// dutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
 	dutyExecutionState *dutyExecutionState
-	qbftController     qbft.Controller
+	qbftController     qbft.IController
 	nodeID             qbft.NodeID
 }
 
@@ -84,7 +84,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	if err := dr.qbftController.StartNewInstance(value); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}
-	newInstance := dr.qbftController.InstanceForHeight(dr.qbftController.Height())
+	newInstance := dr.qbftController.InstanceForHeight(dr.qbftController.GetHeight())
 
 	dr.dutyExecutionState = &dutyExecutionState{
 		runningInstance: newInstance,
