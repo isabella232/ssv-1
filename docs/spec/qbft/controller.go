@@ -23,8 +23,9 @@ func (i instances) FindInstance(height uint64) *Instance {
 type IController interface {
 	// StartNewInstance will start a new QBFT instance, if can't will return error
 	StartNewInstance(value []byte) error
-	// ProcessMsg processes a new msg for a specific instance
-	ProcessMsg(msg SignedMessage) error
+	// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
+	// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
+	ProcessMsg(msg SignedMessage) (bool, []byte, error)
 	// InstanceForHeight returns an instance for a specific height, nil if not found
 	InstanceForHeight(height uint64) *Instance
 	// GetHeight returns the current running instance height or, if not started, the last decided height
@@ -58,15 +59,23 @@ func (c *Controller) StartNewInstance(value []byte) error {
 	return nil
 }
 
-// ProcessMsg processes a new msg for a specific instance
-func (c *Controller) ProcessMsg(msg SignedMessage) error {
+// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
+// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
+func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
 	if !bytes.Equal(c.GetIdentifier(), msg.GetMessage().GetInstanceIdentifier()) {
-		return errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
+		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
 	}
 
 	inst := c.InstanceForHeight(msg.GetMessage().GetHeight())
 	if inst == nil {
-		return errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().GetHeight(), c.GetIdentifier()))
+		return false, nil, errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().GetHeight(), c.GetIdentifier()))
+	}
+
+	prevDecided, _ := inst.IsDecided()
+	if prevDecided {
+		if _, _, err := inst.ProcessMsg(msg); err != nil {
+			return false, nil, err
+		}
 	}
 
 	return inst.ProcessMsg(msg)

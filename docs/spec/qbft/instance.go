@@ -44,7 +44,7 @@ func (i *Instance) Start(value []byte, height uint64) {
 }
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
-func (i *Instance) ProcessMsg(msg SignedMessage) error {
+func (i *Instance) ProcessMsg(msg SignedMessage) (decided bool, decidedValue []byte, err error) {
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.GetMessage().GetType() {
 		case ProposalType:
@@ -52,7 +52,7 @@ func (i *Instance) ProcessMsg(msg SignedMessage) error {
 		case PrepareType:
 			return uponPrepare(i.state, msg, i.prepareContainer, i.commitContainer)
 		case CommitType:
-			decided, decidedValue, err := uponCommit(i.state, msg, i.commitContainer)
+			decided, decidedValue, err = uponCommit(i.state, msg, i.commitContainer)
 			i.decided.Set(decided)
 			if decided {
 				i.decidedValue.Set(decidedValue)
@@ -65,9 +65,9 @@ func (i *Instance) ProcessMsg(msg SignedMessage) error {
 		}
 	})
 	if res != nil {
-		return res.(error)
+		return false, nil, res.(error)
 	}
-	return nil
+	return i.decided.Get(), i.decidedValue.Get(), nil
 }
 
 // IsDecided returns true and a non nil byte slice of the decided value if decided.
