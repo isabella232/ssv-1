@@ -1,6 +1,7 @@
 package qbft
 
 import (
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/utils"
 	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
@@ -12,7 +13,7 @@ import (
 type Instance struct {
 	state      State
 	network    Network
-	valueCheck ValueCheck
+	valueCheck types.ValueCheck
 
 	proposeContainer     MsgContainer
 	prepareContainer     MsgContainer
