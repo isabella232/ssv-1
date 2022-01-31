@@ -13,7 +13,7 @@ const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
 
 // dutyExecutionState holds all the relevant progress the duty execution progress
 type dutyExecutionState struct {
-	runningInstance *qbft.Instance
+	runningInstance qbft.IInstance
 
 	decidedValue consensusData
 
@@ -94,7 +94,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 
 // PostConsensusStateForHeight returns a dutyExecutionState instance for a specific height
 func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionState {
-	if dr.dutyExecutionState != nil && dr.dutyExecutionState.runningInstance.Height() == height {
+	if dr.dutyExecutionState != nil && dr.dutyExecutionState.runningInstance.GetHeight() == height {
 		return dr.dutyExecutionState
 	}
 	return nil
