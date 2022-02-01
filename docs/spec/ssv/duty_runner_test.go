@@ -175,3 +175,52 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestDutyRunner_StartNewInstance(t *testing.T) {
+	t.Run("value nil", func(t *testing.T) {
+		dr := newTestingDutyRunner()
+		require.EqualError(t, dr.StartNewInstance(nil), "new instance value nil")
+	})
+
+	t.Run("valid start", func(t *testing.T) {
+		dr := newTestingDutyRunner()
+		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
+		require.NotNil(t, dr.dutyExecutionState)
+	})
+}
+
+func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
+	t.Run("no return", func(t *testing.T) {
+		dr := newTestingDutyRunner()
+		require.Nil(t, dr.PostConsensusStateForHeight(10))
+	})
+
+	t.Run("returns", func(t *testing.T) {
+		dr := newTestingDutyRunner()
+		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
+		require.NotNil(t, dr.PostConsensusStateForHeight(1))
+	})
+}
+
+func TestDutyRunner_DecideRunningInstance(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		dr := newTestingDutyRunner()
+		dr.dutyExecutionState = &dutyExecutionState{
+			collectedPartialSigs: make(map[qbft.NodeID][]byte),
+			quorumCount:          3,
+		}
+		decidedValue := &consensusData{
+			Duty: &beacon.Duty{
+				Type:   beacon.RoleTypeAttester,
+				Slot:   12,
+				PubKey: testingValidatorPK,
+			},
+			AttestationData: nil,
+		}
+		require.NoError(t, dr.DecideRunningInstance(decidedValue, &testingSigner{}))
+		require.NotNil(t, dr.dutyExecutionState.decidedValue)
+		require.NotNil(t, dr.dutyExecutionState.signedAttestation)
+		require.NotNil(t, dr.dutyExecutionState.postConsensusSigRoot)
+		require.NotNil(t, dr.dutyExecutionState.collectedPartialSigs)
+	})
+}

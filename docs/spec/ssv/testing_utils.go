@@ -5,6 +5,7 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/ibft/proto"
 	"github.com/pkg/errors"
 )
 
@@ -44,12 +45,17 @@ type testingQBFTController struct {
 func NewTestingQBFTController(identifier []byte) *testingQBFTController {
 	return &testingQBFTController{
 		identifier: identifier,
-		height:     1,
+		height:     0,
+		instances:  make(map[uint64]*testingQBFTInstance),
 	}
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
 func (tContr *testingQBFTController) StartNewInstance(value []byte) error {
+	inst := newTestingQBFTInstance()
+	tContr.height++
+	inst.height = tContr.height
+	tContr.instances[inst.height] = inst
 	return nil
 }
 
@@ -177,4 +183,22 @@ func newTestingDutyRunner() *DutyRunner {
 			quorum:        3,
 		},
 	}
+}
+
+type testingSigner struct {
+}
+
+// SignIBFTMessage signs a network iBFT msg
+func (s *testingSigner) SignIBFTMessage(message *proto.Message, pk []byte) ([]byte, error) {
+	return nil, nil
+}
+
+// SignAttestation signs the given attestation
+func (s *testingSigner) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
+	sig := spec.BLSSignature{1, 2, 3, 4}
+	att := &spec.Attestation{
+		Data:      data,
+		Signature: sig,
+	}
+	return att, sig[:], nil
 }

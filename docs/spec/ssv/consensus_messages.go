@@ -21,6 +21,10 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg qbft.SignedM
 		return nil
 	}
 
+	/**
+	Decided returns true only once so if it is true it must be for the current running instance
+	*/
+
 	var decidedValue *consensusData
 	// TODO - parse decidedValueByts to decidedValue
 
