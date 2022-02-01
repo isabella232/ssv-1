@@ -15,13 +15,15 @@ const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
 type dutyExecutionState struct {
 	runningInstance qbft.IInstance
 
-	decidedValue consensusData
+	decidedValue *consensusData
 
 	signedAttestation *spec.Attestation
 	signedProposal    *spec.SignedBeaconBlock
 
 	collectedPartialSigs map[qbft.NodeID][]byte
 	postConsensusSigRoot []byte
+	// quorumCount is the number of min signatures needed for quorum
+	quorumCount uint64
 }
 
 func (pcs *dutyExecutionState) AddPartialSig(sigMsg PostConsensusSigMessage) {
@@ -36,7 +38,7 @@ func (pcs *dutyExecutionState) ReconstructAttestationSig() (*spec.Attestation, e
 }
 
 func (pcs *dutyExecutionState) HasPostConsensusSigQuorum() bool {
-	panic("implement")
+	return uint64(len(pcs.collectedPartialSigs)) >= pcs.quorumCount
 }
 
 // DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
@@ -49,6 +51,7 @@ type DutyRunner struct {
 	dutyExecutionState *dutyExecutionState
 	qbftController     qbft.IController
 	nodeID             qbft.NodeID
+	share              Share
 }
 
 // CanStartNewDuty returns nil if:
@@ -72,8 +75,9 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 	if decided, _ := dr.dutyExecutionState.runningInstance.IsDecided(); !decided {
 		return errors.New("consensus on duty is running")
 	}
+
 	if !dr.dutyExecutionState.HasPostConsensusSigQuorum() &&
-		dr.dutyExecutionState.decidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout > duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
+		dr.dutyExecutionState.decidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
 		return errors.New("post consensus sig collection is running")
 	}
 	return nil
@@ -101,7 +105,7 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 }
 
 // DecideRunningInstance sets the decided duty and partially signs the decided data
-func (dr *DutyRunner) DecideRunningInstance(decidedValue consensusData, signer beacon.Signer) error {
+func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer beacon.Signer) error {
 	if err := dr.storage.SaveHighestDecided(dr.validatorPK, dr.beaconRoleType, decidedValue); err != nil {
 		return errors.Wrap(err, "could not save decided")
 	}

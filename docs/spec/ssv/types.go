@@ -4,6 +4,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/network"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 )
 
 type ValidatorID []byte
@@ -36,6 +37,8 @@ type Share interface {
 	Sign(data []byte) ([]byte, error)
 	// GetValidatorPubKey returns the validator public key to which the share is associated with
 	GetValidatorPubKey() []byte
+	GetQBFTCommittee() []qbft.NodeID
+	GetQuorumCount() uint64
 }
 
 type Network interface {

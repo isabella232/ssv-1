@@ -21,7 +21,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg qbft.SignedM
 		return nil
 	}
 
-	var decidedValue consensusData
+	var decidedValue *consensusData
 	// TODO - parse decidedValueByts to decidedValue
 
 	if err := dutyRunner.DecideRunningInstance(decidedValue, v.signer); err != nil {
