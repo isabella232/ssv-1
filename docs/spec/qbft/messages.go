@@ -35,18 +35,11 @@ type Message interface {
 }
 
 type SignedMessage interface {
+	types.MessageEncoder
+	types.MessageDigest
+	types.MessageSignature
 	// GetMessage returns the message for which this signature is for
 	GetMessage() Message
-	// GetSignature returns the signature
-	GetSignature() []byte
-	// GetSignerIds returns the ids of signers (according to node configuration)
-	GetSignerIds() []NodeID
-	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
-	MatchedSigners(ids []NodeID) bool
-	// IsValidSignature returns true if signature is valid (against message and signers)
-	IsValidSignature(nodes []Node) bool
-	// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
-	Aggregate(signedMsg SignedMessage) error
 }
 
 type ProposalData interface {

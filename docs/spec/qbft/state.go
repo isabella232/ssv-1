@@ -2,20 +2,11 @@ package qbft
 
 import "github.com/bloxapp/ssv/docs/spec/types"
 
-type NodeID uint64
-
-type Node interface {
-	// GetPublicKey returns the public key with which the node is identified with
-	GetPublicKey() []byte
-	// GetID returns the node's ID
-	GetID() NodeID
-}
-
 type Config interface {
 	// GetNodes returns instance nodes
-	GetNodes() []Node
+	GetNodes() []types.Node
 	// GetID returns the specific node's ID
-	GetID() NodeID
+	GetID() types.NodeID
 	// HasQuorum returns true if at least 2f+1 signatures present
 	HasQuorum([]SignedMessage) bool
 	// HasPartialQuorum returns true if at least f+1 signatures present

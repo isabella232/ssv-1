@@ -40,6 +40,17 @@ type MessageDigest interface {
 	Digest() []byte
 }
 
+type MessageSignature interface {
+	GetSignature() []byte
+	GetSigners() []NodeID
+	// IsValidSignature returns true if signature is valid (against message and signers)
+	IsValidSignature(nodes []Node) bool
+	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
+	MatchedSigners(ids []NodeID) bool
+	// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
+	Aggregate(signedMsg MessageSignature) error
+}
+
 // SSVMessage is the main message passed within the SSV network, it can contain different types of messages (QBTF, Sync, etc.)
 type SSVMessage interface {
 	MessageEncoder

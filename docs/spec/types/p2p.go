@@ -1,10 +1,8 @@
 package types
 
-import "github.com/bloxapp/ssv/docs/spec/qbft"
-
-// QBFTNetwork holds all QBFT relevant networking functions
+// QBFTNetwork is a collection of funcs for the QBFT network
 type QBFTNetwork interface {
-	BroadcastSignedMessage(msg qbft.SignedMessage) error
+	BroadcastSignedMessage(msg MessageEncoder) error
 }
 
 // SSVNetwork holds all SSV relevant networking functions
