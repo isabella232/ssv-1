@@ -1,5 +1,7 @@
 package qbft
 
+import "github.com/bloxapp/ssv/docs/spec/types"
+
 type MessageType int
 
 const (
@@ -9,17 +11,9 @@ const (
 	RoundChangeType
 )
 
-type MessageEncoder interface {
-	// Encode returns a msg encoded bytes or error
-	Encode() ([]byte, error)
-	// Decode returns error if decoding failed
-	Decode(data []byte) error
-	// Digest returns a digest of the msg including any msg specific data, used for signing and verification
-	Digest() []byte
-}
-
 type Message interface {
-	MessageEncoder
+	types.MessageEncoder
+	types.MessageDigest
 
 	// GetType returns the msg type
 	GetType() MessageType
@@ -41,8 +35,6 @@ type Message interface {
 }
 
 type SignedMessage interface {
-	MessageEncoder
-
 	// GetMessage returns the message for which this signature is for
 	GetMessage() Message
 	// GetSignature returns the signature
