@@ -3,8 +3,6 @@ package types
 import (
 	"encoding/hex"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
-	"github.com/bloxapp/ssv/docs/spec/ssv"
 )
 
 type MessageID []byte
@@ -59,9 +57,6 @@ type SSVMessage interface {
 	GetType() Type
 	// GetID returns a unique msg ID that is used to identify to which validator should the message be sent for processing
 	GetID() MessageID
-
-	// GetQBFTSignedMessage returns qbft.SignedMessage if able to parse or error
-	GetQBFTSignedMessage() (qbft.SignedMessage, error)
-	// GetPostConsensusSigMessage returns ssv.PostConsensusSigMessage if able to parse or error
-	GetPostConsensusSigMessage() (ssv.PostConsensusSigMessage, error)
+	// GetData returns message data as byte slice
+	GetData() []byte
 }

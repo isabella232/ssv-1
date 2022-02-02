@@ -5,16 +5,17 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/ibft/proto"
 	"github.com/pkg/errors"
 )
 
 var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
-var committee = []qbft.NodeID{1, 2, 3, 4}
+var committee = []types.NodeID{1, 2, 3, 4}
 
 type testingPostConsensusSigMessage struct {
 	height   uint64
-	signerID qbft.NodeID
+	signerID types.NodeID
 	sig      []byte
 }
 
@@ -22,7 +23,7 @@ func (tpcsm *testingPostConsensusSigMessage) GetHeight() uint64 {
 	return tpcsm.height
 }
 
-func (tpcsm *testingPostConsensusSigMessage) GetSignerID() qbft.NodeID {
+func (tpcsm *testingPostConsensusSigMessage) GetSignerID() types.NodeID {
 	return tpcsm.signerID
 }
 
@@ -32,7 +33,7 @@ func (tpcsm *testingPostConsensusSigMessage) GetSig() []byte {
 
 func NewTestingDutyExecutionState() *dutyExecutionState {
 	return &dutyExecutionState{
-		collectedPartialSigs: make(map[qbft.NodeID][]byte),
+		collectedPartialSigs: make(map[types.NodeID][]byte),
 	}
 }
 
@@ -148,7 +149,7 @@ func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleT
 
 type testingShare struct {
 	validatorPK   []byte
-	qbftCommittee []qbft.NodeID
+	qbftCommittee []types.NodeID
 	quorum        uint64
 }
 
@@ -162,7 +163,7 @@ func (s *testingShare) GetValidatorPubKey() []byte {
 	return s.validatorPK
 }
 
-func (s *testingShare) GetQBFTCommittee() []qbft.NodeID {
+func (s *testingShare) GetQBFTCommittee() []types.NodeID {
 	return s.qbftCommittee
 }
 

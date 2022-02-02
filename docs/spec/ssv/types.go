@@ -3,7 +3,6 @@ package ssv
 import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
@@ -28,7 +27,7 @@ type Share interface {
 	Sign(data []byte) ([]byte, error)
 	// GetValidatorPubKey returns the validator public key to which the share is associated with
 	GetValidatorPubKey() []byte
-	GetQBFTCommittee() []qbft.NodeID
+	GetQBFTCommittee() []types.NodeID
 	GetQuorumCount() uint64
 }
 

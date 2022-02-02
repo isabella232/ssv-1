@@ -5,6 +5,7 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -20,15 +21,19 @@ type dutyExecutionState struct {
 	signedAttestation *spec.Attestation
 	signedProposal    *spec.SignedBeaconBlock
 
-	collectedPartialSigs map[qbft.NodeID][]byte
+	collectedPartialSigs map[types.NodeID][]byte
 	postConsensusSigRoot []byte
 	// quorumCount is the number of min signatures needed for quorum
 	quorumCount uint64
 }
 
 func (pcs *dutyExecutionState) AddPartialSig(sigMsg PostConsensusSigMessage) {
-	if pcs.collectedPartialSigs[sigMsg.GetSignerID()] == nil {
-		pcs.collectedPartialSigs[sigMsg.GetSignerID()] = sigMsg.GetSig()
+	if len(sigMsg.GetSigners()) != 1 {
+		return // TODO should be done better
+	}
+
+	if pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] == nil {
+		pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] = sigMsg.GetSignature()
 	}
 }
 
@@ -50,7 +55,7 @@ type DutyRunner struct {
 	// dutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
 	dutyExecutionState *dutyExecutionState
 	qbftController     qbft.IController
-	nodeID             qbft.NodeID
+	nodeID             types.NodeID
 	share              Share
 }
 
@@ -123,7 +128,7 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer 
 		dr.dutyExecutionState.decidedValue = decidedValue
 		dr.dutyExecutionState.signedAttestation = signedAttestation
 		dr.dutyExecutionState.postConsensusSigRoot = ensureRoot(r)
-		dr.dutyExecutionState.collectedPartialSigs = map[qbft.NodeID][]byte{}
+		dr.dutyExecutionState.collectedPartialSigs = map[types.NodeID][]byte{}
 
 		return nil
 	default:
