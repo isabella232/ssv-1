@@ -23,7 +23,7 @@ type IInstance interface {
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
 	state      State
-	p2pNetwork types.P2P
+	p2pNetwork types.QBFTNetwork
 	valueCheck types.ValueCheck
 
 	proposeContainer     MsgContainer

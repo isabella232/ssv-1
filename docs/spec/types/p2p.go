@@ -2,6 +2,7 @@ package types
 
 import "github.com/bloxapp/ssv/docs/spec/qbft"
 
-type P2P interface {
+// QBFTNetwork holds all QBFT relevant networking functions
+type QBFTNetwork interface {
 	BroadcastSignedMessage(msg qbft.SignedMessage) error
 }

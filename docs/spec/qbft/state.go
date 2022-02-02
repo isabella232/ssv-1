@@ -23,7 +23,7 @@ type Config interface {
 	// GetValueCheck returns value check instance
 	GetValueCheck() types.ValueCheck
 	// GetNetwork returns a p2p Network instance
-	GetP2PNetwork() types.P2P
+	GetP2PNetwork() types.QBFTNetwork
 	// GetTimer returns round timer
 	GetTimer() Timer
 }
