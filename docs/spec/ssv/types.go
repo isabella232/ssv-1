@@ -7,12 +7,8 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 )
 
+// ValidatorID is an eth2 validator public key
 type ValidatorID []byte
-
-// ValidatorIDFromPubKey returns ValidatorID from a validator public key
-func ValidatorIDFromPubKey(pk []byte) ValidatorID {
-	return pk
-}
 
 // MessageIDBelongs returns true if message ID belongs to validator
 func (vid ValidatorID) MessageIDBelongs(msgID network.MessageID) bool {
@@ -26,11 +22,6 @@ type DutyRunners map[beacon.RoleType]*DutyRunner
 func (ci DutyRunners) DutyRunnerForMsgID(msgID network.MessageID) *DutyRunner {
 	panic("implement")
 }
-
-//// ControllerFromDuty returns a QBFT controller from the provided duty, nil if not found
-//func (ci DutyRunners) ControllerFromDuty(duty *beacon.Duty) *qbft.Controller {
-//	panic("implement")
-//}
 
 type Share interface {
 	// Sign will return a signature using the share secret key
