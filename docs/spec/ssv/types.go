@@ -3,15 +3,15 @@ package ssv
 import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/network"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
 // ValidatorID is an eth2 validator public key
 type ValidatorID []byte
 
 // MessageIDBelongs returns true if message ID belongs to validator
-func (vid ValidatorID) MessageIDBelongs(msgID network.MessageID) bool {
+func (vid ValidatorID) MessageIDBelongs(msgID types.MessageID) bool {
 	panic("implement")
 }
 
@@ -19,7 +19,7 @@ func (vid ValidatorID) MessageIDBelongs(msgID network.MessageID) bool {
 type DutyRunners map[beacon.RoleType]*DutyRunner
 
 // DutyRunnerForMsgID returns a DutyRunner from the provided msg ID, or nil if not found
-func (ci DutyRunners) DutyRunnerForMsgID(msgID network.MessageID) *DutyRunner {
+func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *DutyRunner {
 	panic("implement")
 }
 
@@ -33,7 +33,7 @@ type Share interface {
 }
 
 type Network interface {
-	BroadcastMessage(message network.Message) error
+	BroadcastMessage(message types.SSVMessage) error
 }
 
 // consensusData holds all relevant duty and data decided on by consensus

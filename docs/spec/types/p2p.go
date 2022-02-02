@@ -6,3 +6,7 @@ import "github.com/bloxapp/ssv/docs/spec/qbft"
 type QBFTNetwork interface {
 	BroadcastSignedMessage(msg qbft.SignedMessage) error
 }
+
+// SSVNetwork holds all SSV relevant networking functions
+type SSVNetwork interface {
+}

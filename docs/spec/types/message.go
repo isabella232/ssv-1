@@ -1,4 +1,4 @@
-package network
+package types
 
 import (
 	"encoding/hex"
@@ -27,19 +27,20 @@ const (
 	PostConsensusSignature
 )
 
-type Message interface {
+// SSVMessage is the main message passed within the SSV network, it can contain different types of messages (QBTF, Sync, etc.)
+type SSVMessage interface {
 	GetType() Type
 	// GetID returns a unique msg ID that is used to identify to which validator should the message be sent for processing
 	GetID() MessageID
 	// GetData returns msg data
 	GetData() []byte
 
-	// GetSigningData returns signing data for the message to be used for signing the message
-	GetSigningData() []byte
+	// GetSigningRoot returns the signing root for the message to be used for signing the message, cimi
+	GetSigningRoot() []byte
 }
 
-type SignedMessage interface {
+type SignedSSVMessage interface {
 	GetSigner() qbft.NodeID
 	GetSig() []byte
-	GetMessage() Message
+	GetMessage() SSVMessage
 }

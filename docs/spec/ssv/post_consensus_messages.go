@@ -2,7 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/network"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -40,6 +40,6 @@ func (v *Validator) verifyPostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg
 	panic("implement")
 }
 
-func (v *Validator) createPartialSigMsg(sig []byte) network.Message {
+func (v *Validator) createPartialSigMsg(sig []byte) types.SSVMessage {
 	panic("implement")
 }

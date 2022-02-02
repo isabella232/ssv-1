@@ -2,8 +2,8 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/network"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -32,7 +32,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg qbft.SignedM
 		return errors.Wrap(err, "failed to sign duty")
 	}
 
-	var msgToBroadcast network.Message
+	var msgToBroadcast types.SSVMessage
 	switch dutyRunner.beaconRoleType {
 	case beacon.RoleTypeAttester:
 		msgToBroadcast = v.createPartialSigMsg(dutyRunner.dutyExecutionState.signedAttestation.Signature[:])
