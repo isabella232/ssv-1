@@ -2,6 +2,7 @@ package qbft
 
 import (
 	"bytes"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -69,7 +70,7 @@ func validPreparesForHeightRoundAndDigest(
 	height uint64,
 	round Round,
 	value []byte,
-	nodes []Node) SignedMessage {
+	nodes []types.Node) SignedMessage {
 	var aggregatedPrepareMsg SignedMessage
 	for _, signedMsg := range prepareMessages {
 		if err := validSignedPrepareForHeightRoundAndValue(signedMsg, height, round, value, nodes); err == nil {
@@ -90,7 +91,7 @@ func validSignedPrepareForHeightRoundAndValue(
 	height uint64,
 	round Round,
 	value []byte,
-	nodes []Node) error {
+	nodes []types.Node) error {
 	if signedPrepare.GetMessage().GetType() != PrepareType {
 		return errors.New("prepare msg type is wrong")
 	}

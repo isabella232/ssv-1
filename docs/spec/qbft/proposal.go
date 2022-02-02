@@ -38,7 +38,7 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck types.V
 		return errors.New("proposal height is wrong")
 	}
 	// TODO - where do we check signedProposal sig
-	if !signedProposal.MatchedSigners([]NodeID{proposer(state, signedProposal.GetMessage().GetRound())}) {
+	if !signedProposal.MatchedSigners([]types.NodeID{proposer(state, signedProposal.GetMessage().GetRound())}) {
 		return errors.New("proposal leader invalid")
 	}
 	if err := isProposalJustification(
@@ -49,7 +49,7 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck types.V
 		signedProposal.GetMessage().GetRound(),
 		signedProposal.GetMessage().GetProposalData().GetData(),
 		valCheck,
-		signedProposal.GetSignerIds()[0], // already verified sig so we know there is 1 signer
+		signedProposal.GetSigners()[0], // already verified sig so we know there is 1 signer
 	); err != nil {
 		return errors.Wrap(err, "proposal not justified")
 	}
@@ -70,7 +70,7 @@ func isProposalJustification(
 	round Round,
 	value []byte,
 	valCheck types.ValueCheck,
-	roundLeader NodeID,
+	roundLeader types.NodeID,
 ) error {
 	if err := valCheck.Check(value); err != nil {
 		return errors.Wrap(err, "proposal value invalid")
@@ -133,7 +133,7 @@ func isProposalJustification(
 	}
 }
 
-func proposer(state State, round Round) NodeID {
+func proposer(state State, round Round) types.NodeID {
 	panic("implement")
 }
 

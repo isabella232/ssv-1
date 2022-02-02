@@ -2,6 +2,7 @@ package qbft
 
 import (
 	"bytes"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -72,7 +73,7 @@ func validateCommit(
 	signedCommit SignedMessage,
 	height uint64,
 	round Round,
-	nodes []Node,
+	nodes []types.Node,
 ) error {
 	if signedCommit.GetMessage().GetType() != CommitType {
 		return errors.New("commit msg type is wrong")
