@@ -22,8 +22,8 @@ type Config interface {
 	HasPartialQuorum([]SignedMessage) bool
 	// GetValueCheck returns value check instance
 	GetValueCheck() types.ValueCheck
-	// GetNetwork returns network instance
-	GetNetwork() Network
+	// GetNetwork returns a p2p Network instance
+	GetP2PNetwork() types.P2P
 	// GetTimer returns round timer
 	GetTimer() Timer
 }

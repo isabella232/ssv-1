@@ -35,7 +35,7 @@ func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, 
 
 	proposedValue := state.GetProposalAcceptedForCurrentRound().GetMessage().GetProposalData().GetData()
 	commitMsg := createCommit(state, proposedValue)
-	if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(commitMsg); err != nil {
+	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 

@@ -23,7 +23,7 @@ type IInstance interface {
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
 	state      State
-	network    Network
+	p2pNetwork types.P2P
 	valueCheck types.ValueCheck
 
 	proposeContainer     MsgContainer
@@ -48,7 +48,7 @@ func (i *Instance) Start(value []byte, height uint64) {
 		// propose if this node is the proposer
 		if proposer(i.state, FirstRound) == i.state.GetConfig().GetID() {
 			proposal := createProposal(i.state, i.startValue)
-			if err := i.state.GetConfig().GetNetwork().BroadcastSignedMessage(proposal); err != nil {
+			if err := i.state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
 				// TODO - log
 			}
 		}
