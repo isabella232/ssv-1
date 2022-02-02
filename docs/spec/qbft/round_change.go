@@ -22,7 +22,7 @@ func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMs
 		}
 
 		proposal := createProposal(state, value)
-		if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(proposal); err != nil {
+		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
 
@@ -32,7 +32,7 @@ func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMs
 		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.GetMessage().GetHeight(), signedRoundChange.GetMessage().GetRound()))
 
 		roundChange := createRoundChange(state, newRound)
-		if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(roundChange); err != nil {
+		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(roundChange); err != nil {
 			return errors.Wrap(err, "failed to broadcast round change message")
 		}
 

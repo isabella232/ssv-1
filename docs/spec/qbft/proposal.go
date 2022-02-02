@@ -17,7 +17,7 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 	newRound := signedProposal.GetMessage().GetRound()
 
 	prepare := createPrepare(state, newRound, signedProposal.GetMessage().GetProposalData().GetData())
-	if err := state.GetConfig().GetNetwork().BroadcastSignedMessage(prepare); err != nil {
+	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
 
