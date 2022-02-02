@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/ssv"
 )
 
 type MessageID []byte
@@ -27,20 +28,29 @@ const (
 	PostConsensusSignature
 )
 
+type MessageEncoder interface {
+	// Encode returns a msg encoded bytes or error
+	Encode() ([]byte, error)
+	// Decode returns error if decoding failed
+	Decode(data []byte) error
+}
+
+type MessageDigest interface {
+	// Digest returns a digest of the msg including any msg specific data, used for signing and verification
+	Digest() []byte
+}
+
 // SSVMessage is the main message passed within the SSV network, it can contain different types of messages (QBTF, Sync, etc.)
 type SSVMessage interface {
+	MessageEncoder
+	MessageDigest
+
 	GetType() Type
 	// GetID returns a unique msg ID that is used to identify to which validator should the message be sent for processing
 	GetID() MessageID
-	// GetData returns msg data
-	GetData() []byte
 
-	// GetSigningRoot returns the signing root for the message to be used for signing the message, cimi
-	GetSigningRoot() []byte
-}
-
-type SignedSSVMessage interface {
-	GetSigner() qbft.NodeID
-	GetSig() []byte
-	GetMessage() SSVMessage
+	// GetQBFTSignedMessage returns qbft.SignedMessage if able to parse or error
+	GetQBFTSignedMessage() (qbft.SignedMessage, error)
+	// GetPostConsensusSigMessage returns ssv.PostConsensusSigMessage if able to parse or error
+	GetPostConsensusSigMessage() (ssv.PostConsensusSigMessage, error)
 }
