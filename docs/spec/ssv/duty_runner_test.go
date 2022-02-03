@@ -2,7 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -156,7 +156,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		inst := newTestingQBFTInstance()
 		inst.decided = true
 		dr.dutyExecutionState = &dutyExecutionState{
-			collectedPartialSigs: make(map[qbft.NodeID][]byte),
+			collectedPartialSigs: make(map[types.NodeID][]byte),
 			runningInstance:      inst,
 			quorumCount:          3,
 			decidedValue: &consensusData{
@@ -206,7 +206,7 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		dr.dutyExecutionState = &dutyExecutionState{
-			collectedPartialSigs: make(map[qbft.NodeID][]byte),
+			collectedPartialSigs: make(map[types.NodeID][]byte),
 			quorumCount:          3,
 		}
 		decidedValue := &consensusData{

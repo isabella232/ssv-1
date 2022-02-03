@@ -1,6 +1,7 @@
 package ssv
 
 import (
+	"bytes"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
@@ -11,7 +12,8 @@ type ValidatorID []byte
 
 // MessageIDBelongs returns true if message ID belongs to validator
 func (vid ValidatorID) MessageIDBelongs(msgID types.MessageID) bool {
-	panic("implement")
+	toMatch := msgID[:len(vid)]
+	return bytes.Equal(vid, toMatch)
 }
 
 // DutyRunners is a map of duty runners mapped by msg id hex.

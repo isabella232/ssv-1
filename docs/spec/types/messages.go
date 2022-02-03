@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"github.com/bloxapp/ssv/beacon"
 )
@@ -8,7 +9,9 @@ import (
 type MessageID []byte
 
 func MessageIDForValidatorPKAndRole(pk []byte, role beacon.RoleType) MessageID {
-	panic("implement")
+	roleByts := make([]byte, 4)
+	binary.LittleEndian.PutUint32(roleByts, uint32(role))
+	return append(pk, roleByts...)
 }
 
 func (msgID MessageID) String() string {

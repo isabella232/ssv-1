@@ -19,16 +19,39 @@ type testingPostConsensusSigMessage struct {
 	sig      []byte
 }
 
+func (tpcsm *testingPostConsensusSigMessage) Encode() ([]byte, error) {
+	panic("implement")
+}
+
+func (tpcsm *testingPostConsensusSigMessage) Decode(data []byte) error {
+	panic("implement")
+}
+
 func (tpcsm *testingPostConsensusSigMessage) GetHeight() uint64 {
 	return tpcsm.height
 }
 
-func (tpcsm *testingPostConsensusSigMessage) GetSignerID() types.NodeID {
-	return tpcsm.signerID
+func (tpcsm *testingPostConsensusSigMessage) GetSignature() []byte {
+	return tpcsm.sig
 }
 
-func (tpcsm *testingPostConsensusSigMessage) GetSig() []byte {
-	return tpcsm.sig
+func (tpcsm *testingPostConsensusSigMessage) GetSigners() []types.NodeID {
+	return []types.NodeID{tpcsm.signerID}
+}
+
+// IsValidSignature returns true if signature is valid (against message and signers)
+func (tpcsm *testingPostConsensusSigMessage) IsValidSignature(nodes []types.Node) bool {
+	panic("implement")
+}
+
+// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
+func (tpcsm *testingPostConsensusSigMessage) MatchedSigners(ids []types.NodeID) bool {
+	panic("implement")
+}
+
+// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
+func (tpcsm *testingPostConsensusSigMessage) Aggregate(signedMsg types.MessageSignature) error {
+	panic("implement")
 }
 
 func NewTestingDutyExecutionState() *dutyExecutionState {
