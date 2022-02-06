@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg PostConsensusSigMessage) error {
+func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *PostConsensusSigMessage) error {
 	if err := v.verifyPostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
 		return errors.Wrap(err, "partial sig invalid")
 	}
@@ -36,7 +36,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg PostC
 	return nil
 }
 
-func (v *Validator) verifyPostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg PostConsensusSigMessage) error {
+func (v *Validator) verifyPostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg types.MessageSignature) error {
 	panic("implement")
 }
 

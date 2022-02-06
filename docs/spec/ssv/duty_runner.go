@@ -27,14 +27,15 @@ type dutyExecutionState struct {
 	quorumCount uint64
 }
 
-func (pcs *dutyExecutionState) AddPartialSig(sigMsg PostConsensusSigMessage) {
+func (pcs *dutyExecutionState) AddPartialSig(sigMsg types.MessageSignature) error {
 	if len(sigMsg.GetSigners()) != 1 {
-		return // TODO should be done better
+		return errors.New("PostConsensusSigMessage has != 1 signers")
 	}
 
 	if pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] == nil {
 		pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] = sigMsg.GetSignature()
 	}
+	return nil
 }
 
 // ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig

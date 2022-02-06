@@ -37,11 +37,12 @@ type MessageEncoder interface {
 }
 
 type MessageDigest interface {
-	// Digest returns a digest of the msg including any msg specific data, used for signing and verification
-	Digest() []byte
+	// GetRoot returns the root used for signing and verification
+	GetRoot() []byte
 }
 
 type MessageSignature interface {
+	MessageDigest
 	GetSignature() []byte
 	GetSigners() []NodeID
 	// IsValidSignature returns true if signature is valid (against message and signers)
@@ -55,7 +56,6 @@ type MessageSignature interface {
 // SSVMessage is the main message passed within the SSV network, it can contain different types of messages (QBTF, Sync, etc.)
 type SSVMessage interface {
 	MessageEncoder
-	MessageDigest
 
 	GetType() Type
 	// GetID returns a unique msg ID that is used to identify to which validator should the message be sent for processing

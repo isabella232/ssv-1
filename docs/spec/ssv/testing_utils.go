@@ -17,6 +17,7 @@ type testingPostConsensusSigMessage struct {
 	height   uint64
 	signerID types.NodeID
 	sig      []byte
+	root     []byte
 }
 
 func (tpcsm *testingPostConsensusSigMessage) Encode() ([]byte, error) {
@@ -52,6 +53,10 @@ func (tpcsm *testingPostConsensusSigMessage) MatchedSigners(ids []types.NodeID) 
 // Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
 func (tpcsm *testingPostConsensusSigMessage) Aggregate(signedMsg types.MessageSignature) error {
 	panic("implement")
+}
+
+func (tpcsm *testingPostConsensusSigMessage) GetRoot() []byte {
+	return tpcsm.root
 }
 
 func NewTestingDutyExecutionState() *dutyExecutionState {
@@ -225,4 +230,18 @@ func (s *testingSigner) SignAttestation(data *spec.AttestationData, duty *beacon
 		Signature: sig,
 	}
 	return att, sig[:], nil
+}
+
+type testingNode struct {
+	nodeID types.NodeID
+	pk     []byte
+}
+
+func (n *testingNode) GetPublicKey() []byte {
+	return n.pk
+}
+
+// GetID returns the node's ID
+func (n *testingNode) GetID() types.NodeID {
+	return n.nodeID
 }
