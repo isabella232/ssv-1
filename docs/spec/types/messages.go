@@ -7,9 +7,9 @@ type MessageEncoder interface {
 	Decode(data []byte) error
 }
 
-type MessageDigest interface {
-	// Digest returns a digest of the msg including any msg specific data, used for signing and verification
-	Digest() []byte
+type MessageRoot interface {
+	// GetRoot returns the root used for signing and verification
+	GetRoot() []byte
 }
 
 type MessageSignature interface {
