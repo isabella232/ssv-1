@@ -13,7 +13,7 @@ const (
 
 type Message interface {
 	types.MessageEncoder
-	types.MessageDigest
+	types.MessageRoot
 
 	// GetType returns the msg type
 	GetType() MessageType
@@ -36,7 +36,6 @@ type Message interface {
 
 type SignedMessage interface {
 	types.MessageEncoder
-	types.MessageDigest
 	types.MessageSignature
 	// GetMessage returns the message for which this signature is for
 	GetMessage() Message

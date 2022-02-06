@@ -36,7 +36,7 @@ type MessageEncoder interface {
 	Decode(data []byte) error
 }
 
-type MessageDigest interface {
+type MessageRoot interface {
 	// GetRoot returns the root used for signing and verification
 	GetRoot() []byte
 }
