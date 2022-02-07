@@ -5,7 +5,7 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-func verifySig(sig *bls.Sign, signers []types.NodeID, nodes []types.Node, root []byte) bool {
+func verifySig(sig *bls.Sign, signers []types.NodeID, nodes []*types.Node, root []byte) bool {
 	pks := make([]bls.PublicKey, 0)
 	for _, signer := range signers {
 		for _, n := range nodes {

@@ -63,11 +63,11 @@ func TestPostConsensusSigMessage_IsValidSignature(t *testing.T) {
 	sk4 := &bls.SecretKey{}
 	sk4.SetByCSPRNG()
 
-	nodes := []types.Node{
-		&testingNode{nodeID: 1, pk: sk1.GetPublicKey().Serialize()},
-		&testingNode{nodeID: 2, pk: sk2.GetPublicKey().Serialize()},
-		&testingNode{nodeID: 3, pk: sk3.GetPublicKey().Serialize()},
-		&testingNode{nodeID: 4, pk: sk4.GetPublicKey().Serialize()},
+	nodes := []*types.Node{
+		{NodeID: 1, PubKey: sk1.GetPublicKey().Serialize()},
+		{NodeID: 2, PubKey: sk2.GetPublicKey().Serialize()},
+		{NodeID: 3, PubKey: sk3.GetPublicKey().Serialize()},
+		{NodeID: 4, PubKey: sk4.GetPublicKey().Serialize()},
 	}
 
 	t.Run("valid sig single signer", func(t *testing.T) {

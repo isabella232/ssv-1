@@ -37,7 +37,10 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *Post
 }
 
 func (v *Validator) verifyPostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg types.MessageSignature) error {
-	panic("implement")
+	if !sigMsg.IsValidSignature(v.share.GetQBFTCommittee()) {
+		return errors.New("failed to verify signature")
+	}
+	return nil
 }
 
 func (v *Validator) createPartialSigMsg(sig []byte) types.SSVMessage {

@@ -35,7 +35,7 @@ type Network interface {
 
 type Share struct {
 	pubKey    []byte
-	committee []types.NodeID
+	committee []*types.Node
 	quorum    uint64
 }
 
@@ -44,7 +44,7 @@ func (share *Share) GetValidatorPubKey() []byte {
 	return share.pubKey
 }
 
-func (share *Share) GetQBFTCommittee() []types.NodeID {
+func (share *Share) GetQBFTCommittee() []*types.Node {
 	return share.committee
 }
 

@@ -34,7 +34,7 @@ func (pcsm *PostConsensusSigMessage) GetSigners() []types.NodeID {
 }
 
 // IsValidSignature returns true if signature is valid (against message and signers)
-func (pcsm *PostConsensusSigMessage) IsValidSignature(nodes []types.Node) bool {
+func (pcsm *PostConsensusSigMessage) IsValidSignature(nodes []*types.Node) bool {
 	sig, err := blsSig(pcsm.signature)
 	if err != nil {
 		return false
