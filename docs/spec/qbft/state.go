@@ -4,7 +4,7 @@ import "github.com/bloxapp/ssv/docs/spec/types"
 
 type Config interface {
 	// GetNodes returns instance nodes
-	GetNodes() []types.Node
+	GetNodes() []*types.Node
 	// GetID returns the specific node's ID
 	GetID() types.NodeID
 	// HasQuorum returns true if at least 2f+1 signatures present
