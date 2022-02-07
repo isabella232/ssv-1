@@ -29,17 +29,35 @@ func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *DutyRunner {
 	return ci[role]
 }
 
-type Share interface {
-	// Sign will return a signature using the share secret key
-	Sign(data []byte) ([]byte, error)
-	// GetValidatorPubKey returns the validator public key to which the share is associated with
-	GetValidatorPubKey() []byte
-	GetQBFTCommittee() []types.NodeID
-	GetQuorumCount() uint64
-}
-
 type Network interface {
 	BroadcastMessage(message types.SSVMessage) error
+}
+
+type Share struct {
+	pubKey    []byte
+	committee []types.NodeID
+	quorum    uint64
+}
+
+// GetValidatorPubKey returns the validator public key to which the share is associated with
+func (share *Share) GetValidatorPubKey() []byte {
+	return share.pubKey
+}
+
+func (share *Share) GetQBFTCommittee() []types.NodeID {
+	return share.committee
+}
+
+func (share *Share) GetQuorumCount() uint64 {
+	return share.quorum
+}
+
+func (share *Share) Encode() ([]byte, error) {
+	return json.Marshal(share)
+}
+
+func (share *Share) Decode(data []byte) error {
+	return json.Unmarshal(data, share)
 }
 
 // consensusData holds all relevant duty and data decided on by consensus

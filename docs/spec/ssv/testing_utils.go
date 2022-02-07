@@ -175,30 +175,6 @@ func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleT
 	return nil, errors.New("can't find role")
 }
 
-type testingShare struct {
-	validatorPK   []byte
-	qbftCommittee []types.NodeID
-	quorum        uint64
-}
-
-// Sign will return a signature using the share secret key
-func (s *testingShare) Sign(data []byte) ([]byte, error) {
-	return nil, nil
-}
-
-// GetValidatorPubKey returns the validator public key to which the share is associated with
-func (s *testingShare) GetValidatorPubKey() []byte {
-	return s.validatorPK
-}
-
-func (s *testingShare) GetQBFTCommittee() []types.NodeID {
-	return s.qbftCommittee
-}
-
-func (s *testingShare) GetQuorumCount() uint64 {
-	return s.quorum
-}
-
 func newTestingDutyRunner() *DutyRunner {
 	return &DutyRunner{
 		beaconRoleType: beacon.RoleTypeAttester,
@@ -206,10 +182,10 @@ func newTestingDutyRunner() *DutyRunner {
 		storage:        newTestingStorage(),
 		qbftController: NewTestingQBFTController([]byte{1, 2, 3, 4}),
 		nodeID:         1,
-		share: &testingShare{
-			validatorPK:   testingValidatorPK[:],
-			qbftCommittee: committee,
-			quorum:        3,
+		share: &Share{
+			pubKey:    testingValidatorPK[:],
+			committee: committee,
+			quorum:    3,
 		},
 	}
 }

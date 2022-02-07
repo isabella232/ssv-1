@@ -57,7 +57,7 @@ type DutyRunner struct {
 	dutyExecutionState *dutyExecutionState
 	qbftController     qbft.IController
 	nodeID             types.NodeID
-	share              Share
+	share              *Share
 }
 
 // CanStartNewDuty returns nil if:
