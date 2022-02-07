@@ -10,10 +10,6 @@ func consensusMsgFromNetworkMsg(msg types.SSVMessage) (qbft.SignedMessage, error
 	panic("implement")
 }
 
-func postConsensusSigMsgFromNetworkMsg(msg types.SSVMessage) (PostConsensusSigMessage, error) {
-	panic("implement")
-}
-
 // ProcessMessage processes network message of all types
 func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	if err := v.validateMessage(msg); err != nil {
@@ -46,15 +42,23 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	}
 }
 
-func (v *Validator) validateMessage(signedMsg types.SSVMessage) error {
-	if !v.id.MessageIDBelongs(signedMsg.GetID()) {
+func (v *Validator) validateMessage(msg types.SSVMessage) error {
+	if !v.id.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}
 
-	dutyRunner := v.dutyRunners.DutyRunnerForMsgID(signedMsg.GetID())
+	dutyRunner := v.dutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
-		return errors.Errorf("could not get duty runner for msg ID %s", signedMsg.GetID().String())
+		return errors.Errorf("could not get duty runner for msg ID %s", msg.GetID().String())
 	}
 
-	panic("implement")
+	if msg.GetType() > 2 {
+		return errors.New("msg type not supported")
+	}
+
+	if len(msg.GetData()) == 0 {
+		return errors.New("msg data is invalid")
+	}
+
+	return nil
 }
