@@ -1,17 +1,12 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/utils/threshold"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
-
-func TestMessageIDForValidatorPKAndRole(t *testing.T) {
-	require.EqualValues(t, []byte{1, 2, 3, 4, 1, 0, 0, 0}, types.MessageIDForValidatorPKAndRole([]byte{1, 2, 3, 4}, beacon.RoleTypeAttester))
-}
 
 func TestPostConsensusSigMessage_MatchedSigners(t *testing.T) {
 	t.Run("matched same order", func(t *testing.T) {

@@ -8,6 +8,11 @@ import (
 
 type MessageID []byte
 
+func (msg MessageID) GetRoleType() beacon.RoleType {
+	roleByts := msg[len(msg)-4:]
+	return beacon.RoleType(binary.LittleEndian.Uint32(roleByts))
+}
+
 func MessageIDForValidatorPKAndRole(pk []byte, role beacon.RoleType) MessageID {
 	roleByts := make([]byte, 4)
 	binary.LittleEndian.PutUint32(roleByts, uint32(role))
@@ -42,7 +47,7 @@ type MessageRoot interface {
 }
 
 type MessageSignature interface {
-	MessageDigest
+	MessageRoot
 	GetSignature() []byte
 	GetSigners() []NodeID
 	// IsValidSignature returns true if signature is valid (against message and signers)

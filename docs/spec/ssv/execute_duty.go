@@ -30,7 +30,12 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
 	}
 
-	if err := dutyRunner.StartNewInstance(input.Marshal()); err != nil {
+	byts, err := input.Encode()
+	if err != nil {
+		return errors.Wrap(err, "could not encode input")
+	}
+
+	if err := dutyRunner.StartNewInstance(byts); err != nil {
 		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
 
