@@ -73,7 +73,7 @@ func validateCommit(
 	signedCommit SignedMessage,
 	height uint64,
 	round Round,
-	nodes []types.Node,
+	nodes []*types.Node,
 ) error {
 	if signedCommit.GetMessage().GetType() != CommitType {
 		return errors.New("commit msg type is wrong")
