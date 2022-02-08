@@ -30,7 +30,7 @@ func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *DutyRunner {
 }
 
 type Network interface {
-	BroadcastMessage(message types.SSVMessage) error
+	BroadcastMessage(message *types.SSVMessage) error
 }
 
 type Share struct {

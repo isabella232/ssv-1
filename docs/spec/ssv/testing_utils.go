@@ -26,7 +26,11 @@ var committee = []*types.Node{
 	},
 }
 
-func NewTestingDutyExecutionState() *dutyExecutionState {
+func newTestingValidator() *Validator {
+	return &Validator{}
+}
+
+func newTestingDutyExecutionState() *dutyExecutionState {
 	return &dutyExecutionState{
 		collectedPartialSigs: make(map[types.NodeID][]byte),
 	}
@@ -38,7 +42,7 @@ type testingQBFTController struct {
 	identifier []byte
 }
 
-func NewTestingQBFTController(identifier []byte) *testingQBFTController {
+func newTestingQBFTController(identifier []byte) *testingQBFTController {
 	return &testingQBFTController{
 		identifier: identifier,
 		height:     0,
@@ -147,7 +151,7 @@ func newTestingDutyRunner() *DutyRunner {
 		beaconRoleType: beacon.RoleTypeAttester,
 		validatorPK:    testingValidatorPK[:],
 		storage:        newTestingStorage(),
-		qbftController: NewTestingQBFTController([]byte{1, 2, 3, 4}),
+		qbftController: newTestingQBFTController([]byte{1, 2, 3, 4}),
 		nodeID:         1,
 		share: &Share{
 			pubKey:    testingValidatorPK[:],

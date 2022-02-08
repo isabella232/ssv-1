@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -24,20 +23,25 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg qbft.SignedM
 	/**
 	Decided returns true only once so if it is true it must be for the current running instance
 	*/
-
-	var decidedValue *consensusData
-	// TODO - parse decidedValueByts to decidedValue
-
-	if err := dutyRunner.DecideRunningInstance(decidedValue, v.signer); err != nil {
-		return errors.Wrap(err, "failed to sign duty")
+	decidedValue := &consensusData{}
+	if err := decidedValue.Decode(decidedValueByts); err != nil {
+		return errors.Wrap(err, "failed to parse decided value to consensusData")
 	}
 
-	var msgToBroadcast types.SSVMessage
-	switch dutyRunner.beaconRoleType {
-	case beacon.RoleTypeAttester:
-		msgToBroadcast = v.createPartialSigMsg(dutyRunner.dutyExecutionState.signedAttestation.Signature[:])
-	default:
-		return errors.Errorf("duty type %s unkwon", dutyRunner.beaconRoleType.String())
+	postConsensusMsg, err := dutyRunner.DecideRunningInstance(decidedValue, v.signer)
+	if err != nil {
+		return errors.Wrap(err, "failed to decide duty at runner")
+	}
+
+	data, err := postConsensusMsg.Encode()
+	if err != nil {
+		return errors.Wrap(err, "failed to encode PostConsensusSigMessage")
+	}
+
+	msgToBroadcast := &types.SSVMessage{
+		MsgType: types.PostConsensusSignature,
+		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.GetValidatorPubKey(), dutyRunner.beaconRoleType),
+		Data:    data,
 	}
 
 	if err := v.network.BroadcastMessage(msgToBroadcast); err != nil {
