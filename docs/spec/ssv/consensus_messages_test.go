@@ -13,4 +13,8 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 
 		require.NoError(t, v.processConsensusMsg(dr, &qbft.SignedMessage{}))
 	})
+
+	t.Run("failed msg processing", func(t *testing.T) {
+		t.Fail()
+	})
 }

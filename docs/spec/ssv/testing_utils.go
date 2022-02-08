@@ -27,7 +27,9 @@ var committee = []*types.Node{
 }
 
 func newTestingValidator() *Validator {
-	return &Validator{}
+	return &Validator{
+		valCheck: &testingValCheckPassAll{},
+	}
 }
 
 func newTestingDutyExecutionState() *dutyExecutionState {
@@ -61,7 +63,7 @@ func (tContr *testingQBFTController) StartNewInstance(value []byte) error {
 
 // ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
 // decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
-func (tContr *testingQBFTController) ProcessMsg(msg qbft.SignedMessage) (bool, []byte, error) {
+func (tContr *testingQBFTController) ProcessMsg(msg *qbft.SignedMessage) (bool, []byte, error) {
 	return false, nil, nil
 }
 
@@ -101,7 +103,7 @@ func (tInstance *testingQBFTInstance) Start(value []byte, height uint64) {
 }
 
 // ProcessMsg implementation
-func (tInstance *testingQBFTInstance) ProcessMsg(msg qbft.SignedMessage) (decided bool, decidedValue []byte, err error) {
+func (tInstance *testingQBFTInstance) ProcessMsg(msg *qbft.SignedMessage) (decided bool, decidedValue []byte, err error) {
 	return false, nil, nil
 
 }
@@ -191,4 +193,11 @@ func (n *testingNode) GetPublicKey() []byte {
 // GetID returns the node's ID
 func (n *testingNode) GetID() types.NodeID {
 	return n.nodeID
+}
+
+type testingValCheckPassAll struct {
+}
+
+func (valCheck *testingValCheckPassAll) Check(value []byte) error {
+	return nil
 }

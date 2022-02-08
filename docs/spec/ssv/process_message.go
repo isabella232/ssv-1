@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func consensusMsgFromNetworkMsg(msg types.SSVMessage) (qbft.SignedMessage, error) {
+func consensusMsgFromNetworkMsg(msg types.SSVMessage) (*qbft.SignedMessage, error) {
 	panic("implement")
 }
 
