@@ -42,7 +42,3 @@ func (v *Validator) verifyPostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg
 	}
 	return nil
 }
-
-func (v *Validator) createPartialSigMsg(sig []byte) types.SSVMessage {
-	panic("implement")
-}

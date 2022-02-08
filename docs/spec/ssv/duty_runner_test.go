@@ -9,7 +9,7 @@ import (
 
 func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	t.Run("add to empty", func(t *testing.T) {
-		s := NewTestingDutyExecutionState()
+		s := newTestingDutyExecutionState()
 		s.AddPartialSig(&PostConsensusSigMessage{
 			signers: []types.NodeID{1},
 		})
@@ -18,7 +18,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	})
 
 	t.Run("add multiple", func(t *testing.T) {
-		s := NewTestingDutyExecutionState()
+		s := newTestingDutyExecutionState()
 		s.AddPartialSig(&PostConsensusSigMessage{
 			signers: []types.NodeID{1},
 		})
@@ -33,7 +33,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	})
 
 	t.Run("add duplicate", func(t *testing.T) {
-		s := NewTestingDutyExecutionState()
+		s := newTestingDutyExecutionState()
 		s.AddPartialSig(&PostConsensusSigMessage{
 			signers: []types.NodeID{1},
 		})
@@ -217,7 +217,8 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 			},
 			AttestationData: nil,
 		}
-		require.NoError(t, dr.DecideRunningInstance(decidedValue, &testingSigner{}))
+		_, err := dr.DecideRunningInstance(decidedValue, &testingSigner{})
+		require.NoError(t, err)
 		require.NotNil(t, dr.dutyExecutionState.decidedValue)
 		require.NotNil(t, dr.dutyExecutionState.signedAttestation)
 		require.NotNil(t, dr.dutyExecutionState.postConsensusSigRoot)

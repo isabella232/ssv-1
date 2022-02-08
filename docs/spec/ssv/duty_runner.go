@@ -14,6 +14,7 @@ const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
 
 // dutyExecutionState holds all the relevant progress the duty execution progress
 type dutyExecutionState struct {
+	height          uint64
 	runningInstance qbft.IInstance
 
 	decidedValue *consensusData
@@ -101,6 +102,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 
 	dr.dutyExecutionState = &dutyExecutionState{
 		runningInstance: newInstance,
+		height:          dr.qbftController.GetHeight(),
 	}
 	return dr.qbftController.StartNewInstance(value)
 }
@@ -113,17 +115,21 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 	return nil
 }
 
-// DecideRunningInstance sets the decided duty and partially signs the decided data
-func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer beacon.Signer) error {
+// DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusSigMessage to be broadcasted or error
+func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer beacon.Signer) (*PostConsensusSigMessage, error) {
 	if err := dr.storage.SaveHighestDecided(dr.validatorPK, dr.beaconRoleType, decidedValue); err != nil {
-		return errors.Wrap(err, "could not save decided")
+		return nil, errors.Wrap(err, "could not save decided")
 	}
 
+	ret := &PostConsensusSigMessage{
+		height:  dr.dutyExecutionState.height,
+		signers: []types.NodeID{dr.nodeID},
+	}
 	switch dr.beaconRoleType {
 	case beacon.RoleTypeAttester:
 		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, decidedValue.Duty.PubKey[:])
 		if err != nil {
-			return errors.Wrap(err, "failed to sign attestation")
+			return nil, errors.Wrap(err, "failed to sign attestation")
 		}
 
 		dr.dutyExecutionState.decidedValue = decidedValue
@@ -131,9 +137,12 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer 
 		dr.dutyExecutionState.postConsensusSigRoot = ensureRoot(r)
 		dr.dutyExecutionState.collectedPartialSigs = map[types.NodeID][]byte{}
 
-		return nil
+		ret.root = dr.dutyExecutionState.postConsensusSigRoot
+		ret.signature = dr.dutyExecutionState.signedAttestation.Signature[:]
+
+		return ret, nil
 	default:
-		return errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
+		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
 	}
 }
 
