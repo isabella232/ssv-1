@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMsgContainer MsgContainer, valCheck types.ValueCheck) error {
+func uponRoundChange(state State, signedRoundChange *SignedMessage, roundChangeMsgContainer MsgContainer, valCheck types.ValueCheck) error {
 	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
 		return errors.Wrap(err, "round change msg invalid")
 	}
@@ -29,7 +29,7 @@ func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMs
 		state.SetRound(111) // TODO - why do we set round? and if so, what is the value of newRound from the spec?
 		state.SetProposalAcceptedForCurrentRound(nil)
 	} else if hasReceivedPartialQuorum(state, roundChangeMsgContainer) {
-		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.GetMessage().Height, signedRoundChange.GetMessage().Round))
+		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.Message.Height, signedRoundChange.Message.Round))
 
 		roundChange := createRoundChange(state, newRound)
 		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(roundChange); err != nil {
@@ -49,25 +49,25 @@ func hasReceivedPartialQuorum(state State, roundChangeMsgContainer MsgContainer)
 
 func hasReceivedProposalJustification(
 	state State,
-	signedRoundChange SignedMessage,
+	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer MsgContainer,
 	valCheck types.ValueCheck,
 ) bool {
 	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
-	prepares := signedRoundChange.GetMessage().GetRoundChangeData().GetRoundChangeJustification()
+	prepares := signedRoundChange.Message.GetRoundChangeData().GetRoundChangeJustification()
 	return isReceivedProposalJustification(
 		state,
 		roundChanges,
 		prepares,
-		signedRoundChange.GetMessage().Round,
-		signedRoundChange.GetMessage().GetRoundChangeData().GetNextProposalData(),
+		signedRoundChange.Message.Round,
+		signedRoundChange.Message.GetRoundChangeData().GetNextProposalData(),
 		valCheck,
 	) != nil
 }
 
 func isReceivedProposalJustification(
 	state State,
-	roundChanges, prepares []SignedMessage,
+	roundChanges, prepares []*SignedMessage,
 	newRound Round,
 	value []byte,
 	valCheck types.ValueCheck,
@@ -100,26 +100,26 @@ func isReceivedProposalJustification(
 	return nil
 }
 
-func validRoundChange(state State, signedMsg SignedMessage, height uint64, round Round) error {
-	if signedMsg.GetMessage().MsgType != RoundChangeType {
+func validRoundChange(state State, signedMsg *SignedMessage, height uint64, round Round) error {
+	if signedMsg.Message.MsgType != RoundChangeType {
 		return errors.New("round change msg type is wrong")
 	}
-	if signedMsg.GetMessage().Height != height {
+	if signedMsg.Message.Height != height {
 		return errors.New("round change height is wrong")
 	}
-	if signedMsg.GetMessage().Round != round {
+	if signedMsg.Message.Round != round {
 		return errors.New("round change round is wrong")
 	}
 	if !signedMsg.IsValidSignature(state.GetConfig().GetNodes()) {
 		return errors.New("round change msg signature invalid")
 	}
 
-	if signedMsg.GetMessage().GetRoundChangeData().GetPreparedRound() == NoRound &&
-		signedMsg.GetMessage().GetRoundChangeData().GetPreparedValue() == nil {
+	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&
+		signedMsg.Message.GetRoundChangeData().GetPreparedValue() == nil {
 		return nil
-	} else if signedMsg.GetMessage().GetRoundChangeData().GetPreparedRound() != NoRound &&
-		signedMsg.GetMessage().GetRoundChangeData().GetPreparedValue() != nil {
-		if signedMsg.GetMessage().GetRoundChangeData().GetPreparedRound() < round {
+	} else if signedMsg.Message.GetRoundChangeData().GetPreparedRound() != NoRound &&
+		signedMsg.Message.GetRoundChangeData().GetPreparedValue() != nil {
+		if signedMsg.Message.GetRoundChangeData().GetPreparedRound() < round {
 			return nil
 		}
 		return errors.New("prepared round >= round")
@@ -128,28 +128,28 @@ func validRoundChange(state State, signedMsg SignedMessage, height uint64, round
 }
 
 // highestPrepared returns a round change message with the highest prepared round, returns nil if none found
-func highestPrepared(roundChanges []SignedMessage) SignedMessage {
-	var ret SignedMessage
+func highestPrepared(roundChanges []*SignedMessage) *SignedMessage {
+	var ret *SignedMessage
 	for _, rc := range roundChanges {
-		if rc.GetMessage().GetRoundChangeData().GetPreparedRound() == NoRound &&
-			rc.GetMessage().GetRoundChangeData().GetPreparedValue() == nil {
+		if rc.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&
+			rc.Message.GetRoundChangeData().GetPreparedValue() == nil {
 			continue
 		}
 
 		if ret == nil {
 			ret = rc
-		} else if ret.GetMessage().GetRoundChangeData().GetPreparedRound() < rc.GetMessage().GetRoundChangeData().GetPreparedRound() {
+		} else if ret.Message.GetRoundChangeData().GetPreparedRound() < rc.Message.GetRoundChangeData().GetPreparedRound() {
 			ret = rc
 		}
 	}
 	return ret
 }
 
-func minRound(roundChangeMsgs []SignedMessage) Round {
+func minRound(roundChangeMsgs []*SignedMessage) Round {
 	panic("implement")
 }
 
-func createRoundChange(state State, newRound Round) SignedMessage {
+func createRoundChange(state State, newRound Round) *SignedMessage {
 	/**
 	RoundChange(
 	           signRoundChange(

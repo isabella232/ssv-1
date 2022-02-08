@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
+func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
 	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
 	if state.GetProposalAcceptedForCurrentRound() == nil {
 		return errors.New("not proposal accepted for prepare")
@@ -16,7 +16,7 @@ func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, 
 		signedPrepare,
 		state.GetHeight(),
 		state.GetRound(),
-		state.GetProposalAcceptedForCurrentRound().GetMessage().GetProposalData().GetData(),
+		state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData(),
 		state.GetConfig().GetNodes(),
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
@@ -34,7 +34,7 @@ func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, 
 		return nil // already moved to commit stage
 	}
 
-	proposedValue := state.GetProposalAcceptedForCurrentRound().GetMessage().GetProposalData().GetData()
+	proposedValue := state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData()
 	commitMsg := createCommit(state, proposedValue)
 	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
@@ -45,7 +45,7 @@ func uponPrepare(state State, signedPrepare SignedMessage, prepareMsgContainer, 
 	return nil
 }
 
-func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) SignedMessage {
+func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) *SignedMessage {
 	if state.GetLastPreparedValue() == nil {
 		return nil
 	}
@@ -66,12 +66,12 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 
 // validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific height and round
 func validPreparesForHeightRoundAndDigest(
-	prepareMessages []SignedMessage,
+	prepareMessages []*SignedMessage,
 	height uint64,
 	round Round,
 	value []byte,
-	nodes []*types.Node) SignedMessage {
-	var aggregatedPrepareMsg SignedMessage
+	nodes []*types.Node) *SignedMessage {
+	var aggregatedPrepareMsg *SignedMessage
 	for _, signedMsg := range prepareMessages {
 		if err := validSignedPrepareForHeightRoundAndValue(signedMsg, height, round, value, nodes); err == nil {
 			if aggregatedPrepareMsg == nil {
@@ -87,21 +87,21 @@ func validPreparesForHeightRoundAndDigest(
 // validSignedPrepareForHeightRoundAndValue known in dafny spec as validSignedPrepareForHeightRoundAndDigest
 // https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
 func validSignedPrepareForHeightRoundAndValue(
-	signedPrepare SignedMessage,
+	signedPrepare *SignedMessage,
 	height uint64,
 	round Round,
 	value []byte,
 	nodes []*types.Node) error {
-	if signedPrepare.GetMessage().MsgType != PrepareType {
+	if signedPrepare.Message.MsgType != PrepareType {
 		return errors.New("prepare msg type is wrong")
 	}
-	if signedPrepare.GetMessage().Height != height {
+	if signedPrepare.Message.Height != height {
 		return errors.New("msg height wrong")
 	}
-	if signedPrepare.GetMessage().Round != round {
+	if signedPrepare.Message.Round != round {
 		return errors.New("msg round wrong")
 	}
-	if bytes.Compare(signedPrepare.GetMessage().GetPrepareData().GetData(), value) != 0 {
+	if bytes.Compare(signedPrepare.Message.GetPrepareData().GetData(), value) != 0 {
 		return errors.New("msg identifier wrong")
 	}
 	if !signedPrepare.IsValidSignature(nodes) {
@@ -110,7 +110,7 @@ func validSignedPrepareForHeightRoundAndValue(
 	return nil
 }
 
-func createPrepare(state State, newRound Round, value []byte) SignedMessage {
+func createPrepare(state State, newRound Round, value []byte) *SignedMessage {
 	/**
 	Prepare(
 	                    signPrepare(

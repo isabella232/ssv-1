@@ -8,12 +8,12 @@ type Config interface {
 	// GetID returns the specific node's ID
 	GetID() types.NodeID
 	// HasQuorum returns true if at least 2f+1 signatures present
-	HasQuorum([]SignedMessage) bool
+	HasQuorum([]*SignedMessage) bool
 	// HasPartialQuorum returns true if at least f+1 signatures present
-	HasPartialQuorum([]SignedMessage) bool
+	HasPartialQuorum([]*SignedMessage) bool
 	// GetValueCheck returns value check instance
 	GetValueCheck() types.ValueCheck
-	// GetNetwork returns a p2p Network instance
+	// GetP2PNetwork returns a p2p Network instance
 	GetP2PNetwork() types.QBFTNetwork
 	// GetTimer returns round timer
 	GetTimer() Timer
@@ -42,7 +42,7 @@ type State interface {
 	SetLastPreparedValue(value []byte)
 
 	// GetProposalAcceptedForCurrentRound returns the set proposal for current round, nil if not set
-	GetProposalAcceptedForCurrentRound() SignedMessage
+	GetProposalAcceptedForCurrentRound() *SignedMessage
 	// SetProposalAcceptedForCurrentRound sets the variable
-	SetProposalAcceptedForCurrentRound(msg SignedMessage)
+	SetProposalAcceptedForCurrentRound(msg *SignedMessage)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state State, signedCommit SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, error) {
+func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, error) {
 	if err := validateCommit(
 		signedCommit,
 		state.GetHeight(),
@@ -20,7 +20,7 @@ func uponCommit(state State, signedCommit SignedMessage, commitMsgContainer MsgC
 		return false, nil, nil // uponCommit was already called
 	}
 
-	value := signedCommit.GetMessage().GetCommitData().GetData()
+	value := signedCommit.Message.GetCommitData().GetData()
 	if commitQuorumForValue(state, commitMsgContainer, value) {
 		return true, value, nil
 	}
@@ -29,9 +29,9 @@ func uponCommit(state State, signedCommit SignedMessage, commitMsgContainer MsgC
 
 func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []byte) bool {
 	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
-	valueFiltered := make([]SignedMessage, 0)
+	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
-		if bytes.Equal(msg.GetMessage().GetCommitData().GetData(), value) {
+		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
 			valueFiltered = append(valueFiltered, msg)
 		}
 	}
@@ -53,7 +53,7 @@ func didSendCommitForHeightAndRound(state State, commitMsgContainer MsgContainer
 	panic("implement")
 }
 
-func createCommit(state State, value []byte) SignedMessage {
+func createCommit(state State, value []byte) *SignedMessage {
 	/**
 	Commit(
 	                    signCommit(
@@ -70,18 +70,18 @@ func createCommit(state State, value []byte) SignedMessage {
 }
 
 func validateCommit(
-	signedCommit SignedMessage,
+	signedCommit *SignedMessage,
 	height uint64,
 	round Round,
 	nodes []*types.Node,
 ) error {
-	if signedCommit.GetMessage().MsgType != CommitType {
+	if signedCommit.Message.MsgType != CommitType {
 		return errors.New("commit msg type is wrong")
 	}
-	if signedCommit.GetMessage().Height != height {
+	if signedCommit.Message.Height != height {
 		return errors.New("commit height is wrong")
 	}
-	if signedCommit.GetMessage().Round != round {
+	if signedCommit.Message.Round != round {
 		return errors.New("commit round is wrong")
 	}
 	if !signedCommit.IsValidSignature(nodes) {
