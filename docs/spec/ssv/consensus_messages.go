@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg qbft.SignedMessage) error {
+func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.SignedMessage) error {
 	decided, decidedValueByts, err := dutyRunner.qbftController.ProcessMsg(msg)
 	if err != nil {
 		return errors.Wrap(err, "failed to process consensus msg")

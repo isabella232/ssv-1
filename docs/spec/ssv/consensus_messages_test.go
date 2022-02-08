@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -10,6 +11,6 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 		v := newTestingValidator()
 		dr := newTestingDutyRunner()
 
-		v.processConsensusMsg(dr, &qbft.SignedMessage())
+		require.NoError(t, v.processConsensusMsg(dr, &qbft.SignedMessage{}))
 	})
 }
