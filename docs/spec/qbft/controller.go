@@ -30,7 +30,7 @@ type IController interface {
 	StartNewInstance(value []byte) error
 	// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
 	// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
-	ProcessMsg(msg SignedMessage) (bool, []byte, error)
+	ProcessMsg(msg *SignedMessage) (bool, []byte, error)
 	// InstanceForHeight returns an instance for a specific height, nil if not found
 	InstanceForHeight(height uint64) IInstance
 	// GetHeight returns the current running instance height or, if not started, the last decided height
@@ -63,7 +63,7 @@ func (c *Controller) StartNewInstance(value []byte) error {
 
 // ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
 // decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
-func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
+func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 	if !bytes.Equal(c.GetIdentifier(), msg.Message.Identifier) {
 		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
 	}
