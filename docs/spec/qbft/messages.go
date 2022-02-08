@@ -118,3 +118,8 @@ func (signedMsg *SignedMessage) Encode() ([]byte, error) {
 func (signedMsg *SignedMessage) Decode(data []byte) error {
 	panic("implement")
 }
+
+// GetRoot returns the root used for signing and verification
+func (signedMsg *SignedMessage) GetRoot() []byte {
+	return signedMsg.Message.GetRoot()
+}
