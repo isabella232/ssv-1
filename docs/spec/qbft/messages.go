@@ -11,20 +11,13 @@ const (
 	RoundChangeType
 )
 
-type SignedMessage interface {
-	types.MessageEncoder
-	types.MessageSignature
-	// GetMessage returns the message for which this signature is for
-	GetMessage() *Message
-}
-
 type ProposalData interface {
 	// GetData returns the data for which this QBFT instance tries to decide, can be any arbitrary data
 	GetData() []byte
 	// GetRoundChangeJustification returns a signed message with quorum as justification for the round change
-	GetRoundChangeJustification() []SignedMessage
+	GetRoundChangeJustification() []*SignedMessage
 	// GetPrepareJustification returns a signed message with quorum as justification for a prepared round change
-	GetPrepareJustification() []SignedMessage
+	GetPrepareJustification() []*SignedMessage
 }
 
 type PrepareData interface {
@@ -43,7 +36,7 @@ type RoundChangeData interface {
 	// GetNextProposalData returns NOT nil byte array if the signer is the next round's proposal.
 	GetNextProposalData() []byte
 	// GetRoundChangeJustification returns signed prepare messages for the last prepared state
-	GetRoundChangeJustification() []SignedMessage
+	GetRoundChangeJustification() []*SignedMessage
 }
 
 type Message struct {
@@ -85,5 +78,43 @@ func (msg *Message) Decode(data []byte) error {
 
 // GetRoot returns the root used for signing and verification
 func (msg *Message) GetRoot() []byte {
+	panic("implement")
+}
+
+type SignedMessage struct {
+	Signature []byte
+	Signers   []types.NodeID
+	Message   *Message // message for which this signature is for
+}
+
+func (signedMsg *SignedMessage) GetSignature() []byte {
+	return signedMsg.Signature
+}
+func (signedMsg *SignedMessage) GetSigners() []types.NodeID {
+	return signedMsg.Signers
+}
+
+// IsValidSignature returns true if signature is valid (against message and signers)
+func (signedMsg *SignedMessage) IsValidSignature(nodes []*types.Node) bool {
+	panic("implement")
+}
+
+// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
+func (signedMsg *SignedMessage) MatchedSigners(ids []types.NodeID) bool {
+	panic("implement")
+}
+
+// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
+func (signedMsg *SignedMessage) Aggregate(sig types.MessageSignature) error {
+	panic("implement")
+}
+
+// Encode returns a msg encoded bytes or error
+func (signedMsg *SignedMessage) Encode() ([]byte, error) {
+	panic("implement")
+}
+
+// Decode returns error if decoding failed
+func (signedMsg *SignedMessage) Decode(data []byte) error {
 	panic("implement")
 }

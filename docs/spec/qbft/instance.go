@@ -56,9 +56,9 @@ func (i *Instance) Start(value []byte, height uint64) {
 }
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
-func (i *Instance) ProcessMsg(msg SignedMessage) (decided bool, decidedValue []byte, err error) {
+func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, err error) {
 	res := i.processMsgF.Run(func() interface{} {
-		switch msg.GetMessage().MsgType {
+		switch msg.Message.MsgType {
 		case ProposalType:
 			return uponProposal(i.state, msg, i.proposeContainer)
 		case PrepareType:
