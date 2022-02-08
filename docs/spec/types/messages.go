@@ -13,6 +13,7 @@ type MessageRoot interface {
 }
 
 type MessageSignature interface {
+	MessageRoot
 	GetSignature() []byte
 	GetSigners() []NodeID
 	// IsValidSignature returns true if signature is valid (against message and signers)
