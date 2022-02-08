@@ -11,34 +11,11 @@ const (
 	RoundChangeType
 )
 
-type Message interface {
-	types.MessageEncoder
-	types.MessageRoot
-
-	// GetType returns the msg type
-	GetType() MessageType
-	// GetHeight returns the QBFT instance height (similar to block number)
-	GetHeight() uint64
-	// GetRound returns the round for which the msg was sent
-	GetRound() Round
-	// GetInstanceIdentifier returns the instance identifier this msg belongs to
-	GetInstanceIdentifier() []byte
-
-	// GetProposalData returns proposal specific data
-	GetProposalData() ProposalData
-	// GetPrepareData returns prepare specific data
-	GetPrepareData() PrepareData
-	// GetCommitData returns commit specific data
-	GetCommitData() PrepareData
-	// GetRoundChangeData returns round change specific data
-	GetRoundChangeData() RoundChangeData
-}
-
 type SignedMessage interface {
 	types.MessageEncoder
 	types.MessageSignature
 	// GetMessage returns the message for which this signature is for
-	GetMessage() Message
+	GetMessage() *Message
 }
 
 type ProposalData interface {
@@ -67,4 +44,46 @@ type RoundChangeData interface {
 	GetNextProposalData() []byte
 	// GetRoundChangeJustification returns signed prepare messages for the last prepared state
 	GetRoundChangeJustification() []SignedMessage
+}
+
+type Message struct {
+	MsgType    MessageType
+	Height     uint64 // QBFT instance height
+	Round      Round  // QBFT round for which the msg is for
+	Identifier []byte // instance identifier this msg belongs to
+}
+
+// GetProposalData returns proposal specific data
+func (msg *Message) GetProposalData() ProposalData {
+	panic("implement")
+}
+
+// GetPrepareData returns prepare specific data
+func (msg *Message) GetPrepareData() PrepareData {
+	panic("implement")
+}
+
+// GetCommitData returns commit specific data
+func (msg *Message) GetCommitData() PrepareData {
+	panic("implement")
+}
+
+// GetRoundChangeData returns round change specific data
+func (msg *Message) GetRoundChangeData() RoundChangeData {
+	panic("implement")
+}
+
+// Encode returns a msg encoded bytes or error
+func (msg *Message) Encode() ([]byte, error) {
+	panic("implement")
+}
+
+// Decode returns error if decoding failed
+func (msg *Message) Decode(data []byte) error {
+	panic("implement")
+}
+
+// GetRoot returns the root used for signing and verification
+func (msg *Message) GetRoot() []byte {
+	panic("implement")
 }
