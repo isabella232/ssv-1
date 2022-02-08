@@ -12,7 +12,7 @@ type IInstance interface {
 	// Start will start the new instance with a specific value and height
 	Start(value []byte, height uint64)
 	// ProcessMsg will process a signed msg
-	ProcessMsg(msg SignedMessage) (decided bool, decidedValue []byte, err error)
+	ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, err error)
 	// IsDecided will return true and a non-empty byte slice if instance decided.
 	IsDecided() (bool, []byte)
 	// GetHeight returns the instance's height
