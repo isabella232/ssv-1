@@ -75,13 +75,13 @@ func validateCommit(
 	round Round,
 	nodes []*types.Node,
 ) error {
-	if signedCommit.GetMessage().GetType() != CommitType {
+	if signedCommit.GetMessage().MsgType != CommitType {
 		return errors.New("commit msg type is wrong")
 	}
-	if signedCommit.GetMessage().GetHeight() != height {
+	if signedCommit.GetMessage().Height != height {
 		return errors.New("commit height is wrong")
 	}
-	if signedCommit.GetMessage().GetRound() != round {
+	if signedCommit.GetMessage().Round != round {
 		return errors.New("commit round is wrong")
 	}
 	if !signedCommit.IsValidSignature(nodes) {

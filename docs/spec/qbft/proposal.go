@@ -14,7 +14,7 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 		return nil // uponProposal was already called
 	}
 
-	newRound := signedProposal.GetMessage().GetRound()
+	newRound := signedProposal.GetMessage().Round
 
 	prepare := createPrepare(state, newRound, signedProposal.GetMessage().GetProposalData().GetData())
 	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(prepare); err != nil {
@@ -22,8 +22,8 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 	}
 
 	state.SetProposalAcceptedForCurrentRound(signedProposal)
-	if signedProposal.GetMessage().GetRound() > state.GetRound() {
-		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.GetMessage().GetRound())
+	if signedProposal.GetMessage().Round > state.GetRound() {
+		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.GetMessage().Round)
 	}
 	state.SetRound(newRound)
 
@@ -31,14 +31,14 @@ func uponProposal(state State, signedProposal SignedMessage, proposeMsgContainer
 }
 
 func isValidProposal(state State, signedProposal SignedMessage, valCheck types.ValueCheck) error {
-	if signedProposal.GetMessage().GetType() != ProposalType {
+	if signedProposal.GetMessage().MsgType != ProposalType {
 		return errors.New("msg type is not proposal")
 	}
-	if signedProposal.GetMessage().GetHeight() != state.GetHeight() {
+	if signedProposal.GetMessage().Height != state.GetHeight() {
 		return errors.New("proposal height is wrong")
 	}
 	// TODO - where do we check signedProposal sig
-	if !signedProposal.MatchedSigners([]types.NodeID{proposer(state, signedProposal.GetMessage().GetRound())}) {
+	if !signedProposal.MatchedSigners([]types.NodeID{proposer(state, signedProposal.GetMessage().Round)}) {
 		return errors.New("proposal leader invalid")
 	}
 	if err := isProposalJustification(
@@ -46,7 +46,7 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck types.V
 		signedProposal.GetMessage().GetProposalData().GetRoundChangeJustification(),
 		signedProposal.GetMessage().GetProposalData().GetPrepareJustification(),
 		state.GetHeight(),
-		signedProposal.GetMessage().GetRound(),
+		signedProposal.GetMessage().Round,
 		signedProposal.GetMessage().GetProposalData().GetData(),
 		valCheck,
 		signedProposal.GetSigners()[0], // already verified sig so we know there is 1 signer
@@ -54,8 +54,8 @@ func isValidProposal(state State, signedProposal SignedMessage, valCheck types.V
 		return errors.Wrap(err, "proposal not justified")
 	}
 
-	if (state.GetProposalAcceptedForCurrentRound() == nil && signedProposal.GetMessage().GetRound() == state.GetRound()) ||
-		(state.GetProposalAcceptedForCurrentRound() != nil && signedProposal.GetMessage().GetRound() > state.GetRound()) {
+	if (state.GetProposalAcceptedForCurrentRound() == nil && signedProposal.GetMessage().Round == state.GetRound()) ||
+		(state.GetProposalAcceptedForCurrentRound() != nil && signedProposal.GetMessage().Round > state.GetRound()) {
 		return nil
 	}
 	return errors.New("proposal is not valid with current state")

@@ -64,13 +64,13 @@ func (c *Controller) StartNewInstance(value []byte) error {
 // ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
 // decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
 func (c *Controller) ProcessMsg(msg SignedMessage) (bool, []byte, error) {
-	if !bytes.Equal(c.GetIdentifier(), msg.GetMessage().GetInstanceIdentifier()) {
+	if !bytes.Equal(c.GetIdentifier(), msg.GetMessage().Identifier) {
 		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
 	}
 
-	inst := c.InstanceForHeight(msg.GetMessage().GetHeight())
+	inst := c.InstanceForHeight(msg.GetMessage().Height)
 	if inst == nil {
-		return false, nil, errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().GetHeight(), c.GetIdentifier()))
+		return false, nil, errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.GetMessage().Height, c.GetIdentifier()))
 	}
 
 	prevDecided, _ := inst.IsDecided()

@@ -29,7 +29,7 @@ func uponRoundChange(state State, signedRoundChange SignedMessage, roundChangeMs
 		state.SetRound(111) // TODO - why do we set round? and if so, what is the value of newRound from the spec?
 		state.SetProposalAcceptedForCurrentRound(nil)
 	} else if hasReceivedPartialQuorum(state, roundChangeMsgContainer) {
-		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.GetMessage().GetHeight(), signedRoundChange.GetMessage().GetRound()))
+		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.GetMessage().Height, signedRoundChange.GetMessage().Round))
 
 		roundChange := createRoundChange(state, newRound)
 		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(roundChange); err != nil {
@@ -59,7 +59,7 @@ func hasReceivedProposalJustification(
 		state,
 		roundChanges,
 		prepares,
-		signedRoundChange.GetMessage().GetRound(),
+		signedRoundChange.GetMessage().Round,
 		signedRoundChange.GetMessage().GetRoundChangeData().GetNextProposalData(),
 		valCheck,
 	) != nil
@@ -101,13 +101,13 @@ func isReceivedProposalJustification(
 }
 
 func validRoundChange(state State, signedMsg SignedMessage, height uint64, round Round) error {
-	if signedMsg.GetMessage().GetType() != RoundChangeType {
+	if signedMsg.GetMessage().MsgType != RoundChangeType {
 		return errors.New("round change msg type is wrong")
 	}
-	if signedMsg.GetMessage().GetHeight() != height {
+	if signedMsg.GetMessage().Height != height {
 		return errors.New("round change height is wrong")
 	}
-	if signedMsg.GetMessage().GetRound() != round {
+	if signedMsg.GetMessage().Round != round {
 		return errors.New("round change round is wrong")
 	}
 	if !signedMsg.IsValidSignature(state.GetConfig().GetNodes()) {
