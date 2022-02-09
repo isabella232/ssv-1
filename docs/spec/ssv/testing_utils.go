@@ -7,9 +7,37 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/ibft/proto"
+	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
 
+var testDuty = &beacon.Duty{
+	Type:                    beacon.RoleTypeAttester,
+	PubKey:                  spec.BLSPubKey{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8},
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	ValidatorCommitteeIndex: 11,
+}
+var testAttData = &spec.AttestationData{
+	Slot:            1,
+	Index:           3,
+	BeaconBlockRoot: spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+	Source: &spec.Checkpoint{
+		Epoch: 1,
+		Root:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+	},
+	Target: &spec.Checkpoint{
+		Epoch: 2,
+		Root:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+	},
+}
+var testConsensusData = &consensusData{
+	Duty:            testDuty,
+	AttestationData: testAttData,
+}
+var testConsensusDataByts, _ = testConsensusData.Encode()
 var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
 var committee = []*types.Node{
 	{
@@ -29,6 +57,13 @@ var committee = []*types.Node{
 func newTestingValidator() *Validator {
 	return &Validator{
 		valCheck: &testingValCheckPassAll{},
+		signer:   &testingSigner{},
+		share: &Share{
+			pubKey:    testingValidatorPK[:],
+			committee: committee,
+			quorum:    3,
+		},
+		network: &testingNetwork{},
 	}
 }
 
@@ -42,6 +77,10 @@ type testingQBFTController struct {
 	instances  map[uint64]*testingQBFTInstance
 	height     uint64
 	identifier []byte
+
+	failProcessMsg     bool
+	returnDecided      bool
+	returnDecidedValue []byte
 }
 
 func newTestingQBFTController(identifier []byte) *testingQBFTController {
@@ -64,6 +103,12 @@ func (tContr *testingQBFTController) StartNewInstance(value []byte) error {
 // ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
 // decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
 func (tContr *testingQBFTController) ProcessMsg(msg *qbft.SignedMessage) (bool, []byte, error) {
+	if tContr.failProcessMsg {
+		return false, nil, errors.New("failed process msg")
+	}
+	if tContr.returnDecided {
+		return true, tContr.returnDecidedValue, nil
+	}
 	return false, nil, nil
 }
 
@@ -164,6 +209,7 @@ func newTestingDutyRunner() *DutyRunner {
 }
 
 type testingSigner struct {
+	sk *bls.SecretKey
 }
 
 // SignIBFTMessage signs a network iBFT msg
@@ -173,7 +219,7 @@ func (s *testingSigner) SignIBFTMessage(message *proto.Message, pk []byte) ([]by
 
 // SignAttestation signs the given attestation
 func (s *testingSigner) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
-	sig := spec.BLSSignature{1, 2, 3, 4}
+	sig := spec.BLSSignature{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6}
 	att := &spec.Attestation{
 		Data:      data,
 		Signature: sig,
@@ -199,5 +245,12 @@ type testingValCheckPassAll struct {
 }
 
 func (valCheck *testingValCheckPassAll) Check(value []byte) error {
+	return nil
+}
+
+type testingNetwork struct {
+}
+
+func (net *testingNetwork) BroadcastMessage(message *types.SSVMessage) error {
 	return nil
 }
