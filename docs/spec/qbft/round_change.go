@@ -20,12 +20,16 @@ func uponRoundChange(state State, signedRoundChange *SignedMessage, roundChangeM
 			return nil
 		}
 
-		proposal := createProposal(
+		proposal, err := createProposal(
 			state,
 			highestJustifiedRoundChangeMsg.Message.GetRoundChangeData().GetNextProposalData(),
 			roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound()), // TODO - might be optimized to include only necessary quorum
 			highestJustifiedRoundChangeMsg.Message.GetRoundChangeData().GetRoundChangeJustification(),
 		)
+		if err != nil {
+			return errors.Wrap(err, "failed to create proposal")
+		}
+
 		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
@@ -124,8 +128,8 @@ func validRoundChange(state State, signedMsg *SignedMessage, height uint64, roun
 	if signedMsg.Message.Round != round {
 		return errors.New("round change round is wrong")
 	}
-	if !signedMsg.IsValidSignature(state.GetConfig().GetNodes()) {
-		return errors.New("round change msg signature invalid")
+	if err := signedMsg.IsValidSignature(state.GetConfig().GetSignatureDomainType(), state.GetConfig().GetNodes()); err != nil {
+		return errors.Wrap(err, "round change msg signature invalid")
 	}
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&
 		signedMsg.Message.GetRoundChangeData().GetPreparedValue() == nil {

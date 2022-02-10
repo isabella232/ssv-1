@@ -1,16 +1,25 @@
 package types
 
 import (
+	"encoding/hex"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/herumi/bls-eth-go-binary/bls"
+	"github.com/pkg/errors"
 )
 
-type SignatureType byte
+// DomainType is a unique identifier for signatures, 2 identical pieces of data signed with different domains will result in different sigs
+type DomainType []byte
 
 var (
-	QBFTSigType          = byte(1)
-	PostConsensusSigType = byte(2)
+	PrimusTestnet = DomainType("primus_testnet")
+)
+
+type SignatureType []byte
+
+var (
+	QBFTSigType          = []byte{1, 0, 0, 0}
+	PostConsensusSigType = []byte{2, 0, 0, 0}
 )
 
 type BeaconSigner interface {
@@ -19,7 +28,7 @@ type BeaconSigner interface {
 }
 
 type Signer interface {
-	SignRoot(root, sigType, pk []byte) ([]byte, error)
+	SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error)
 }
 
 // KeyManager is an interface responsible for all key manager functions
@@ -32,7 +41,15 @@ type KeyManager interface {
 
 // SSVKeyManager implements the KeyManager interface with all of its funcs
 type SSVKeyManager struct {
-	keys map[string]*bls.SecretKey // holds pub keys as key and secret key as value
+	keys   map[string]*bls.SecretKey // holds pub keys as key and secret key as value
+	domain DomainType
+}
+
+func NewSSVKeyManager(domain DomainType) KeyManager {
+	return &SSVKeyManager{
+		keys:   make(map[string]*bls.SecretKey),
+		domain: domain,
+	}
 }
 
 // SignAttestation signs the given attestation
@@ -40,8 +57,12 @@ func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon
 	panic("implement from beacon ")
 }
 
-func (s *SSVKeyManager) SignRoot(root, sigType, pk []byte) ([]byte, error) {
-
+func (s *SSVKeyManager) SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error) {
+	if k, found := s.keys[hex.EncodeToString(pk)]; found {
+		computedRoot := ComputeSigningRoot(root, ComputeSignatureDomain(s.domain, sigType))
+		return k.SignByte(computedRoot).Serialize(), nil
+	}
+	return nil, errors.New("pk not found")
 }
 
 // AddShare saves a share key

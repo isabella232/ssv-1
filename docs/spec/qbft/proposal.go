@@ -120,6 +120,7 @@ func isProposalJustification(
 
 			for _, pm := range prepareMsgs {
 				if err := validSignedPrepareForHeightRoundAndValue(
+					state,
 					pm,
 					height,
 					rcm.Message.GetRoundChangeData().GetPreparedRound(),
@@ -138,7 +139,7 @@ func proposer(state State, round Round) types.NodeID {
 	panic("implement")
 }
 
-func createProposal(state State, value []byte, roundChanged, prepares []*SignedMessage) *SignedMessage {
+func createProposal(state State, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
 	/**
 	  	Proposal(
 	                        signProposal(
@@ -151,5 +152,17 @@ func createProposal(state State, value []byte, roundChanged, prepares []*SignedM
 	                        extractSignedRoundChanges(roundChanges),
 	                        extractSignedPrepares(prepares));
 	*/
-	panic("implementation")
+	panic("implement")
+	msg := &Message{}
+	sig, err := state.GetConfig().GetSigner().SignRoot(msg.GetRoot(), types.QBFTSigType, state.GetConfig().GetSigningPubKey())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed signing proposal msg")
+	}
+
+	signedMsg := &SignedMessage{
+		Signature: sig,
+		Signers:   []types.NodeID{state.GetConfig().GetID()},
+		Message:   msg,
+	}
+	return signedMsg, nil
 }

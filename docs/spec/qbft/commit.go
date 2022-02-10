@@ -13,6 +13,7 @@ func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer Msg
 	}
 
 	if err := validateCommit(
+		state,
 		signedCommit,
 		state.GetHeight(),
 		state.GetRound(),
@@ -76,6 +77,7 @@ func createCommit(state State, value []byte) *SignedMessage {
 }
 
 func validateCommit(
+	state State,
 	signedCommit *SignedMessage,
 	height uint64,
 	round Round,
@@ -94,8 +96,8 @@ func validateCommit(
 	if !bytes.Equal(proposedMsg.Message.GetCommitData().GetData(), signedCommit.Message.GetCommitData().GetData()) {
 		return errors.New("proposed data different than commit msg data")
 	}
-	if !signedCommit.IsValidSignature(nodes) {
-		return errors.New("commit msg signature invalid")
+	if err := signedCommit.IsValidSignature(state.GetConfig().GetSignatureDomainType(), nodes); err != nil {
+		return errors.Wrap(err, "commit msg signature invalid")
 	}
 	return nil
 }

@@ -47,7 +47,10 @@ func (i *Instance) Start(value []byte, height uint64) {
 
 		// propose if this node is the proposer
 		if proposer(i.state, FirstRound) == i.state.GetConfig().GetID() {
-			proposal := createProposal(i.state, i.startValue)
+			proposal, err := createProposal(i.state, i.startValue, nil, nil)
+			if err != nil {
+				// TODO log
+			}
 			if err := i.state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
 				// TODO - log
 			}
