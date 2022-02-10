@@ -3,6 +3,7 @@ package qbft
 import (
 	"bytes"
 	"fmt"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
 )
@@ -44,6 +45,7 @@ type Controller struct {
 	height     *threadsafe.SafeUint64 // incremental height for instances
 	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	storedInstances instances
+	signer          types.Signer
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
