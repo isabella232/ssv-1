@@ -13,6 +13,7 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 	}
 
 	if err := validSignedPrepareForHeightRoundAndValue(
+		state,
 		signedPrepare,
 		state.GetHeight(),
 		state.GetRound(),
@@ -35,13 +36,15 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 	}
 
 	proposedValue := state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData()
+
+	state.SetLastPreparedValue(proposedValue)
+	state.SetLastPreparedRound(state.GetRound())
+
 	commitMsg := createCommit(state, proposedValue)
 	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 
-	state.SetLastPreparedValue(proposedValue)
-	state.SetLastPreparedRound(state.GetRound())
 	return nil
 }
 
@@ -50,8 +53,9 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 		return nil
 	}
 
-	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetLastPreparedRound())
 	validPrepares := validPreparesForHeightRoundAndDigest(
+		state,
 		prepareMsgs,
 		state.GetHeight(),
 		state.GetLastPreparedRound(),
@@ -66,6 +70,7 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 
 // validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific height and round
 func validPreparesForHeightRoundAndDigest(
+	state State,
 	prepareMessages []*SignedMessage,
 	height uint64,
 	round Round,
@@ -73,7 +78,7 @@ func validPreparesForHeightRoundAndDigest(
 	nodes []*types.Node) *SignedMessage {
 	var aggregatedPrepareMsg *SignedMessage
 	for _, signedMsg := range prepareMessages {
-		if err := validSignedPrepareForHeightRoundAndValue(signedMsg, height, round, value, nodes); err == nil {
+		if err := validSignedPrepareForHeightRoundAndValue(state, signedMsg, height, round, value, nodes); err == nil {
 			if aggregatedPrepareMsg == nil {
 				aggregatedPrepareMsg = signedMsg
 			} else {
@@ -87,6 +92,7 @@ func validPreparesForHeightRoundAndDigest(
 // validSignedPrepareForHeightRoundAndValue known in dafny spec as validSignedPrepareForHeightRoundAndDigest
 // https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
 func validSignedPrepareForHeightRoundAndValue(
+	state State,
 	signedPrepare *SignedMessage,
 	height uint64,
 	round Round,
@@ -104,8 +110,8 @@ func validSignedPrepareForHeightRoundAndValue(
 	if bytes.Compare(signedPrepare.Message.GetPrepareData().GetData(), value) != 0 {
 		return errors.New("msg identifier wrong")
 	}
-	if !signedPrepare.IsValidSignature(nodes) {
-		return errors.New("prepare msg signature invalid")
+	if err := signedPrepare.IsValidSignature(state.GetConfig().GetSignatureDomainType(), nodes); err != nil {
+		return errors.Wrap(err, "prepare msg signature invalid")
 	}
 	return nil
 }

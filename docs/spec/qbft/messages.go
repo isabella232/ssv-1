@@ -1,6 +1,8 @@
 package qbft
 
-import "github.com/bloxapp/ssv/docs/spec/types"
+import (
+	"github.com/bloxapp/ssv/docs/spec/types"
+)
 
 type MessageType int
 
@@ -44,6 +46,7 @@ type Message struct {
 	Height     uint64 // QBFT instance height
 	Round      Round  // QBFT round for which the msg is for
 	Identifier []byte // instance identifier this msg belongs to
+	Data       []byte
 }
 
 // GetProposalData returns proposal specific data
@@ -82,7 +85,7 @@ func (msg *Message) GetRoot() []byte {
 }
 
 type SignedMessage struct {
-	Signature []byte
+	Signature types.Signature
 	Signers   []types.NodeID
 	Message   *Message // message for which this signature is for
 }
@@ -95,8 +98,22 @@ func (signedMsg *SignedMessage) GetSigners() []types.NodeID {
 }
 
 // IsValidSignature returns true if signature is valid (against message and signers)
-func (signedMsg *SignedMessage) IsValidSignature(nodes []*types.Node) bool {
-	panic("implement")
+func (signedMsg *SignedMessage) IsValidSignature(domain types.DomainType, nodes []*types.Node) error {
+	pks := make([][]byte, 0)
+	for _, id := range signedMsg.Signers {
+		for _, n := range nodes {
+			if id == n.GetID() {
+				pks = append(pks, n.GetPublicKey())
+			}
+		}
+	}
+
+	return signedMsg.Signature.VerifyMultiPubKey(
+		signedMsg.Message.GetRoot(),
+		domain,
+		types.QBFTSigType,
+		pks,
+	)
 }
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
