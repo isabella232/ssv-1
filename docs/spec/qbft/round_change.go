@@ -6,6 +6,7 @@ import (
 )
 
 func uponRoundChange(state State, signedRoundChange *SignedMessage, roundChangeMsgContainer MsgContainer, valCheck types.ValueCheck) error {
+	// TODO - Roberto comment: could happen we received a round change before we switched the round and this msg will be rejected (lost)
 	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
 		return errors.Wrap(err, "round change msg invalid")
 	}
@@ -13,38 +14,46 @@ func uponRoundChange(state State, signedRoundChange *SignedMessage, roundChangeM
 		return nil // uponCommit was already called
 	}
 
-	if hasReceivedProposalJustification(state, signedRoundChange, roundChangeMsgContainer, valCheck) {
-		var value []byte
-		if state.GetLastPreparedValue() != nil {
-			value = state.GetLastPreparedValue()
-		} else {
-			// TODO - set to start value
+	if highestJustifiedRoundChangeMsg := hasReceivedProposalJustification(state, signedRoundChange, roundChangeMsgContainer, valCheck); highestJustifiedRoundChangeMsg != nil {
+		// check if this node is the proposer
+		if proposer(state, highestJustifiedRoundChangeMsg.Message.Round) != state.GetConfig().GetID() {
+			return nil
 		}
 
-		proposal := createProposal(state, value)
+		proposal := createProposal(
+			state,
+			highestJustifiedRoundChangeMsg.Message.GetRoundChangeData().GetNextProposalData(),
+			roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound()), // TODO - might be optimized to include only necessary quorum
+			highestJustifiedRoundChangeMsg.Message.GetRoundChangeData().GetRoundChangeJustification(),
+		)
 		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
+	} else if partialQuorum, rcs := hasReceivedPartialQuorum(state, roundChangeMsgContainer); partialQuorum {
+		newRound := minRound(rcs)
 
-		state.SetRound(111) // TODO - why do we set round? and if so, what is the value of newRound from the spec?
+		state.SetRound(newRound)
 		state.SetProposalAcceptedForCurrentRound(nil)
-	} else if hasReceivedPartialQuorum(state, roundChangeMsgContainer) {
-		newRound := minRound(roundChangeMsgContainer.MessagesForHeightAndRound(signedRoundChange.Message.Height, signedRoundChange.Message.Round))
 
 		roundChange := createRoundChange(state, newRound)
 		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(roundChange); err != nil {
 			return errors.Wrap(err, "failed to broadcast round change message")
 		}
-
-		state.SetRound(newRound) // TODO - why do we set round?
-		state.SetProposalAcceptedForCurrentRound(nil)
 	}
 	return nil
 }
 
-func hasReceivedPartialQuorum(state State, roundChangeMsgContainer MsgContainer) bool {
-	rc := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
-	return state.GetConfig().HasPartialQuorum(rc)
+func hasReceivedPartialQuorum(state State, roundChangeMsgContainer MsgContainer) (bool, []*SignedMessage) {
+	all := roundChangeMsgContainer.AllMessagedForHeight(state.GetHeight())
+
+	rc := make([]*SignedMessage, 0)
+	for _, msg := range all {
+		if msg.Message.Round > state.GetRound() {
+			rc = append(rc, msg)
+		}
+	}
+
+	return state.GetConfig().HasPartialQuorum(rc), rc
 }
 
 func hasReceivedProposalJustification(
@@ -52,19 +61,30 @@ func hasReceivedProposalJustification(
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer MsgContainer,
 	valCheck types.ValueCheck,
-) bool {
+) *SignedMessage {
 	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
-	prepares := signedRoundChange.Message.GetRoundChangeData().GetRoundChangeJustification()
-	return isReceivedProposalJustification(
-		state,
-		roundChanges,
-		prepares,
-		signedRoundChange.Message.Round,
-		signedRoundChange.Message.GetRoundChangeData().GetNextProposalData(),
-		valCheck,
-	) != nil
+
+	// TODO - optimization, if no round change quorum can return false
+
+	// Important!
+	// We iterate on all round chance msgs for liveliness in case the last round change msg is malicious.
+	for _, msg := range roundChanges {
+		prepares := msg.Message.GetRoundChangeData().GetRoundChangeJustification()
+		if isReceivedProposalJustification(
+			state,
+			roundChanges,
+			prepares,
+			signedRoundChange.Message.Round,
+			msg.Message.GetRoundChangeData().GetNextProposalData(),
+			valCheck,
+		) != nil {
+			return msg
+		}
+	}
+	return nil
 }
 
+// isReceivedProposalJustification - returns nil if we have a quorum of round change msgs and highest justified value
 func isReceivedProposalJustification(
 	state State,
 	roundChanges, prepares []*SignedMessage,
@@ -72,21 +92,15 @@ func isReceivedProposalJustification(
 	value []byte,
 	valCheck types.ValueCheck,
 ) error {
-	/**
-			&& roundChanges <= receivedRoundChanges(current)
-	        && prepares <= receivedPrepares(current)
-	TODO - not sure what does this check?
-	*/
-
 	if err := isProposalJustification(
 		state,
 		roundChanges,
 		prepares,
 		state.GetHeight(),
-		state.GetRound(),
+		newRound,
 		value,
 		valCheck,
-		state.GetConfig().GetID(), // checks if this node is the leader
+		proposer(state, newRound),
 	); err != nil {
 		return errors.Wrap(err, "round change ")
 	}
@@ -113,12 +127,14 @@ func validRoundChange(state State, signedMsg *SignedMessage, height uint64, roun
 	if !signedMsg.IsValidSignature(state.GetConfig().GetNodes()) {
 		return errors.New("round change msg signature invalid")
 	}
-
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&
 		signedMsg.Message.GetRoundChangeData().GetPreparedValue() == nil {
 		return nil
 	} else if signedMsg.Message.GetRoundChangeData().GetPreparedRound() != NoRound &&
 		signedMsg.Message.GetRoundChangeData().GetPreparedValue() != nil {
+
+		// TODO Roberto comment: we should add a validation for justification data (sigs and so on)
+
 		if signedMsg.Message.GetRoundChangeData().GetPreparedRound() < round {
 			return nil
 		}

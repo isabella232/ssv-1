@@ -1,0 +1,9 @@
+- Instances get decided once a quorum of commit messages is received,
+a node can be disconnected and not receive msgs in which case its stuck.
+We should have some way for the nodes to understand if they are left behind.
+Maybe during the peer handshake or something.
+
+- What happens if ethereum is out of sync, the SSV node should maybe stop and wait for sync.
+
+- Maybe the data the QBFT comes to a consensus on should have some reference to latest BN finalized block
+so to prevent situations where the operator set changes but the nodes are not aware of it.

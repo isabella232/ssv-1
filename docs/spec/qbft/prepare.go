@@ -35,13 +35,15 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 	}
 
 	proposedValue := state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData()
+
+	state.SetLastPreparedValue(proposedValue)
+	state.SetLastPreparedRound(state.GetRound())
+
 	commitMsg := createCommit(state, proposedValue)
 	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 
-	state.SetLastPreparedValue(proposedValue)
-	state.SetLastPreparedRound(state.GetRound())
 	return nil
 }
 
@@ -50,7 +52,7 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 		return nil
 	}
 
-	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetLastPreparedRound())
 	validPrepares := validPreparesForHeightRoundAndDigest(
 		prepareMsgs,
 		state.GetHeight(),

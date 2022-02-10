@@ -69,6 +69,8 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 			if decided {
 				i.decidedValue.Set(decidedValue)
 			}
+
+			// TODO - Roberto comment: we should send a decided msg here
 			return err
 		case RoundChangeType:
 			return uponRoundChange(i.state, msg, i.roundChangeContainer, i.valueCheck)

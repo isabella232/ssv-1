@@ -16,16 +16,17 @@ func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContaine
 
 	newRound := signedProposal.Message.Round
 
-	prepare := createPrepare(state, newRound, signedProposal.Message.GetProposalData().GetData())
-	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(prepare); err != nil {
-		return errors.Wrap(err, "failed to broadcast prepare message")
-	}
-
+	// set state to new round and proposal accepted
 	state.SetProposalAcceptedForCurrentRound(signedProposal)
 	if signedProposal.Message.Round > state.GetRound() {
 		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.Message.Round)
 	}
 	state.SetRound(newRound)
+
+	prepare := createPrepare(state, newRound, signedProposal.Message.GetProposalData().GetData())
+	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(prepare); err != nil {
+		return errors.Wrap(err, "failed to broadcast prepare message")
+	}
 
 	return nil
 }
@@ -37,7 +38,7 @@ func isValidProposal(state State, signedProposal *SignedMessage, valCheck types.
 	if signedProposal.Message.Height != state.GetHeight() {
 		return errors.New("proposal height is wrong")
 	}
-	// TODO - where do we check signedProposal sig
+	// TODO - Roberto comment: we should check signedProposal sig (added here https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L573)
 	if !signedProposal.MatchedSigners([]types.NodeID{proposer(state, signedProposal.Message.Round)}) {
 		return errors.New("proposal leader invalid")
 	}
@@ -137,7 +138,7 @@ func proposer(state State, round Round) types.NodeID {
 	panic("implement")
 }
 
-func createProposal(state State, value []byte) *SignedMessage {
+func createProposal(state State, value []byte, roundChanged, prepares []*SignedMessage) *SignedMessage {
 	/**
 	  	Proposal(
 	                        signProposal(

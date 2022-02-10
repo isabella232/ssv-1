@@ -8,10 +8,15 @@ import (
 
 // uponCommit returns true if a quorum of commit messages was received.
 func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, error) {
+	if state.GetProposalAcceptedForCurrentRound() == nil {
+		return false, nil, errors.New("did not receive proposal for this round")
+	}
+
 	if err := validateCommit(
 		signedCommit,
 		state.GetHeight(),
 		state.GetRound(),
+		state.GetProposalAcceptedForCurrentRound(),
 		state.GetConfig().GetNodes(),
 	); err != nil {
 		return false, nil, errors.Wrap(err, "commit msg invalid")
@@ -31,6 +36,7 @@ func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []
 	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
 	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
+		// TODO - not needed as we add msgs to container after validating the value
 		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
 			valueFiltered = append(valueFiltered, msg)
 		}
@@ -73,6 +79,7 @@ func validateCommit(
 	signedCommit *SignedMessage,
 	height uint64,
 	round Round,
+	proposedMsg *SignedMessage,
 	nodes []*types.Node,
 ) error {
 	if signedCommit.Message.MsgType != CommitType {
@@ -83,6 +90,9 @@ func validateCommit(
 	}
 	if signedCommit.Message.Round != round {
 		return errors.New("commit round is wrong")
+	}
+	if !bytes.Equal(proposedMsg.Message.GetCommitData().GetData(), signedCommit.Message.GetCommitData().GetData()) {
+		return errors.New("proposed data different than commit msg data")
 	}
 	if !signedCommit.IsValidSignature(nodes) {
 		return errors.New("commit msg signature invalid")
