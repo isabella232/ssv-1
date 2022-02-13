@@ -9,6 +9,23 @@ import (
 type SignatureDomain []byte
 type Signature []byte
 
+func (s Signature) VerifyByNodes(data MessageSignature, domain DomainType, sigType SignatureType, nodes []*Node) error {
+	pks := make([][]byte, 0)
+	for _, id := range data.GetSigners() {
+		found := false
+		for _, n := range nodes {
+			if id == n.GetID() {
+				pks = append(pks, n.GetPublicKey())
+				found = true
+			}
+		}
+		if !found {
+			return errors.New("signer not found in nodes")
+		}
+	}
+	return s.VerifyMultiPubKey(data, domain, sigType, pks)
+}
+
 func (s Signature) VerifyMultiPubKey(data MessageRoot, domain DomainType, sigType SignatureType, pks [][]byte) error {
 	var aggPK *bls.PublicKey
 	for _, pkByts := range pks {
