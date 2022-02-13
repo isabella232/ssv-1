@@ -29,6 +29,7 @@ type BeaconSigner interface {
 	IsAttestationSlashable(data *spec.AttestationData) error
 }
 
+// SSVSigner used for all SSV specific signing
 type SSVSigner interface {
 	SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error)
 }

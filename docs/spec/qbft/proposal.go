@@ -31,7 +31,7 @@ func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContaine
 	return nil
 }
 
-func isValidProposal(state State, signedProposal *SignedMessage, valCheck types.BeaconDataCheck) error {
+func isValidProposal(state State, signedProposal *SignedMessage, valCheck proposedValueCheck) error {
 	if signedProposal.Message.MsgType != ProposalType {
 		return errors.New("msg type is not proposal")
 	}
@@ -70,10 +70,10 @@ func isProposalJustification(
 	height uint64,
 	round Round,
 	value []byte,
-	valCheck types.BeaconDataCheck,
+	valCheck proposedValueCheck,
 	roundLeader types.NodeID,
 ) error {
-	if err := valCheck.Check(value); err != nil {
+	if err := valCheck(value); err != nil {
 		return errors.Wrap(err, "proposal value invalid")
 	}
 

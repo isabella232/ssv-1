@@ -28,7 +28,7 @@ type Config interface {
 	// GetID returns the specific node's ID
 	GetID() types.NodeID
 	// GetValueCheck returns value check instance
-	GetValueCheck() types.BeaconDataCheck
+	GetValueCheck() proposedValueCheck
 	// GetP2PNetwork returns a p2p Network instance
 	GetP2PNetwork() types.QBFTNetwork
 	// GetTimer returns round timer
