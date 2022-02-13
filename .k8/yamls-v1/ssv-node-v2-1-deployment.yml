@@ -2,34 +2,34 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ssv-node-paul-lh-svc
+  name: ssv-node-v2-1-svc
   namespace: REPLACE_NAMESPACE
   labels:
-    app: ssv-node-paul-lh
+    app: ssv-node-v2-1
 spec:
   type: ClusterIP
   ports:
-    - port: 12005
+    - port: 12001
       protocol: UDP
-      targetPort: 12005
-      name: port-12005
-    - port: 13005
+      targetPort: 12001
+      name: port-12001
+    - port: 13001
       protocol: TCP
-      targetPort: 13005
-      name: port-13005
-    - port: 15005
+      targetPort: 13001
+      name: port-13001
+    - port: 15001
       protocol: TCP
-      targetPort: 15005
-      name: port-15005
+      targetPort: 15001
+      name: port-15001
   selector:
-    app: ssv-node-paul-lh
+    app: ssv-node-v2-1
 ---
 apiVersion: REPLACE_API_VERSION 
 kind: Deployment
 metadata:
   labels:
-    app: ssv-node-paul-lh
-  name: ssv-node-paul-lh
+    app: ssv-node-v2-1
+  name: ssv-node-v2-1
   namespace: REPLACE_NAMESPACE
 spec:
   replicas: REPLACE_REPLICAS
@@ -37,11 +37,11 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: ssv-node-paul-lh
+      app: ssv-node-v2-1
   template:
     metadata:
       labels:
-        app: ssv-node-paul-lh
+        app: ssv-node-v2-1
     spec:
       affinity:
         nodeAffinity:
@@ -52,26 +52,30 @@ spec:
                     operator: In
                     values:
                       - ssv-main
+                  - key: beta.kubernetes.io/instance-type
+                    operator: In
+                    values:
+                      - m5a.4xlarge
       containers:
-      - name: ssv-node-paul-lh
+      - name: ssv-node-v2-1
         image: REPLACE_DOCKER_REPO:REPLACE_IMAGETAG 
         imagePullPolicy: Always
         resources:
           limits:
             cpu: REPLACE_NODES_CPU_LIMIT
-            memory: REPLACE_NODES_MEM_LIMIT
+            memory: REPLACE_NODES_MEM_LIMIT            
         command: ["make", "start-node"]
         ports:
-        - containerPort: 12005
-          name: port-12005
+        - containerPort: 12001
+          name: port-12001
+          hostPort: 12001           
           protocol: UDP
-          hostPort: 12005            
-        - containerPort: 13005
-          name: port-13005
-          hostPort: 13005
-        - containerPort: 15005
-          name: port-15005
-          hostPort: 15005
+        - containerPort: 13001
+          name: port-13001
+          hostPort: 13001
+        - containerPort: 15001
+          name: port-15001
+          hostPort: 15001
         env:
         - name: SHARE_CONFIG
           value: "./data/share.yaml"
@@ -122,24 +126,42 @@ spec:
         - name: DB_REPORTING
           value: "true"
         - name: METRICS_API_PORT
-          value: "15005"
+          value: "15001"
         - name: ENABLE_PROFILE
           value: "true"
         volumeMounts:
         - mountPath: /data
-          name: ssv-node-paul-lh
+          name: ssv-node-v2-1
         - mountPath: /data/share.yaml
           subPath: share.yaml
-          name: ssv-cm-validator-options-paul-lh
+          name: ssv-cm-validator-options-1
+#      - name: ubuntu
+#        image: REPLACE_HEALTH_IMAGE
+#        imagePullPolicy: Always
+#        args: [bash, -c, sleep infinity]
+#        volumeMounts:
+#        - name: ssv-nodes-health-check-cm
+#          mountPath: /root/http-status.sh
+#          subPath: http-status.sh
+#        livenessProbe:
+#          exec:
+#            command:
+#            - /bin/bash
+#            - /root/http-status.sh
+#          initialDelaySeconds: 120
+#          periodSeconds: 60
       volumes:
-      - name: ssv-node-paul-lh
+      - name: ssv-node-v2-1
         persistentVolumeClaim:
-          claimName: ssv-node-paul-lh
-      - name: ssv-cm-validator-options-paul-lh
+          claimName: ssv-node-v2-1
+      - name: ssv-cm-validator-options-1
         configMap:
-          name: ssv-cm-validator-options-paul-lh
+          name: ssv-cm-validator-options-1
+#      - name: ssv-nodes-health-check-cm
+#        configMap:
+#          name: ssv-nodes-health-check-cm
       tolerations:
         - effect: NoSchedule
           key: kubernetes.io/role
           operator: Exists
-      hostNetwork: true   
+      hostNetwork: true
