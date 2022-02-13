@@ -46,6 +46,7 @@ type Controller struct {
 	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	storedInstances instances
 	signer          types.SSVSigner
+	valueCheck      proposedValueCheck
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
@@ -117,7 +118,7 @@ func (c *Controller) canStartInstance(value []byte) error {
 	}
 
 	// check value
-	if err := c.valCheck.Check(value); err != nil {
+	if err := c.valueCheck(value); err != nil {
 		return errors.Wrap(err, "value invalid")
 	}
 	panic("implement")
