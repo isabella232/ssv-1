@@ -154,7 +154,7 @@ func createProposal(state State, value []byte, roundChanged, prepares []*SignedM
 	*/
 	panic("implement")
 	msg := &Message{}
-	sig, err := state.GetConfig().GetSigner().SignRoot(msg.GetRoot(), types.QBFTSigType, state.GetConfig().GetSigningPubKey())
+	sig, err := state.GetConfig().GetSigner().SignRoot(msg, types.QBFTSigType, state.GetConfig().GetSigningPubKey())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed signing proposal msg")
 	}

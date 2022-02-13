@@ -31,7 +31,7 @@ type BeaconSigner interface {
 
 // SSVSigner used for all SSV specific signing
 type SSVSigner interface {
-	SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error)
+	SignRoot(data MessageRoot, sigType SignatureType, pk []byte) (Signature, error)
 }
 
 // KeyManager is an interface responsible for all key manager functions
@@ -60,13 +60,9 @@ func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon
 	panic("implement from beacon ")
 }
 
-func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error {
-	panic("implement")
-}
-
-func (s *SSVKeyManager) SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error) {
+func (s *SSVKeyManager) SignRoot(data MessageRoot, sigType SignatureType, pk []byte) (Signature, error) {
 	if k, found := s.keys[hex.EncodeToString(pk)]; found {
-		computedRoot := ComputeSigningRoot(root, ComputeSignatureDomain(s.domain, sigType))
+		computedRoot := ComputeSigningRoot(data, ComputeSignatureDomain(s.domain, sigType))
 		return k.SignByte(computedRoot).Serialize(), nil
 	}
 	return nil, errors.New("pk not found")
