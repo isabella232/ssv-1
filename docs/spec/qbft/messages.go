@@ -109,7 +109,7 @@ func (signedMsg *SignedMessage) IsValidSignature(domain types.DomainType, nodes 
 	}
 
 	return signedMsg.Signature.VerifyMultiPubKey(
-		signedMsg.Message.GetRoot(),
+		signedMsg.Message,
 		domain,
 		types.QBFTSigType,
 		pks,
