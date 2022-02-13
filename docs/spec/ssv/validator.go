@@ -15,6 +15,6 @@ type Validator struct {
 	share       *Share
 	id          ValidatorID
 	dutyRunners DutyRunners
-	signer      beacon.Signer
+	signer      types.KeyManager
 	valCheck    types.ValueCheck
 }
