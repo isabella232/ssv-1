@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponRoundChange(state State, signedRoundChange *SignedMessage, roundChangeMsgContainer MsgContainer, valCheck types.ValueCheck) error {
+func uponRoundChange(state State, signedRoundChange *SignedMessage, roundChangeMsgContainer MsgContainer, valCheck types.BeaconDataCheck) error {
 	// TODO - Roberto comment: could happen we received a round change before we switched the round and this msg will be rejected (lost)
 	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
 		return errors.Wrap(err, "round change msg invalid")
@@ -64,7 +64,7 @@ func hasReceivedProposalJustification(
 	state State,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer MsgContainer,
-	valCheck types.ValueCheck,
+	valCheck types.BeaconDataCheck,
 ) *SignedMessage {
 	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
 
@@ -94,7 +94,7 @@ func isReceivedProposalJustification(
 	roundChanges, prepares []*SignedMessage,
 	newRound Round,
 	value []byte,
-	valCheck types.ValueCheck,
+	valCheck types.BeaconDataCheck,
 ) error {
 	if err := isProposalJustification(
 		state,

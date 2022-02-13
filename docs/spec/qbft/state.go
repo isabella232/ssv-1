@@ -4,7 +4,7 @@ import "github.com/bloxapp/ssv/docs/spec/types"
 
 type signing interface {
 	// GetSigner returns a signer instance
-	GetSigner() types.Signer
+	GetSigner() types.SSVSigner
 	// GetSigningPubKey returns the public key used to sign all QBFT messages
 	GetSigningPubKey() []byte
 	// GetSignatureDomainType returns the domain type used for signatures
@@ -28,7 +28,7 @@ type Config interface {
 	// GetID returns the specific node's ID
 	GetID() types.NodeID
 	// GetValueCheck returns value check instance
-	GetValueCheck() types.ValueCheck
+	GetValueCheck() types.BeaconDataCheck
 	// GetP2PNetwork returns a p2p Network instance
 	GetP2PNetwork() types.QBFTNetwork
 	// GetTimer returns round timer

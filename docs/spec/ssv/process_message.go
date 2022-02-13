@@ -6,10 +6,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func consensusMsgFromNetworkMsg(msg types.SSVMessage) (*qbft.SignedMessage, error) {
-	panic("implement")
-}
-
 // ProcessMessage processes network message of all types
 func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	if err := v.validateMessage(msg); err != nil {
@@ -23,14 +19,13 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 
 	switch msg.GetType() {
 	case types.Consensus:
-		consensusMsg, err := consensusMsgFromNetworkMsg(msg)
-		if err != nil {
-			return errors.Wrap(err, "could not get consensus message from network message")
+		signedMsg := &qbft.SignedMessage{}
+		if err := signedMsg.Decode(msg.GetData()); err != nil {
+			return errors.Wrap(err, "could not get post consensus message from network message")
 		}
-		return v.processConsensusMsg(dutyRunner, consensusMsg)
+		return v.processConsensusMsg(dutyRunner, signedMsg)
 	case types.PostConsensusSignature:
 		sigMsg := &PostConsensusSigMessage{}
-
 		if err := sigMsg.Decode(msg.GetData()); err != nil {
 			return errors.Wrap(err, "could not get post consensus message from network message")
 		}

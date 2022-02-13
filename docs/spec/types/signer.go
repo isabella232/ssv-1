@@ -25,16 +25,18 @@ var (
 type BeaconSigner interface {
 	// SignAttestation signs the given attestation
 	SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error)
+	// IsAttestationSlashable returns error if attestation data is slashable
+	IsAttestationSlashable(data *spec.AttestationData) error
 }
 
-type Signer interface {
+type SSVSigner interface {
 	SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error)
 }
 
 // KeyManager is an interface responsible for all key manager functions
 type KeyManager interface {
 	BeaconSigner
-	Signer
+	SSVSigner
 	// AddShare saves a share key
 	AddShare(shareKey *bls.SecretKey) error
 }
@@ -55,6 +57,10 @@ func NewSSVKeyManager(domain DomainType) KeyManager {
 // SignAttestation signs the given attestation
 func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
 	panic("implement from beacon ")
+}
+
+func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error {
+	panic("implement")
 }
 
 func (s *SSVKeyManager) SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error) {

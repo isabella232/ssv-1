@@ -1,7 +1,15 @@
 package types
 
-// ValueCheck is an interface which validates the pre-prepare value passed to the node.
-// It's kept minimal to allow the implementation to have all the check logic.
-type ValueCheck interface {
-	Check(value []byte) error
+import (
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+)
+
+// BeaconDataCheck validates beacon duty data (AttestationData, Block, etc.), including slashing protection
+type BeaconDataCheck struct {
+	KeyManager KeyManager
+}
+
+func (vc *BeaconDataCheck) CheckAttestationData(data *spec.AttestationData) error {
+	// validate not slashable
+	return vc.KeyManager.IsAttestationSlashable(data)
 }

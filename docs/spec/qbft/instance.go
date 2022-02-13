@@ -24,7 +24,7 @@ type IInstance interface {
 type Instance struct {
 	state      State
 	p2pNetwork types.QBFTNetwork
-	valueCheck types.ValueCheck
+	valueCheck types.BeaconDataCheck
 
 	proposeContainer     MsgContainer
 	prepareContainer     MsgContainer

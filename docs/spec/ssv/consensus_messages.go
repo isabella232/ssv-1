@@ -1,6 +1,7 @@
 package ssv
 
 import (
+	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -12,20 +13,20 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "failed to process consensus msg")
 	}
 
-	if err := v.valCheck.Check(decidedValueByts); err != nil {
-		return errors.Wrap(err, "post consensus value check fail")
+	decidedValue := &consensusData{}
+	if err := decidedValue.Decode(decidedValueByts); err != nil {
+		return errors.Wrap(err, "failed to parse decided value to consensusData")
 	}
 
-	if !decided {
-		return nil
+	if err := v.checkDecidedValue(decidedValue); err != nil {
+		return errors.Wrap(err, "decided value is invalid")
 	}
 
 	/**
 	Decided returns true only once so if it is true it must be for the current running instance
 	*/
-	decidedValue := &consensusData{}
-	if err := decidedValue.Decode(decidedValueByts); err != nil {
-		return errors.Wrap(err, "failed to parse decided value to consensusData")
+	if !decided {
+		return nil
 	}
 
 	postConsensusMsg, err := dutyRunner.DecideRunningInstance(decidedValue, v.signer)
@@ -48,4 +49,13 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "can't broadcast partial sig")
 	}
 	return nil
+}
+
+func (v *Validator) checkDecidedValue(decidedValue *consensusData) error {
+	switch decidedValue.Duty.Type {
+	case beacon.RoleTypeAttester:
+		return v.valCheck.CheckAttestationData(decidedValue.AttestationData)
+	default:
+		return errors.New("can't validate unknown decided value")
+	}
 }

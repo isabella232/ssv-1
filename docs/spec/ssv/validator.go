@@ -16,5 +16,5 @@ type Validator struct {
 	id          ValidatorID
 	dutyRunners DutyRunners
 	signer      types.KeyManager
-	valCheck    types.ValueCheck
+	valCheck    types.BeaconDataCheck
 }
