@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+type proposedValueCheck func(data []byte) error
+
 type IInstance interface {
 	// Start will start the new instance with a specific value and height
 	Start(value []byte, height uint64)
@@ -24,7 +26,7 @@ type IInstance interface {
 type Instance struct {
 	state      State
 	p2pNetwork types.QBFTNetwork
-	valueCheck types.ValueCheck
+	valueCheck proposedValueCheck
 
 	proposeContainer     MsgContainer
 	prepareContainer     MsgContainer

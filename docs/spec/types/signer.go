@@ -27,14 +27,15 @@ type BeaconSigner interface {
 	SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error)
 }
 
-type Signer interface {
+// SSVSigner used for all SSV specific signing
+type SSVSigner interface {
 	SignRoot(root []byte, sigType SignatureType, pk []byte) (Signature, error)
 }
 
 // KeyManager is an interface responsible for all key manager functions
 type KeyManager interface {
 	BeaconSigner
-	Signer
+	SSVSigner
 	// AddShare saves a share key
 	AddShare(shareKey *bls.SecretKey) error
 }
