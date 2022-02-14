@@ -7,7 +7,7 @@ import (
 )
 
 func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *PostConsensusSigMessage) error {
-	if err := v.verifyPostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
+	if err := v.validatePostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
@@ -36,9 +36,9 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *Post
 	return nil
 }
 
-func (v *Validator) verifyPostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg types.MessageSignature) error {
-	if !sigMsg.IsValidSignature(v.share.GetQBFTCommittee()) {
-		return errors.New("failed to verify signature")
+func (v *Validator) validatePostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg *PostConsensusSigMessage) error {
+	if err := sigMsg.signature.VerifyByNodes(sigMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
+		return errors.Wrap(err, "failed to verify signature")
 	}
 	return nil
 }

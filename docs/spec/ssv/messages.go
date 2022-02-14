@@ -10,7 +10,7 @@ import (
 
 type PostConsensusSigMessage struct {
 	height    uint64
-	signature []byte
+	signature types.Signature
 	root      []byte
 	signers   []types.NodeID
 }
@@ -31,16 +31,6 @@ func (pcsm *PostConsensusSigMessage) GetSignature() []byte {
 
 func (pcsm *PostConsensusSigMessage) GetSigners() []types.NodeID {
 	return pcsm.signers
-}
-
-// IsValidSignature returns true if signature is valid (against message and signers)
-func (pcsm *PostConsensusSigMessage) IsValidSignature(nodes []*types.Node) bool {
-	sig, err := blsSig(pcsm.signature)
-	if err != nil {
-		return false
-	}
-
-	return verifySig(sig, pcsm.signers, nodes, pcsm.root)
 }
 
 func (pcsm *PostConsensusSigMessage) Aggregate(signedMsg types.MessageSignature) error {

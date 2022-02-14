@@ -34,9 +34,10 @@ type Network interface {
 }
 
 type Share struct {
-	pubKey    []byte
-	committee []*types.Node
-	quorum    uint64
+	pubKey     []byte
+	committee  []*types.Node
+	quorum     uint64
+	domainType types.DomainType
 }
 
 // GetValidatorPubKey returns the validator public key to which the share is associated with
@@ -50,6 +51,10 @@ func (share *Share) GetQBFTCommittee() []*types.Node {
 
 func (share *Share) GetQuorumCount() uint64 {
 	return share.quorum
+}
+
+func (share *Share) GetDomainType() types.DomainType {
+	return share.domainType
 }
 
 func (share *Share) Encode() ([]byte, error) {

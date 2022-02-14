@@ -6,7 +6,6 @@ import (
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
-	"github.com/bloxapp/ssv/ibft/proto"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
@@ -55,9 +54,10 @@ var committee = []*types.Node{
 }
 
 func newTestingValidator() *Validator {
+	signer := &testingKeyManager{}
 	return &Validator{
-		valCheck: &testingValCheckPassAll{},
-		signer:   &testingSigner{},
+		valCheck: &types.BeaconDataCheck{KeyManager: signer},
+		signer:   signer,
 		share: &Share{
 			pubKey:    testingValidatorPK[:],
 			committee: committee,
@@ -208,17 +208,26 @@ func newTestingDutyRunner() *DutyRunner {
 	}
 }
 
-type testingSigner struct {
-	sk *bls.SecretKey
+type testingNetwork struct {
 }
 
-// SignIBFTMessage signs a network iBFT msg
-func (s *testingSigner) SignIBFTMessage(message *proto.Message, pk []byte) ([]byte, error) {
+func (net *testingNetwork) BroadcastMessage(message *types.SSVMessage) error {
+	return nil
+}
+
+type testingKeyManager struct {
+}
+
+// IsAttestationSlashable returns error if attestation data is slashable
+func (km *testingKeyManager) IsAttestationSlashable(data *spec.AttestationData) error {
+	return nil
+}
+
+func (km *testingKeyManager) SignRoot(data types.MessageRoot, sigType types.SignatureType, pk []byte) (types.Signature, error) {
 	return nil, nil
 }
 
-// SignAttestation signs the given attestation
-func (s *testingSigner) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
+func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
 	sig := spec.BLSSignature{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6}
 	att := &spec.Attestation{
 		Data:      data,
@@ -227,30 +236,6 @@ func (s *testingSigner) SignAttestation(data *spec.AttestationData, duty *beacon
 	return att, sig[:], nil
 }
 
-type testingNode struct {
-	nodeID types.NodeID
-	pk     []byte
-}
-
-func (n *testingNode) GetPublicKey() []byte {
-	return n.pk
-}
-
-// GetID returns the node's ID
-func (n *testingNode) GetID() types.NodeID {
-	return n.nodeID
-}
-
-type testingValCheckPassAll struct {
-}
-
-func (valCheck *testingValCheckPassAll) Check(value []byte) error {
-	return nil
-}
-
-type testingNetwork struct {
-}
-
-func (net *testingNetwork) BroadcastMessage(message *types.SSVMessage) error {
+func (km *testingKeyManager) AddShare(shareKey *bls.SecretKey) error {
 	return nil
 }

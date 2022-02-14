@@ -217,7 +217,7 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 			},
 			AttestationData: nil,
 		}
-		_, err := dr.DecideRunningInstance(decidedValue, &testingSigner{})
+		_, err := dr.DecideRunningInstance(decidedValue, &testingKeyManager{})
 		require.NoError(t, err)
 		require.NotNil(t, dr.dutyExecutionState.decidedValue)
 		require.NotNil(t, dr.dutyExecutionState.signedAttestation)

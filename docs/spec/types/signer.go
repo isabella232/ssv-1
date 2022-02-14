@@ -44,8 +44,9 @@ type KeyManager interface {
 
 // SSVKeyManager implements the KeyManager interface with all of its funcs
 type SSVKeyManager struct {
-	keys   map[string]*bls.SecretKey // holds pub keys as key and secret key as value
-	domain DomainType
+	keys               map[string]*bls.SecretKey // holds pub keys as key and secret key as value
+	domain             DomainType
+	highestAttestation *spec.AttestationData
 }
 
 func NewSSVKeyManager(domain DomainType) KeyManager {
@@ -57,7 +58,28 @@ func NewSSVKeyManager(domain DomainType) KeyManager {
 
 // SignAttestation signs the given attestation
 func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
+	if err := s.IsAttestationSlashable(data); err != nil {
+		return nil, nil, errors.Wrap(err, "can't sign slashalbe attestation")
+	}
+	s.highestAttestation = data
 	panic("implement from beacon ")
+}
+
+// IsAttestationSlashable returns error if attestation data is slashable
+func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error {
+	if s.highestAttestation == nil {
+		return nil
+	}
+	if data.Slot <= s.highestAttestation.Slot {
+		return errors.New("attestation data slot potentially slashable")
+	}
+	if data.Source.Epoch <= s.highestAttestation.Source.Epoch {
+		return errors.New("attestation data source epoch potentially slashable")
+	}
+	if data.Target.Epoch <= s.highestAttestation.Target.Epoch {
+		return errors.New("attestation data target epoch potentially slashable")
+	}
+	return nil
 }
 
 func (s *SSVKeyManager) SignRoot(data MessageRoot, sigType SignatureType, pk []byte) (Signature, error) {

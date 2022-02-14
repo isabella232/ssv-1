@@ -13,6 +13,13 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "failed to process consensus msg")
 	}
 
+	/**
+	Decided returns true only once so if it is true it must be for the current running instance
+	*/
+	if !decided {
+		return nil
+	}
+
 	decidedValue := &consensusData{}
 	if err := decidedValue.Decode(decidedValueByts); err != nil {
 		return errors.Wrap(err, "failed to parse decided value to consensusData")
@@ -20,13 +27,6 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 
 	if err := v.checkDecidedValue(decidedValue); err != nil {
 		return errors.Wrap(err, "decided value is invalid")
-	}
-
-	/**
-	Decided returns true only once so if it is true it must be for the current running instance
-	*/
-	if !decided {
-		return nil
 	}
 
 	postConsensusMsg, err := dutyRunner.DecideRunningInstance(decidedValue, v.signer)
