@@ -110,7 +110,8 @@ func validSignedPrepareForHeightRoundAndValue(
 	if bytes.Compare(signedPrepare.Message.GetPrepareData().GetData(), value) != 0 {
 		return errors.New("msg identifier wrong")
 	}
-	if err := signedPrepare.IsValidSignature(state.GetConfig().GetSignatureDomainType(), nodes); err != nil {
+
+	if err := signedPrepare.Signature.VerifyByNodes(signedPrepare, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, nodes); err != nil {
 		return errors.Wrap(err, "prepare msg signature invalid")
 	}
 	return nil

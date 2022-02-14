@@ -1,6 +1,7 @@
 package qbft
 
 import (
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -132,7 +133,8 @@ func validRoundChange(state State, signedMsg *SignedMessage, height uint64, roun
 	if signedMsg.Message.Round != round {
 		return errors.New("round change round is wrong")
 	}
-	if err := signedMsg.IsValidSignature(state.GetConfig().GetSignatureDomainType(), state.GetConfig().GetNodes()); err != nil {
+
+	if err := signedMsg.Signature.VerifyByNodes(signedMsg, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, state.GetConfig().GetNodes()); err != nil {
 		return errors.Wrap(err, "round change msg signature invalid")
 	}
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&

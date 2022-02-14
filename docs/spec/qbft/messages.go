@@ -90,30 +90,11 @@ type SignedMessage struct {
 	Message   *Message // message for which this signature is for
 }
 
-func (signedMsg *SignedMessage) GetSignature() []byte {
+func (signedMsg *SignedMessage) GetSignature() types.Signature {
 	return signedMsg.Signature
 }
 func (signedMsg *SignedMessage) GetSigners() []types.NodeID {
 	return signedMsg.Signers
-}
-
-// IsValidSignature returns true if signature is valid (against message and signers)
-func (signedMsg *SignedMessage) IsValidSignature(domain types.DomainType, nodes []*types.Node) error {
-	pks := make([][]byte, 0)
-	for _, id := range signedMsg.Signers {
-		for _, n := range nodes {
-			if id == n.GetID() {
-				pks = append(pks, n.GetPublicKey())
-			}
-		}
-	}
-
-	return signedMsg.Signature.VerifyMultiPubKey(
-		signedMsg.Message,
-		domain,
-		types.QBFTSigType,
-		pks,
-	)
 }
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance

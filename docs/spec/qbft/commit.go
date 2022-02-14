@@ -96,7 +96,8 @@ func validateCommit(
 	if !bytes.Equal(proposedMsg.Message.GetCommitData().GetData(), signedCommit.Message.GetCommitData().GetData()) {
 		return errors.New("proposed data different than commit msg data")
 	}
-	if err := signedCommit.IsValidSignature(state.GetConfig().GetSignatureDomainType(), nodes); err != nil {
+
+	if err := signedCommit.Signature.VerifyByNodes(signedCommit, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, nodes); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
 	}
 	return nil

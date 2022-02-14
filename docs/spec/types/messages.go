@@ -14,10 +14,8 @@ type MessageRoot interface {
 
 type MessageSignature interface {
 	MessageRoot
-	GetSignature() []byte
+	GetSignature() Signature
 	GetSigners() []NodeID
-	// IsValidSignature returns true if signature is valid (against message and signers)
-	IsValidSignature(domain DomainType, nodes []*Node) error
 	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
 	MatchedSigners(ids []NodeID) bool
 	// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)

@@ -25,6 +25,8 @@ var (
 type BeaconSigner interface {
 	// SignAttestation signs the given attestation
 	SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error)
+	// IsAttestationSlashable returns error if attestation is slashable
+	IsAttestationSlashable(data *spec.AttestationData) error
 }
 
 // SSVSigner used for all SSV specific signing
@@ -55,6 +57,11 @@ func NewSSVKeyManager(domain DomainType) KeyManager {
 
 // SignAttestation signs the given attestation
 func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
+	panic("implement from beacon ")
+}
+
+// IsAttestationSlashable returns error if attestation data is slashable
+func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error {
 	panic("implement from beacon ")
 }
 
