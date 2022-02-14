@@ -1,344 +1,149 @@
 # SSV Specifications - Messaging
 
-**WIP**
+| Authors                                 | Status | Last Revision |
+|:----------------------------------------|:-------|:--------------|
+| [@niv-blox](https://github.com/nivBlox) | WIP    | FEB 14        |
 
-This document contains the networking messaging process specification for SSV.
+This document contains the messaging specification for `SSV.Network`.
 
+## Overview
+
+- [ ] [Fundamentals](#fundamentals)
+  - [ ] [Stack](#stack)
+  - [ ] [P2P Network](#p2p-networking)
+  - [ ] [Life Cycle](#life-cycle)
+  - [ ] [Message Router](#messages-Router)
+- [ ] [Wire](#wire)
+  - [ ] [IBFT message](#ibft-message)
+- [ ] [Validation](#validation)
+  - [ ] [IBFT](#ibft)
+  - [ ] [Decided](#decided)
+  - [ ] [Sync](#sync)
 ## Fundamentals
 
 ### Stack
 
-SSV is a decentralized P2P network, built with [Libp2p](https://libp2p.io/), a modular framework for P2P networking.
+SSV supports a large amount of messages from the network in order to reach consensus between all committee’s operators
+All messages need to be handled for each validator in parallel.
 
 ### P2P Networking
 
-p2p networking should work as a "black box". Messaging process handles only msg's from pubsub topics. 
+p2p networking should work as a "black box" for the messages handler. Where the messaging processor gets the msgs from.
+
+### Life Cycle 
+![commit flow](../resources/messaging-life-cycle.png)
+
+### Messages Router
+Messages can come in various times, even next round's messages can come "early" as other nodes can change round before this node.
+The messages processing should be "smart & dynamic". messages will be processed by multi layer decisions
+1. **Sequence number** - always priorities validator's state seqNum. until seqNum is decided no further message will be processed.   
+2. **Stage** - messages will be processed by time of arrival unless there are quorum of the same stage (prepare, commit). in that case processor will "push" the quorum msg's forward. 
+3. **Round** - Same as **Stage**, current state round have priority unless there is a quorum for a higher round.  
+
+
+## Wire
+
+### IBFT Message
+Sync
+IBFT
+Pre-prepare
+Prepare
+Commit
+Decided
+Signature
+
+## Validation
+### IBFT
+Each IBFT message goes through basic validation.
+- Message
+  - Checks sign message is not nil
+  - Checks message is not nil
+- Type
+  - Checks if type is expected
+- Lambda
+  - Checks if lambda equal to share state lambda
+- Sequence Number
+  - Checks if seqNum is equal to share state seqNum
+- BLS
+  - Get all publicKeys by the message signer id’s
+  - Verify all signers are unique
+  - Aggregate all pk’s
+  - Deserialize message signature
+  - Verify pk’s and root bytes with sig
+
+#### Pre-Prepare
+- Round
+  - Validate round from state is equal to message round
+- **UponPrePrepareMsg** Algorithm 2 IBFTController pseudocode for process pi: normal case operation
+upon receiving a valid ⟨PRE-PREPARE, λi, ri, value⟩ message m from leader(λi, round) such that:
+JustifyPrePrepare(m) do
+set timer i to running and expire after t(ri)
+broadcast ⟨PREPARE, λi, ri, value⟩
+
+#### Prepare
+- Round
+  - Validate round from state is equal to message round
+- Quorum Check
+
+#### Commit
+- Quorum Check
+- Flow
+
+  ![commit flow](http://via.placeholder.com/200x150) //TODO add flow diagram
+
+
+#### Change Round
+- Validate
+  - Check if msg is nil
+  - Check if Prepared value is nil
+  - Check if justification message type is not `prepare`
+  - Validate msg sequence number with justification msg
+  - Validate msg round with justification msg
+  - Validate data.prepared round with justification msg round
+  - Validate msg lambda with justification msg lambda
+  - Validate data prepared value with justification msg value
+  - Validate enough signer id’s is not less than threshold size
+  - BLS verify signature
+  - **uponChangeRoundPartialQuorum**
+  upon receiving a set Frc of f + 1 valid ⟨ROUND-CHANGE, λi, rj, −, −⟩ messages such that:
+  ∀⟨ROUND-CHANGE, λi, rj, −, −⟩ ∈ Frc : rj > ri do
+  let ⟨ROUND-CHANGE, hi, rmin, −, −⟩ ∈ Frc such that:
+  ∀⟨ROUND-CHANGE, λi, rj, −, −⟩ ∈ Frc : rmin ≤ rj
+  ri ← rmin
+  set timer i to running and expire after t(ri)
+  broadcast ⟨ROUND-CHANGE, λi, ri, pri, pvi⟩
+  - Validate Round
+  - **uponChangeRoundFullQuorum**
+    upon receiving a quorum Qrc of valid ⟨ROUND-CHANGE, λi, ri, −, −⟩ messages such that
+    leader(λi, ri) = pi ∧ JustifyRoundChange(Qrc) do
+    if HighestPrepared(Qrc) ̸= ⊥ then
+    let v such that (−, v) = HighestPrepared(Qrc))
+    else
+    let v such that v = inputValue i
+    broadcast ⟨PRE-PREPARE, λi, ri, v⟩
+
+### Decided
+
+- Message
+  - Checks sign message is not nil
+  - Checks message is not nil
+- Type
+  - Checks if type is expected
+- BLS
+  - Get all publicKeys by the message signer id’s
+  - Verify all signers are unique
+  - Aggregate all pk’s
+  - Deserialize message signature
+  - Verify pk’s and root bytes with sig
+- Quorum
+  - Validate enough signer id’s is not less than threshold size 
+- Flow
 
-[go-libp2p-noise](https://github.com/libp2p/go-libp2p-noise) is used to secure transport channels (based on [noise protocol](https://noiseprotocol.org/noise.html)).
+  ![decided flow](http://via.placeholder.com/200x150) //TODO add flow diagram 
 
-Multiplexing of protocols over channels is achieved using [yamux](https://github.com/libp2p/go-libp2p-yamux) protocol.
+### Sync
 
-### Messaging
 
-Messages in the network are formatted with `protobuf`,
-and being transported p2p with one of the following methods:
-
-#### Streams
-
-Libp2p allows to create a bidirectional stream between two peers and implement a wire messaging protocol. \
-See more information in [IPFS specs > communication-model - streams](https://ipfs.io/ipfs/QmVqNrDfr2dxzQUo4VN3zhG4NV78uYFmRpgSktWDc2eeh2/specs/7-properties/#71-communication-model---streams).
-
-Streams are used in cases where message audience is a single peer.
-
-#### PubSub
-
-PubSub is used as an infrastructure for broadcasting messages among a group (AKA subnet) of operator nodes.
-
-GossipSub ([v1.1](https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.1.md)) is the pubsub protocol used in SSV. \
-In short, each node saves metadata regards topic subscriptions of other peers in the network. \
-With that information, messages are propagated to the most relevant peers (subscribed or neighbors of a subscribed peer) and therefore reduce the overall traffic.
-
-### Network Peers
-
-There are several types of nodes in the network:
-
-#### Operator
-
-Operator node is responsible for signing validators duties. \
-It holds relevant registry data and the validators consensus data.
-
-#### Bootnode
-
-Bootnode is a public peer which is responsible for helping new peers to find other peers in the network. \
-The bootnode have a static (and stable) ENR so other peers could join the network easily.
-
-#### Exporter
-
-Exporter role is to export information from the network. \
-It collects registry data (validators / operators) and consensus data (decided messages chains) of all validators in the network.
-
-### Identity
-
-Identity in the network is based on two types of keys:
-
-`Network Key` is used to create peer ID by all network peers. \
-All messages from a peer are signed using this key and verified by other peers with the corresponding public key. \
-Unless provided, the key will be generated and saved locally for future use.
-
-`Operator Key` is used for decryption of shares keys that are used for signing consensus messages and duties. \
-Exporter and Bootnode does not hold this key.
-
----
-
-## Protocols
-
-Network interaction includes several types of protocols, as detailed below.
-
-### 1. Consensus
-
-`IBFT`/`QBFT` consensus protocol is used to govern `SSV` network.
-`IBFT` ensures that consensus can be reached by a committee of `n` operator nodes while tolerating a certain amount of `f` faulty nodes as defined by `n ≥ 3f + 1`.
-
-As part of the algorithm, nodes are exchanging messages with other nodes in the committee. \
-Once the committee reaches consensus, the nodes will publish the decided message across the network.
-
-More information regarding the protocol can be found in [iBFT annotated paper (By Blox)](/ibft/IBFT.md)
-
-#### Message Structure
-
-`SignedMessage` is a wrapper for IBFT messages, it holds a message and its signature with a list of signer IDs:
-
-```protobuf
-syntax = "proto3";
-import "gogo.proto";
-
-// SignedMessage is a wrapper on top of Message for supporting signatures
-message SignedMessage{
- // message is the raw message to sign
- Message message = 1 [(gogoproto.nullable) = false];
- // signature is a signature of the message
- bytes signature = 2 [(gogoproto.nullable) = false];
- // signer_ids are the IDs of the signing operators
- repeated uint64 signer_ids = 3;
-}
-```
-
-`Message` represent an IBFT message:
-
-```protobuf
-syntax = "proto3";
-
-// Message represents an IBFT message
-message Message {
- // type is the IBFT state / stage
- Stage type   = 1;
- // round is the current round where the message was sent
- uint64 round      = 2;
- // lambda is the message identifier
- bytes lambda      = 3;
- // sequence number is an incremental number for each instance, much like a block number would be in a blockchain
- uint64 seq_number = 4;
- // value holds the message data in bytes
- bytes value       = 5;
-}
-```
-
-See the following example of a message json:
-```json
-{
- "message": {
-   "type": 3,
-   "round": 1,
-   "lambda": "OTFiZGZjOWQxYzU4NzZkYTEwY...",
-   "seq_number": 28276,
-   "value": "mB0aAAAAAAA4AAAAAAAAADpTC1djq..."
- },
- "signature": "jrB0+Z9zyzzVaUpDMTlCt6Om9mj...",
- "signer_ids": [4, 2, 3]
-}
-```
-
-**NOTE** that all pubsub messages in the network are wrapped by libp2p's message structure
-
-### 2. History Sync
-
-History sync is the procedure of syncing decided messages from other peers. \
-It is a prerequisite for taking part in some validator's consensus.
-
-Sync is done over streams as pubsub is not suitable for this case due to several reasons such as:
-- API nature is request/response, unlike broadcasting in consensus messages
-- Bandwidth - only one peer (usually) needs the data, it would be a waste to send redundant messages across the network.
-
-#### Message Structure
-
-TODO: refine structure
-
-`SyncMessage` structure is used by all sync protocols, the type of message is specified in a dedicated field:
-
-```protobuf
-message SyncMessage {
- // MsgType is the type of sync message
- SyncMsgType MsgType                      = 1;
- // FromPeerID is the ID of the sender
- string FromPeerID                     = 2;
- // Identifier of the message (validator + role)
- bytes Identifier                      = 3;
- // Params holds the requests parameters
- repeated uint64 Params                = 4;
- // Messages holds the results (decided messages) of some request
- repeated proto.SignedMessage Messages = 5;
- // Error holds an error response if exist
- string Error                          = 6;
-}
-```
-
-`SyncMsgType` is an enum that represents the type of message:
-
-```protobuf
-// SyncMsgType is an enum that represents the type of sync message
-enum SyncMsgType {
- // GetHighestType is a request from peers to return the highest decided/ prepared instance they know of
- GetHighestType = 0;
- // GetInstanceRange is a request from peers to return instances and their decided/ prepared justifications
- GetInstanceRange = 1;
- // GetCurrentInstance is a request from peers to return their current running instance details
- GetLatestChangeRound = 2;
-}
-```
-
-#### Stream Protocols
-
-The following protocols are used as part of history sync:
-
-##### Heights Decided
-
-This protocol is used by a node to find out what is the highest decided message among a specific committee. \
-In case there are no decided messages, it will return an empty array of messages.
-
-`/sync/highest_decided/0.0.1`
-
-**TODO: add example request/response**
-
-##### Decided By Range ?
-
-This protocol enables to sync decided messages in some specific range.
-
-`/sync/decided_by_range/0.0.1`
-
-**TODO: add example request/response**
-
-##### Last Change Round
-
-This protocol enables a node that was online to catch up with change round messages.
-
-`/sync/last_change_round/0.0.1`
-
-**TODO: add example request/response**
-
-
-
-
-## Networking
-
-### Network ID
-
-Network ID is a 32byte hash, which has to be known and used by all members across the network.
-Peers from other public/private libp2p networks (with wrong network ID) won't be able to read or write messages in the network.
-
-The way it is implemented is with [libp2p's private network](https://github.com/libp2p/specs/blob/master/pnet/Private-Networks-PSK-V1.md),
-which encrypts/decrypts all traffic of a given network with the corresponding key (network id/hash),
-regardless of the regular transport security ([go-libp2p-noise](https://github.com/libp2p/go-libp2p-noise)).
-
-### Discovery
-
-As libp2p doesn't provide a module for decentralized discovery,
-[discv5](https://github.com/ethereum/devp2p/blob/master/discv5/discv5.md) is used in ssv as a complementary module for discovery.
-
-Peers are represented by an ENR record (see below) that is published across the network and stored in a DHT.
-
-Bootnode is a special kind of peers that have a public static ENR to enable new peers to join the network. \
-The role of the bootnode ends once a new peer finds existing peers in the network.
-
-#### ENR
-
-[Ethereum Node Records](https://github.com/ethereum/devp2p/blob/master/enr.md) is a format for connectivity information.
-Each record contains a signature, sequence (for republishing) and arbitrary key/value pairs.
-
-`ENR` structure in ssv network contains the following key/value pairs:
-
-| Key         | Value                                           |
-|:------------|:------------------------------------------------|
-| `id`        | name of identity scheme, e.g. "v4"              |
-| `secp256k1` | compressed secp256k1 public key, 33 bytes       |
-| `ip`        | IPv4 address, 4 bytes                           |
-| `tcp`       | TCP port, big endian integer                    |
-| `udp`       | UDP port, big endian integer                    |
-| `type`      | node type, integer -> 1 (operator), 2 (exporter), 3 (bootnode) |
-| `oid`       | operator id, 32 bytes                           |
-| `version`   | fork version, integer                           |
-
-
-### Authentication
-
-This protocol enables ssv nodes to exchange payloads that authenticate an operator/exporter in relation to the peer.
-
-
-### Topics/Subnets
-
-Messages in the network are being sent over a subnet/topic, which the relevant peers should be subscribed to. \
-This helps to reduce the overall bandwidth, related resources etc.
-
-There are several options for how setup topics in the network, see below.
-
-The first version of SSV testnet is using a topic per validator, as described below.
-
-#### Topic per validator
-
-Each validator committee has a dedicated pubsub topic with all the relevant peers subscribed to it (committee + exporter).
-
-It helps to reduce amount of messages in the network, but increases the number of topics. \
-In addition, it a node can instantly understand the status of committee members by checking how many
-peers are subscribed on the validator's topic.
-
-#### Subnets
-
-A subnet of several validators contains multiple committees,
-reusing the topic to communicate on behalf of different validators.
-
-The number of topics will be reduced but the number of messages each peer handles should grow. \
-As the topics interest across the network also increased,
-we can expect a better propagation of messages and therefore lower probability of missed messages.
-
-Subnet approach also enables redundancy of decided messages across multiple peers,
-not only among committee peers (+ exporter), and therefore increasing network security.
-
-##### Validator to subnet mapping
-
-A simple approach that can be taken is hash partitioning: \
-`hash(validatiorPubKey) % num_of_subnets`,
-where the number of subnets is fixed (TBD 32 / 64 / 128).
-The hash function helps to distribute validators across subnets in a balanced way
-
-**TBD** A dynamic number of subnets (e.g. `log(num_of_peers)`) which requires a different approach.
-
-How to check how many peers are online for a specific validator? \
-Assuming peers are authenticated, and published their operator public key in that process,
-nodes can iterate the subnet peers and lookup the desired committee members by their public key.
-
-### Network Peers Connectivity
-
-**TBD**
-
-In a fully-connected network, where each peer is connected to all other peers in the network,
-running nodes will consume many resources to process all network related tasks e.g. parsing, peers management etc.
-
-To lower resource consumption, there is a limitation for the total connected peers, currently set to `150`. \
-Once reached to peer limit, the node will connect only to operators that shares at least one subnet / committee.
-
-### Forks
-
-Future network forks will follow the general forks mechanism and design in SSV. \
-The idea is to wrap procedures that have potential to be changed in future versions.
-Currently, the following are covered:
-
-- validator topic mapping
-- message encoding/decoading
-
-#### Fork v0
-
-validator public key is used as the topic name and JSON is used for encoding.
-
-#### Fork v1
-
-**TODO**
-
-## Open points
-
-* Heartbeat ?
-* Hub/HA
- * proxied network layer?
-* Home setup (non-cloud)
-* History sync changes?
 
 
 
