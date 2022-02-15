@@ -186,6 +186,9 @@ func TestDutyRunner_StartNewInstance(t *testing.T) {
 		dr := newTestingDutyRunner()
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
 		require.NotNil(t, dr.dutyExecutionState)
+		require.EqualValues(t, 1, dr.dutyExecutionState.height)
+		require.NotNil(t, dr.dutyExecutionState.runningInstance)
+		require.EqualValues(t, 3, dr.dutyExecutionState.quorumCount)
 	})
 }
 
