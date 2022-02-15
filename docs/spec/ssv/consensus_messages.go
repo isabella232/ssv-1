@@ -13,6 +13,8 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "failed to process consensus msg")
 	}
 
+	//TODO -how do we handle late commit msgs? DecideRunningInstance is the one saving them to db
+
 	/**
 	Decided returns true only once so if it is true it must be for the current running instance
 	*/

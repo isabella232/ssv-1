@@ -17,6 +17,8 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *Post
 	}
 	postCons.AddPartialSig(sigMsg)
 
+	// TODO what happens when the 4th msg arrives? it will re-execute this code which it shouldnt
+
 	if !postCons.HasPostConsensusSigQuorum() {
 		return nil
 	}
