@@ -29,8 +29,10 @@ type Config interface {
 	GetID() types.NodeID
 	// GetValueCheck returns value check instance
 	GetValueCheck() proposedValueCheck
-	// GetP2PNetwork returns a p2p Network instance
-	GetP2PNetwork() types.QBFTNetwork
+	// GetNetwork returns a p2p Network instance
+	GetNetwork() Network
+	// GetStorage returns a p2p Network instance
+	GetStorage() Storage
 	// GetTimer returns round timer
 	GetTimer() Timer
 }

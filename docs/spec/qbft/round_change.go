@@ -35,7 +35,7 @@ func uponRoundChange(
 			return errors.Wrap(err, "failed to create proposal")
 		}
 
-		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
+		if err := state.GetConfig().GetNetwork().Broadcast(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
 	} else if partialQuorum, rcs := hasReceivedPartialQuorum(state, roundChangeMsgContainer); partialQuorum {
@@ -45,7 +45,7 @@ func uponRoundChange(
 		state.SetProposalAcceptedForCurrentRound(nil)
 
 		roundChange := createRoundChange(state, newRound)
-		if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(roundChange); err != nil {
+		if err := state.GetConfig().GetNetwork().Broadcast(roundChange); err != nil {
 			return errors.Wrap(err, "failed to broadcast round change message")
 		}
 	}

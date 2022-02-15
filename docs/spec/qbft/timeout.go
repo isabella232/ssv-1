@@ -11,7 +11,7 @@ func uponRoundTimeout(state State) error {
 	state.SetRound(state.GetRound() + 1)
 	roundChange := createRoundChange(state, state.GetRound())
 
-	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(roundChange); err != nil {
+	if err := state.GetConfig().GetNetwork().Broadcast(roundChange); err != nil {
 		return errors.Wrap(err, "failed to broadcast round change message")
 	}
 
