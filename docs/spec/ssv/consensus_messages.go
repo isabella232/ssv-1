@@ -47,7 +47,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		Data:    data,
 	}
 
-	if err := v.network.BroadcastMessage(msgToBroadcast); err != nil {
+	if err := v.network.Broadcast(msgToBroadcast); err != nil {
 		return errors.Wrap(err, "can't broadcast partial sig")
 	}
 	return nil

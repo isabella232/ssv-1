@@ -25,7 +25,7 @@ func (pcsm *PostConsensusSigMessage) Decode(data []byte) error {
 	return json.Unmarshal(data, pcsm)
 }
 
-func (pcsm *PostConsensusSigMessage) GetSignature() []byte {
+func (pcsm *PostConsensusSigMessage) GetSignature() types.Signature {
 	return pcsm.signature
 }
 

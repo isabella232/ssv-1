@@ -211,7 +211,7 @@ func newTestingDutyRunner() *DutyRunner {
 type testingNetwork struct {
 }
 
-func (net *testingNetwork) BroadcastMessage(message *types.SSVMessage) error {
+func (net *testingNetwork) Broadcast(message *types.SSVMessage) error {
 	return nil
 }
 
