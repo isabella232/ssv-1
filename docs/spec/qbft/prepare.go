@@ -41,7 +41,7 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 	state.SetLastPreparedRound(state.GetRound())
 
 	commitMsg := createCommit(state, proposedValue)
-	if err := state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(commitMsg); err != nil {
+	if err := state.GetConfig().GetNetwork().Broadcast(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 
@@ -110,7 +110,8 @@ func validSignedPrepareForHeightRoundAndValue(
 	if bytes.Compare(signedPrepare.Message.GetPrepareData().GetData(), value) != 0 {
 		return errors.New("msg identifier wrong")
 	}
-	if err := signedPrepare.IsValidSignature(state.GetConfig().GetSignatureDomainType(), nodes); err != nil {
+
+	if err := signedPrepare.Signature.VerifyByNodes(signedPrepare, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, nodes); err != nil {
 		return errors.Wrap(err, "prepare msg signature invalid")
 	}
 	return nil

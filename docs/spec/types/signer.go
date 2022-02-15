@@ -25,7 +25,7 @@ var (
 type BeaconSigner interface {
 	// SignAttestation signs the given attestation
 	SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error)
-	// IsAttestationSlashable returns error if attestation data is slashable
+	// IsAttestationSlashable returns error if attestation is slashable
 	IsAttestationSlashable(data *spec.AttestationData) error
 }
 

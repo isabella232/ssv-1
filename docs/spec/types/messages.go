@@ -50,7 +50,7 @@ type MessageRoot interface {
 
 type MessageSignature interface {
 	MessageRoot
-	GetSignature() []byte
+	GetSignature() Signature
 	GetSigners() []NodeID
 	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
 	MatchedSigners(ids []NodeID) bool

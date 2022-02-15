@@ -1,7 +1,6 @@
 package qbft
 
 import (
-	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/utils"
 	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
@@ -25,7 +24,6 @@ type IInstance interface {
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
 	state      State
-	p2pNetwork types.QBFTNetwork
 	valueCheck proposedValueCheck
 
 	proposeContainer     MsgContainer
@@ -53,7 +51,7 @@ func (i *Instance) Start(value []byte, height uint64) {
 			if err != nil {
 				// TODO log
 			}
-			if err := i.state.GetConfig().GetP2PNetwork().BroadcastSignedMessage(proposal); err != nil {
+			if err := i.state.GetConfig().GetNetwork().Broadcast(proposal); err != nil {
 				// TODO - log
 			}
 		}
