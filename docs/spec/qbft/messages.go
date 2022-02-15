@@ -84,6 +84,11 @@ func (msg *Message) GetRoot() []byte {
 	panic("implement")
 }
 
+// DeepCopy returns a new instance of Message, deep copied
+func (msg *Message) DeepCopy() *Message {
+	panic("implement")
+}
+
 type SignedMessage struct {
 	Signature types.Signature
 	Signers   []types.NodeID
@@ -120,4 +125,9 @@ func (signedMsg *SignedMessage) Decode(data []byte) error {
 // GetRoot returns the root used for signing and verification
 func (signedMsg *SignedMessage) GetRoot() []byte {
 	return signedMsg.Message.GetRoot()
+}
+
+// DeepCopy returns a new instance of SignedMessage, deep copied
+func (signedMsg *SignedMessage) DeepCopy() *SignedMessage {
+	panic("implement")
 }

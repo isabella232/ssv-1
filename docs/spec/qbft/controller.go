@@ -47,6 +47,7 @@ type Controller struct {
 	storedInstances instances
 	signer          types.SSVSigner
 	valueCheck      proposedValueCheck
+	storage         Storage
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
@@ -75,13 +76,24 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 	}
 
 	prevDecided, _ := inst.IsDecided()
-	if prevDecided {
-		if _, _, err := inst.ProcessMsg(msg); err != nil {
-			return false, nil, err
+	decided, decidedValue, aggregatedCommit, err := inst.ProcessMsg(msg)
+	if err != nil {
+		return false, nil, errors.Wrap(err, "could not process msg")
+	}
+
+	// save the highest decided
+	if decided && inst.GetHeight() == c.GetHeight() { // It's the highest instance
+		if err := c.storage.SaveHighestDecided(aggregatedCommit); err != nil {
+			// LOG
 		}
 	}
 
-	return inst.ProcessMsg(msg)
+	// if previously decided we do not return decided true again
+	if prevDecided {
+		return false, nil, err
+	}
+
+	return decided, decidedValue, nil
 }
 
 func (c *Controller) InstanceForHeight(height uint64) IInstance {
