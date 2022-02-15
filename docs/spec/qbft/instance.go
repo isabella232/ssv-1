@@ -13,7 +13,7 @@ type IInstance interface {
 	// Start will start the new instance with a specific value and height
 	Start(value []byte, height uint64)
 	// ProcessMsg will process a signed msg
-	ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, err error)
+	ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *SignedMessage, err error)
 	// IsDecided will return true and a non-empty byte slice if instance decided.
 	IsDecided() (bool, []byte)
 	// GetHeight returns the instance's height
@@ -59,7 +59,7 @@ func (i *Instance) Start(value []byte, height uint64) {
 }
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
-func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, err error) {
+func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *SignedMessage, err error) {
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
 		case ProposalType:
@@ -67,7 +67,7 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 		case PrepareType:
 			return uponPrepare(i.state, msg, i.prepareContainer, i.commitContainer)
 		case CommitType:
-			decided, decidedValue, err = uponCommit(i.state, msg, i.commitContainer)
+			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, msg, i.commitContainer)
 			i.decided.Set(decided)
 			if decided {
 				i.decidedValue.Set(decidedValue)
@@ -82,9 +82,9 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 		}
 	})
 	if res != nil {
-		return false, nil, res.(error)
+		return false, nil, nil, res.(error)
 	}
-	return i.decided.Get(), i.decidedValue.Get(), nil
+	return i.decided.Get(), i.decidedValue.Get(), aggregatedCommit, nil
 }
 
 // IsDecided interface implementation

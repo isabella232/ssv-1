@@ -31,8 +31,6 @@ type Config interface {
 	GetValueCheck() proposedValueCheck
 	// GetNetwork returns a p2p Network instance
 	GetNetwork() Network
-	// GetStorage returns a p2p Network instance
-	GetStorage() Storage
 	// GetTimer returns round timer
 	GetTimer() Timer
 }

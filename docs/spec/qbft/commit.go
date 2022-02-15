@@ -7,9 +7,9 @@ import (
 )
 
 // uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, error) {
+func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, *SignedMessage, error) {
 	if state.GetProposalAcceptedForCurrentRound() == nil {
-		return false, nil, errors.New("did not receive proposal for this round")
+		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
 
 	if err := validateCommit(
@@ -20,30 +20,51 @@ func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer Msg
 		state.GetProposalAcceptedForCurrentRound(),
 		state.GetConfig().GetNodes(),
 	); err != nil {
-		return false, nil, errors.Wrap(err, "commit msg invalid")
+		return false, nil, nil, errors.Wrap(err, "commit msg invalid")
 	}
 	if !commitMsgContainer.AddIfDoesntExist(signedCommit) {
-		return false, nil, nil // uponCommit was already called
+		return false, nil, nil, nil // uponCommit was already called
 	}
 
 	value := signedCommit.Message.GetCommitData().GetData()
-	if commitQuorumForValue(state, commitMsgContainer, value) {
-		return true, value, nil
+	if quorum, commitMsgs := commitQuorumForValue(state, commitMsgContainer, value); quorum {
+		agg, err := aggregateCommitMsgs(commitMsgs)
+		if err != nil {
+			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
+		}
+		return true, value, agg, nil
 	}
-	return false, nil, nil
+	return false, nil, nil, nil
 }
 
-func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []byte) bool {
+func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []byte) (bool, []*SignedMessage) {
 	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
 	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
-		// TODO - not needed as we add msgs to container after validating the value
 		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
 			valueFiltered = append(valueFiltered, msg)
 		}
 	}
 
-	return state.GetConfig().HasQuorum(valueFiltered)
+	return state.GetConfig().HasQuorum(valueFiltered), valueFiltered
+}
+
+func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
+	if len(msgs) == 0 {
+		return nil, errors.New("can't aggregate zero commit msgs")
+	}
+
+	var ret *SignedMessage
+	for _, m := range msgs {
+		if ret == nil {
+			ret = m.DeepCopy()
+		} else {
+			if err := ret.Aggregate(m); err != nil {
+				return nil, errors.Wrap(err, "could not aggregate commit msg")
+			}
+		}
+	}
+	return ret, nil
 }
 
 // didSendCommitForHeightAndRound returns true if sent commit msg for specific height and round
