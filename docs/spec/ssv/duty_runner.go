@@ -118,10 +118,6 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 
 // DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusSigMessage to be broadcasted or error
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusSigMessage, error) {
-	if err := dr.storage.SaveHighestDecided(dr.validatorPK, dr.beaconRoleType, decidedValue); err != nil {
-		return nil, errors.Wrap(err, "could not save decided")
-	}
-
 	ret := &PostConsensusSigMessage{
 		height:  dr.dutyExecutionState.height,
 		signers: []types.NodeID{dr.nodeID},

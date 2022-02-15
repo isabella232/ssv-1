@@ -148,8 +148,8 @@ func (tInstance *testingQBFTInstance) Start(value []byte, height uint64) {
 }
 
 // ProcessMsg implementation
-func (tInstance *testingQBFTInstance) ProcessMsg(msg *qbft.SignedMessage) (decided bool, decidedValue []byte, err error) {
-	return false, nil, nil
+func (tInstance *testingQBFTInstance) ProcessMsg(msg *qbft.SignedMessage) (decided bool, decidedValue []byte, aggCommit *qbft.SignedMessage, err error) {
+	return false, nil, nil, nil
 
 }
 
