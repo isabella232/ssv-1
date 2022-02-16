@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -8,6 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ValidatorID is an eth2 validator public key
+type ValidatorID []byte
+
+// MessageIDBelongs returns true if message ID belongs to validator
+func (vid ValidatorID) MessageIDBelongs(msgID MessageID) bool {
+	toMatch := msgID[:len(vid)]
+	return bytes.Equal(vid, toMatch)
+}
+
+// MessageID is used to identify and route messages to the right validator and DutyRunner
 type MessageID []byte
 
 func (msg MessageID) GetRoleType() beacon.RoleType {
@@ -25,15 +36,15 @@ func (msgID MessageID) String() string {
 	return hex.EncodeToString(msgID)
 }
 
-type Type uint64
+type SSVMsgType uint64
 
 const (
-	// Consensus are all QBFT consensus related messages
-	Consensus Type = iota
-	// Sync are all QBFT sync messages
-	Sync
-	// PostConsensusSignature are all partial signatures sent after consensus
-	PostConsensusSignature
+	// SSVConsensusMsgType are all QBFT consensus related messages
+	SSVConsensusMsgType SSVMsgType = iota
+	// SSVSyncMsgType are all QBFT sync messages
+	SSVSyncMsgType
+	// SSVPostConsensusMsgType are all partial signatures sent after consensus
+	SSVPostConsensusMsgType
 )
 
 type MessageEncoder interface {
@@ -60,12 +71,12 @@ type MessageSignature interface {
 
 // SSVMessage is the main message passed within the SSV network, it can contain different types of messages (QBTF, Sync, etc.)
 type SSVMessage struct {
-	MsgType Type
+	MsgType SSVMsgType
 	MsgID   MessageID
 	Data    []byte
 }
 
-func (msg *SSVMessage) GetType() Type {
+func (msg *SSVMessage) GetType() SSVMsgType {
 	return msg.MsgType
 }
 

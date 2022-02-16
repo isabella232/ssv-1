@@ -45,7 +45,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 	}
 
 	msgToBroadcast := &types.SSVMessage{
-		MsgType: types.PostConsensusSignature,
+		MsgType: types.SSVPostConsensusMsgType,
 		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.GetValidatorPubKey(), dutyRunner.beaconRoleType),
 		Data:    data,
 	}

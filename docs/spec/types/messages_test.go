@@ -34,7 +34,7 @@ func TestShare_Marshaling(t *testing.T) {
 	t.Run("encode", func(t *testing.T) {
 		msg := &SSVMessage{
 			MsgID:   MessageID{1, 2, 3, 4},
-			MsgType: Consensus,
+			MsgType: SSVConsensusMsgType,
 			Data:    []byte{1, 2, 3, 4},
 		}
 
@@ -47,7 +47,7 @@ func TestShare_Marshaling(t *testing.T) {
 		msg := &SSVMessage{}
 		require.NoError(t, msg.Decode(expected))
 		require.EqualValues(t, MessageID{1, 2, 3, 4}, msg.MsgID)
-		require.EqualValues(t, Consensus, msg.MsgType)
+		require.EqualValues(t, SSVConsensusMsgType, msg.MsgType)
 		require.EqualValues(t, []byte{1, 2, 3, 4}, msg.Data)
 	})
 }

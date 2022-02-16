@@ -18,13 +18,13 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	}
 
 	switch msg.GetType() {
-	case types.Consensus:
+	case types.SSVConsensusMsgType:
 		signedMsg := &qbft.SignedMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
 			return errors.Wrap(err, "could not get post consensus message from network message")
 		}
 		return v.processConsensusMsg(dutyRunner, signedMsg)
-	case types.PostConsensusSignature:
+	case types.SSVPostConsensusMsgType:
 		signedMsg := &SignedPostConsensusMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
 			return errors.Wrap(err, "could not get post consensus message from network message")
@@ -38,7 +38,7 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 }
 
 func (v *Validator) validateMessage(msg types.SSVMessage) error {
-	if !v.id.MessageIDBelongs(msg.GetID()) {
+	if !v.share.pubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}
 

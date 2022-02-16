@@ -85,7 +85,7 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 	}
 
 	if dr.beaconRoleType != duty.Type {
-		return errors.New("duty runner role != duty.Type")
+		return errors.New("duty runner role != duty.SSVMsgType")
 	}
 	if !bytes.Equal(dr.validatorPK, duty.PubKey[:]) {
 		return errors.New("duty runner validator pk != duty.PubKey")

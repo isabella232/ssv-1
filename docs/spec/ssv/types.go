@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -10,15 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-ssz"
 )
-
-// ValidatorID is an eth2 validator public key
-type ValidatorID []byte
-
-// MessageIDBelongs returns true if message ID belongs to validator
-func (vid ValidatorID) MessageIDBelongs(msgID types.MessageID) bool {
-	toMatch := msgID[:len(vid)]
-	return bytes.Equal(vid, toMatch)
-}
 
 // DutyRunners is a map of duty runners mapped by msg id hex.
 type DutyRunners map[beacon.RoleType]*DutyRunner
@@ -39,7 +29,7 @@ type Storage interface {
 
 type Share struct {
 	nodeID     types.NodeID
-	pubKey     []byte
+	pubKey     types.ValidatorID
 	committee  []*types.Node
 	quorum     uint64
 	domainType types.DomainType

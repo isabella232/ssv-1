@@ -13,7 +13,6 @@ type Validator struct {
 	beacon      beacon.Beacon
 	storage     Storage
 	share       *Share
-	id          ValidatorID
 	dutyRunners DutyRunners
 	signer      types.KeyManager
 	valCheck    *types.BeaconDataCheck
