@@ -17,7 +17,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
-	postCons.AddPartialSig(signedMsg)
+	postCons.AddPartialSig(signedMsg.message)
 
 	if !postCons.HasPostConsensusSigQuorum() {
 		return nil
@@ -57,4 +57,17 @@ func (v *Validator) validatePostConsensusPartialSig(executionState *dutyExecutio
 	// TODO verify actual sig with signing root
 
 	return nil
+}
+
+func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPostConsensusMessage, error) {
+	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.pubKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not compute PostConsensusMessage root")
+	}
+
+	return &SignedPostConsensusMessage{
+		message:   msg,
+		signature: signature,
+		signers:   []types.NodeID{v.share.GetNodeID()},
+	}, nil
 }

@@ -25,7 +25,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "failed to parse decided value to consensusData")
 	}
 
-	if err := v.checkDecidedValue(decidedValue); err != nil {
+	if err := v.validateDecidedValue(decidedValue); err != nil {
 		return errors.Wrap(err, "decided value is invalid")
 	}
 
@@ -34,7 +34,12 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "failed to decide duty at runner")
 	}
 
-	data, err := postConsensusMsg.Encode()
+	signedMsg, err := v.signPostConsensusMsg(postConsensusMsg)
+	if err != nil {
+		return errors.Wrap(err, "could not sign post consensus msg")
+	}
+
+	data, err := signedMsg.Encode()
 	if err != nil {
 		return errors.Wrap(err, "failed to encode PostConsensusMessage")
 	}
@@ -51,7 +56,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 	return nil
 }
 
-func (v *Validator) checkDecidedValue(decidedValue *consensusData) error {
+func (v *Validator) validateDecidedValue(decidedValue *consensusData) error {
 	switch decidedValue.Duty.Type {
 	case beacon.RoleTypeAttester:
 		return v.valCheck.CheckAttestationData(decidedValue.AttestationData)

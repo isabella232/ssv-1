@@ -30,13 +30,13 @@ type dutyExecutionState struct {
 	finised bool
 }
 
-func (pcs *dutyExecutionState) AddPartialSig(sigMsg types.MessageSignature) error {
-	if len(sigMsg.GetSigners()) != 1 {
+func (pcs *dutyExecutionState) AddPartialSig(sigMsg *PostConsensusMessage) error {
+	if len(sigMsg.Signers) != 1 {
 		return errors.New("PostConsensusMessage has != 1 Signers")
 	}
 
-	if pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] == nil {
-		pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] = sigMsg.GetSignature()
+	if pcs.collectedPartialSigs[sigMsg.Signers[0]] == nil {
+		pcs.collectedPartialSigs[sigMsg.Signers[0]] = sigMsg.DutySignature
 	}
 	return nil
 }

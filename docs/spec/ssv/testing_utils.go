@@ -216,6 +216,8 @@ func (net *testingNetwork) Broadcast(message *types.SSVMessage) error {
 }
 
 type testingKeyManager struct {
+	sk     *bls.SecretKey
+	domain types.DomainType
 }
 
 // IsAttestationSlashable returns error if attestation data is slashable
@@ -224,7 +226,8 @@ func (km *testingKeyManager) IsAttestationSlashable(data *spec.AttestationData) 
 }
 
 func (km *testingKeyManager) SignRoot(data types.MessageRoot, sigType types.SignatureType, pk []byte) (types.Signature, error) {
-	return nil, nil
+	root, _ := types.ComputeSigningRoot(data, types.ComputeSignatureDomain(km.domain, sigType))
+	return km.sk.SignByte(root).Serialize(), nil
 }
 
 func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {

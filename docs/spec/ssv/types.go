@@ -38,10 +38,16 @@ type Storage interface {
 }
 
 type Share struct {
+	nodeID     types.NodeID
 	pubKey     []byte
 	committee  []*types.Node
 	quorum     uint64
 	domainType types.DomainType
+}
+
+// GetNodeID returns the node ID for this share
+func (share *Share) GetNodeID() types.NodeID {
+	return share.nodeID
 }
 
 // GetValidatorPubKey returns the validator public key to which the share is associated with
