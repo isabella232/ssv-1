@@ -30,18 +30,18 @@ The root is computed over the original data structure (which follows the Message
 **Use ComputeSigningRoot and ComputeSignatureDomain functions for signing**
 ```go
 func ComputeSigningRoot(data MessageRoot, domain SignatureDomain) ([]byte, error) {
-dataRoot, err := data.GetRoot()
-if err != nil {
-return nil, errors.Wrap(err, "could not get root from MessageRoot")
-}
+    dataRoot, err := data.GetRoot()
+    if err != nil {
+        return nil, errors.Wrap(err, "could not get root from MessageRoot")
+    }
 
-ret := sha256.Sum256(append(dataRoot, domain...))
-return ret[:], nil
+    ret := sha256.Sum256(append(dataRoot, domain...))
+    return ret[:], nil
 }
 ```
 ```go
 func ComputeSignatureDomain(domain DomainType, sigType SignatureType) SignatureDomain {
-return SignatureDomain(append(domain, sigType...))
+    return SignatureDomain(append(domain, sigType...))
 }
 ```
 
@@ -92,11 +92,11 @@ Shares include:
 
 ```go
 type Share struct {
-nodeID     types.NodeID
-pubKey     types.ValidatorID
-committee  []*types.Node
-quorum     uint64
-domainType types.DomainType
+    nodeID     types.NodeID
+    pubKey     types.ValidatorID
+    committee  []*types.Node
+    quorum     uint64
+    domainType types.DomainType
 }
 ```
 
@@ -108,8 +108,8 @@ Shares use the Node data (for committee) to verify that incoming messages were s
 
 ```go
 type Node struct {
-NodeID NodeID
-PubKey []byte
+    NodeID NodeID
+    PubKey []byte
 }
 ```
 
