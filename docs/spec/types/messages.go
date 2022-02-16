@@ -36,11 +36,11 @@ func (msgID MessageID) String() string {
 	return hex.EncodeToString(msgID)
 }
 
-type SSVMsgType uint64
+type MsgType uint64
 
 const (
 	// SSVConsensusMsgType are all QBFT consensus related messages
-	SSVConsensusMsgType SSVMsgType = iota
+	SSVConsensusMsgType MsgType = iota
 	// SSVSyncMsgType are all QBFT sync messages
 	SSVSyncMsgType
 	// SSVPostConsensusMsgType are all partial signatures sent after consensus
@@ -59,6 +59,7 @@ type MessageRoot interface {
 	GetRoot() ([]byte, error)
 }
 
+// MessageSignature includes all functions relevant for a signed message (QBFT message, post consensus msg, etc)
 type MessageSignature interface {
 	MessageRoot
 	GetSignature() Signature
@@ -71,12 +72,12 @@ type MessageSignature interface {
 
 // SSVMessage is the main message passed within the SSV network, it can contain different types of messages (QBTF, Sync, etc.)
 type SSVMessage struct {
-	MsgType SSVMsgType
+	MsgType MsgType
 	MsgID   MessageID
 	Data    []byte
 }
 
-func (msg *SSVMessage) GetType() SSVMsgType {
+func (msg *SSVMessage) GetType() MsgType {
 	return msg.MsgType
 }
 
