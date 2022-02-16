@@ -6,6 +6,7 @@ import (
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/bloxapp/ssv/utils/threshold"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
@@ -54,7 +55,7 @@ var committee = []*types.Node{
 }
 
 func newTestingValidator() *Validator {
-	signer := &testingKeyManager{}
+	signer := newTestingKeyManager()
 	return &Validator{
 		valCheck: &types.BeaconDataCheck{KeyManager: signer},
 		signer:   signer,
@@ -218,6 +219,16 @@ func (net *testingNetwork) Broadcast(message *types.SSVMessage) error {
 type testingKeyManager struct {
 	sk     *bls.SecretKey
 	domain types.DomainType
+}
+
+func newTestingKeyManager() types.KeyManager {
+	threshold.Init()
+	sk := &bls.SecretKey{}
+	sk.SetByCSPRNG()
+	return &testingKeyManager{
+		sk:     sk,
+		domain: types.PrimusTestnet,
+	}
 }
 
 // IsAttestationSlashable returns error if attestation data is slashable
