@@ -115,3 +115,4 @@ type Node struct {
 
 ## TODO
 - [ ] Message Encoding - chose an encoding protocol and implement\
+- [ ] Sync protocol\
