@@ -5,18 +5,6 @@
 
 # SSV - Secret Shared Validator
 
-[![API Reference](
-https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/68747470733a2f2f676f646f632e6f72672f6769746875622e636f6d2f676f6c616e672f6764646f3f7374617475732e737667
-)](https://pkg.go.dev/github.com/ethereum/eth2-ssv?tab=doc)
-![Github Actions](https://github.com/ethereum/eth2-ssv/actions/workflows/full-test.yml/badge.svg?branch=stage)
-![Github Actions](https://github.com/ethereum/eth2-ssv/actions/workflows/lint.yml/badge.svg?branch=stage)
-![Test Coverage](./docs/resources/cov-badge.svg)
-[![Discord](https://img.shields.io/badge/discord-join%20chat-blue.svg)](https://discord.gg/eDXSP9R)
-
-[comment]: <> ([![Go Report Card]&#40;https://goreportcard.com/badge/github.com/ethereum/eth2-ssv&#41;]&#40;https://goreportcard.com/report/github.com/ethereum/eth2-ssv&#41;)
-
-[comment]: <> ([![Travis]&#40;https://travis-ci.com/ethereum/eth2-ssv.svg?branch=stage&#41;]&#40;https://travis-ci.com/ethereum/eth2-ssv&#41;)
-
 ## Introduction
 
 Secret Shared Validator ('SSV') is a unique technology that enables the distributed control and operation of an Ethereum validator.
@@ -40,6 +28,22 @@ The KeyManager interface has a function to sign roots, a slice of bytes.
 The root is computed over the original data structure (which follows the MessageRoot interface), domain and signature type.
 
 **Use ComputeSigningRoot and ComputeSignatureDomain functions for signing**
+```go
+func ComputeSigningRoot(data MessageRoot, domain SignatureDomain) ([]byte, error) {
+dataRoot, err := data.GetRoot()
+if err != nil {
+return nil, errors.Wrap(err, "could not get root from MessageRoot")
+}
+
+ret := sha256.Sum256(append(dataRoot, domain...))
+return ret[:], nil
+}
+```
+```go
+func ComputeSignatureDomain(domain DomainType, sigType SignatureType) SignatureDomain {
+return SignatureDomain(append(domain, sigType...))
+}
+```
 
 Domain Constants:
 
@@ -86,11 +90,28 @@ Shares include:
 - Committee: An array of Nodes that constitute the SSV validator committee. A node must include it's NodeID and share public key.
 - Domain
 
+```go
+type Share struct {
+nodeID     types.NodeID
+pubKey     types.ValidatorID
+committee  []*types.Node
+quorum     uint64
+domainType types.DomainType
+}
+```
+
 ## Node
 A node represents a registered SSV operator, each node has a unique ID and encryption key which is used to encrypt assigned shares.
 NodeIDs are extremely important as they are used when splitting a validator key via Shamir-Secret-Sharing, later on they are used to verify messages and reconstruct signatures.
 
 Shares use the Node data (for committee) to verify that incoming messages were signed by a committee member
+
+```go
+type Node struct {
+NodeID NodeID
+PubKey []byte
+}
+```
 
 ## TODO
 - [ ] Message Encoding - chose an encoding protocol and implement\
