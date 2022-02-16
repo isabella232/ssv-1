@@ -147,9 +147,3 @@ func (cid *consensusData) Decode(data []byte) error {
 	}
 	return nil
 }
-
-// Signer interface holds all relevant signature signing funcs for SSV
-type Signer interface {
-	// SignPostConsensusMessage returns a PostConsensusSigMessage instance or error
-	SignPostConsensusMessage(height uint64, root, pk []byte) (*PostConsensusSigMessage, error)
-}

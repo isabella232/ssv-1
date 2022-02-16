@@ -112,7 +112,7 @@ func (tContr *testingQBFTController) ProcessMsg(msg *qbft.SignedMessage) (bool, 
 	return false, nil, nil
 }
 
-// InstanceForHeight returns an instance for a specific height, nil if not found
+// InstanceForHeight returns an instance for a specific Height, nil if not found
 func (tContr *testingQBFTController) InstanceForHeight(height uint64) qbft.IInstance {
 	if inst, found := tContr.instances[height]; found {
 		return inst
@@ -120,7 +120,7 @@ func (tContr *testingQBFTController) InstanceForHeight(height uint64) qbft.IInst
 	return nil
 }
 
-// GetHeight returns the current running instance height or, if not started, the last decided height
+// GetHeight returns the current running instance Height or, if not started, the last decided Height
 func (tContr *testingQBFTController) GetHeight() uint64 {
 	return tContr.height
 }

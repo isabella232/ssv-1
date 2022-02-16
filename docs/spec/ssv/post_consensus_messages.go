@@ -1,27 +1,33 @@
 package ssv
 
 import (
+	"bytes"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
-func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *PostConsensusSigMessage) error {
-	if err := v.validatePostConsensusPartialSig(dutyRunner, sigMsg); err != nil {
+func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *SignedPostConsensusMessage) error {
+	postCons := dutyRunner.PostConsensusStateForHeight(signedMsg.message.Height)
+	if postCons == nil {
+		return errors.New("PostConsensusMessage Height doesn't match duty runner's Height'")
+	}
+
+	if err := v.validatePostConsensusPartialSig(postCons, signedMsg); err != nil {
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
-	postCons := dutyRunner.PostConsensusStateForHeight(sigMsg.GetHeight())
-	if postCons == nil {
-		return errors.New("PostConsensusSigMessage height doesn't match duty runner's height'")
-	}
-	postCons.AddPartialSig(sigMsg)
-
-	// TODO what happens when the 4th msg arrives? it will re-execute this code which it shouldnt
+	postCons.AddPartialSig(signedMsg)
 
 	if !postCons.HasPostConsensusSigQuorum() {
 		return nil
 	}
+
+	// if finished, no need to proceed with reconstructing the DutySignature
+	if postCons.IsFinished() {
+		return nil
+	}
+	postCons.SetFinished()
 
 	switch dutyRunner.beaconRoleType {
 	case beacon.RoleTypeAttester:
@@ -38,9 +44,17 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, sigMsg *Post
 	return nil
 }
 
-func (v *Validator) validatePostConsensusPartialSig(dutyRunner *DutyRunner, sigMsg *PostConsensusSigMessage) error {
-	if err := sigMsg.signature.VerifyByNodes(sigMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
-		return errors.Wrap(err, "failed to verify signature")
+func (v *Validator) validatePostConsensusPartialSig(executionState *dutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
+	if err := SignedMsg.GetSignature().VerifyByNodes(SignedMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
+		return errors.Wrap(err, "failed to verify DutySignature")
 	}
+
+	// validate signing root equal to decided
+	if !bytes.Equal(executionState.postConsensusSigRoot, SignedMsg.message.DutySigningRoot) {
+		return errors.New("pos consensus message signing root is wrong")
+	}
+
+	// TODO verify actual sig with signing root
+
 	return nil
 }

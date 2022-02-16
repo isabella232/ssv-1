@@ -26,11 +26,13 @@ type dutyExecutionState struct {
 	postConsensusSigRoot []byte
 	// quorumCount is the number of min signatures needed for quorum
 	quorumCount uint64
+
+	finised bool
 }
 
 func (pcs *dutyExecutionState) AddPartialSig(sigMsg types.MessageSignature) error {
 	if len(sigMsg.GetSigners()) != 1 {
-		return errors.New("PostConsensusSigMessage has != 1 signers")
+		return errors.New("PostConsensusMessage has != 1 Signers")
 	}
 
 	if pcs.collectedPartialSigs[sigMsg.GetSigners()[0]] == nil {
@@ -46,6 +48,16 @@ func (pcs *dutyExecutionState) ReconstructAttestationSig() (*spec.Attestation, e
 
 func (pcs *dutyExecutionState) HasPostConsensusSigQuorum() bool {
 	return uint64(len(pcs.collectedPartialSigs)) >= pcs.quorumCount
+}
+
+// SetFinished will mark this execution state as finished
+func (pcs *dutyExecutionState) SetFinished() {
+	pcs.finised = true
+}
+
+// IsFinished returns true if this execution state is finished
+func (pcs *dutyExecutionState) IsFinished() bool {
+	return pcs.finised
 }
 
 // DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
@@ -108,7 +120,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	return dr.qbftController.StartNewInstance(value)
 }
 
-// PostConsensusStateForHeight returns a dutyExecutionState instance for a specific height
+// PostConsensusStateForHeight returns a dutyExecutionState instance for a specific Height
 func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionState {
 	if dr.dutyExecutionState != nil && dr.dutyExecutionState.runningInstance.GetHeight() == height {
 		return dr.dutyExecutionState
@@ -116,11 +128,11 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 	return nil
 }
 
-// DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusSigMessage to be broadcasted or error
-func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusSigMessage, error) {
-	ret := &PostConsensusSigMessage{
-		height:  dr.dutyExecutionState.height,
-		signers: []types.NodeID{dr.nodeID},
+// DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusMessage to be broadcasted or error
+func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
+	ret := &PostConsensusMessage{
+		Height:  dr.dutyExecutionState.height,
+		Signers: []types.NodeID{dr.nodeID},
 	}
 	switch dr.beaconRoleType {
 	case beacon.RoleTypeAttester:
@@ -134,8 +146,8 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer 
 		dr.dutyExecutionState.postConsensusSigRoot = ensureRoot(r)
 		dr.dutyExecutionState.collectedPartialSigs = map[types.NodeID][]byte{}
 
-		ret.root = dr.dutyExecutionState.postConsensusSigRoot
-		ret.signature = dr.dutyExecutionState.signedAttestation.Signature[:]
+		ret.DutySigningRoot = dr.dutyExecutionState.postConsensusSigRoot
+		ret.DutySignature = dr.dutyExecutionState.signedAttestation.Signature[:]
 
 		return ret, nil
 	default:
@@ -143,7 +155,7 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer 
 	}
 }
 
-// ensureRoot ensures that root will have sufficient allocated memory
+// ensureRoot ensures that DutySigningRoot will have sufficient allocated memory
 // otherwise we get panic from bls:
 // github.com/herumi/bls-eth-go-binary/bls.(*Sign).VerifyByte:738
 func ensureRoot(root []byte) []byte {

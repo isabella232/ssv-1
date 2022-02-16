@@ -36,7 +36,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 
 	data, err := postConsensusMsg.Encode()
 	if err != nil {
-		return errors.Wrap(err, "failed to encode PostConsensusSigMessage")
+		return errors.Wrap(err, "failed to encode PostConsensusMessage")
 	}
 
 	msgToBroadcast := &types.SSVMessage{

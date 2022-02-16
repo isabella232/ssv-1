@@ -10,44 +10,44 @@ import (
 
 func TestPostConsensusSigMessage_MatchedSigners(t *testing.T) {
 	t.Run("matched same order", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 4}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{1, 2, 3, 4}
 		require.True(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
 	})
 
 	t.Run("matched different order", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 4}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{1, 2, 3, 4}
 		require.True(t, msg.MatchedSigners([]types.NodeID{2, 1, 4, 3}))
 	})
 
 	t.Run("matched same order with duplicate", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{3, 1, 2, 3}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{3, 1, 2, 3}
 		require.True(t, msg.MatchedSigners([]types.NodeID{3, 1, 2, 3}))
 	})
 
 	t.Run("matched different duplicate", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 3}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{1, 2, 3, 3}
 		require.True(t, msg.MatchedSigners([]types.NodeID{3, 1, 2, 3}))
 	})
 
 	t.Run("not matched same order", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 4, 4}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{1, 2, 3, 4, 4}
 		require.False(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
 	})
 
 	t.Run("not matched", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 3}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{1, 2, 3, 3}
 		require.False(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
 	})
 
 	t.Run("not matched", func(t *testing.T) {
-		msg := &PostConsensusSigMessage{}
-		msg.signers = []types.NodeID{1, 2, 3}
+		msg := &PostConsensusMessage{}
+		msg.Signers = []types.NodeID{1, 2, 3}
 		require.False(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
 	})
 }
@@ -66,42 +66,42 @@ func TestPostConsensusSigMessage_Aggregate(t *testing.T) {
 	t.Run("valid aggregate", func(t *testing.T) {
 		sig := sk1.SignByte([]byte{1, 2, 3, 4})
 		sig.Add(sk2.SignByte([]byte{1, 2, 3, 4}))
-		msg1 := &PostConsensusSigMessage{
-			signature: sk1.SignByte([]byte{1, 2, 3, 4}).Serialize(),
-			signers:   []types.NodeID{1},
-			root:      []byte{1, 2, 3, 4},
+		msg1 := &PostConsensusMessage{
+			DutySignature:   sk1.SignByte([]byte{1, 2, 3, 4}).Serialize(),
+			Signers:         []types.NodeID{1},
+			DutySigningRoot: []byte{1, 2, 3, 4},
 		}
-		msg2 := &PostConsensusSigMessage{
-			signature: sk2.SignByte([]byte{1, 2, 3, 4}).Serialize(),
-			signers:   []types.NodeID{2},
-			root:      []byte{1, 2, 3, 4},
+		msg2 := &PostConsensusMessage{
+			DutySignature:   sk2.SignByte([]byte{1, 2, 3, 4}).Serialize(),
+			Signers:         []types.NodeID{2},
+			DutySigningRoot: []byte{1, 2, 3, 4},
 		}
 
 		require.NoError(t, msg1.Aggregate(msg2))
 		msg1.MatchedSigners([]types.NodeID{1, 2})
 	})
 
-	t.Run("partially matching signers", func(t *testing.T) {
+	t.Run("partially matching Signers", func(t *testing.T) {
 		sig := sk1.SignByte([]byte{1, 2, 3, 4})
 		sig.Add(sk2.SignByte([]byte{1, 2, 3, 4}))
-		msg1 := &PostConsensusSigMessage{
-			signers: []types.NodeID{1, 2},
-			root:    []byte{1, 2, 3, 4},
+		msg1 := &PostConsensusMessage{
+			Signers:         []types.NodeID{1, 2},
+			DutySigningRoot: []byte{1, 2, 3, 4},
 		}
-		msg2 := &PostConsensusSigMessage{
-			signers: []types.NodeID{2},
-			root:    []byte{1, 2, 3, 4},
+		msg2 := &PostConsensusMessage{
+			Signers:         []types.NodeID{2},
+			DutySigningRoot: []byte{1, 2, 3, 4},
 		}
 
 		require.EqualError(t, msg1.Aggregate(msg2), "signer IDs partially/ fully match")
 	})
 
 	t.Run("different roots", func(t *testing.T) {
-		msg1 := &PostConsensusSigMessage{
-			root: []byte{1, 2, 3, 4},
+		msg1 := &PostConsensusMessage{
+			DutySigningRoot: []byte{1, 2, 3, 4},
 		}
-		msg2 := &PostConsensusSigMessage{
-			root: []byte{1, 2, 3, 3},
+		msg2 := &PostConsensusMessage{
+			DutySigningRoot: []byte{1, 2, 3, 3},
 		}
 
 		require.EqualError(t, msg1.Aggregate(msg2), "can't aggregate msgs with different roots")

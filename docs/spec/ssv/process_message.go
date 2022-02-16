@@ -25,11 +25,11 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 		}
 		return v.processConsensusMsg(dutyRunner, signedMsg)
 	case types.PostConsensusSignature:
-		sigMsg := &PostConsensusSigMessage{}
-		if err := sigMsg.Decode(msg.GetData()); err != nil {
+		signedMsg := &SignedPostConsensusMessage{}
+		if err := signedMsg.Decode(msg.GetData()); err != nil {
 			return errors.Wrap(err, "could not get post consensus message from network message")
 		}
-		return v.processPostConsensusSig(dutyRunner, sigMsg)
+		return v.processPostConsensusSig(dutyRunner, signedMsg)
 	case types.Sync:
 		panic("")
 	default:
