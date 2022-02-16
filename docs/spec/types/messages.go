@@ -9,7 +9,7 @@ type MessageEncoder interface {
 
 type MessageRoot interface {
 	// GetRoot returns the root used for signing and verification
-	GetRoot() []byte
+	GetRoot() ([]byte, error)
 }
 
 type MessageSignature interface {
