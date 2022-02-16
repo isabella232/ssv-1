@@ -59,16 +59,24 @@ func (s Signature) Verify(data MessageRoot, domain DomainType, sigType Signature
 		return errors.Wrap(err, "failed to deserialize public key")
 	}
 
-	computedRoot := ComputeSigningRoot(data, ComputeSignatureDomain(domain, sigType))
+	computedRoot, err := ComputeSigningRoot(data, ComputeSignatureDomain(domain, sigType))
+	if err != nil {
+		return errors.Wrap(err, "could not compute signing root")
+	}
 	if res := sign.VerifyByte(pk, computedRoot); !res {
 		return errors.New("failed to verify signature")
 	}
 	return nil
 }
 
-func ComputeSigningRoot(data MessageRoot, domain SignatureDomain) []byte {
-	ret := sha256.Sum256(append(data.GetRoot(), domain...))
-	return ret[:]
+func ComputeSigningRoot(data MessageRoot, domain SignatureDomain) ([]byte, error) {
+	dataRoot, err := data.GetRoot()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get root from MessageRoot")
+	}
+
+	ret := sha256.Sum256(append(dataRoot, domain...))
+	return ret[:], nil
 }
 
 func ComputeSignatureDomain(domain DomainType, sigType SignatureType) SignatureDomain {

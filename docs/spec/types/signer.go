@@ -84,7 +84,11 @@ func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error
 
 func (s *SSVKeyManager) SignRoot(data MessageRoot, sigType SignatureType, pk []byte) (Signature, error) {
 	if k, found := s.keys[hex.EncodeToString(pk)]; found {
-		computedRoot := ComputeSigningRoot(data, ComputeSignatureDomain(s.domain, sigType))
+		computedRoot, err := ComputeSigningRoot(data, ComputeSignatureDomain(s.domain, sigType))
+		if err != nil {
+			return nil, errors.Wrap(err, "could not sign root")
+		}
+
 		return k.SignByte(computedRoot).Serialize(), nil
 	}
 	return nil, errors.New("pk not found")

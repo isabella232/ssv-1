@@ -80,7 +80,7 @@ func (msg *Message) Decode(data []byte) error {
 }
 
 // GetRoot returns the root used for signing and verification
-func (msg *Message) GetRoot() []byte {
+func (msg *Message) GetRoot() ([]byte, error) {
 	panic("implement")
 }
 
@@ -123,7 +123,7 @@ func (signedMsg *SignedMessage) Decode(data []byte) error {
 }
 
 // GetRoot returns the root used for signing and verification
-func (signedMsg *SignedMessage) GetRoot() []byte {
+func (signedMsg *SignedMessage) GetRoot() ([]byte, error) {
 	return signedMsg.Message.GetRoot()
 }
 
