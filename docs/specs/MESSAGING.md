@@ -9,51 +9,31 @@ This document contains the messaging specification for `SSV.Network`.
 ## Overview
 
 - [ ] [Fundamentals](#fundamentals)
-  - [ ] [Stack](#stack)
-  - [ ] [P2P Network](#p2p-networking)
-  - [ ] [Life Cycle](#life-cycle)
-  - [ ] [Message Router](#messages-Router)
+  - [x] [Stack](#stack)
+  - [x] [P2P Network](#p2p-networking)
+  - [ ] [Validation](#validation)
+    - [x] [IBFT](#ibft)
+    - [ ] [Decided](#decided)
+    - [ ] [Sync](#sync)
 - [ ] [Wire](#wire)
   - [ ] [IBFT message](#ibft-message)
-- [ ] [Validation](#validation)
-  - [ ] [IBFT](#ibft)
-  - [ ] [Decided](#decided)
-  - [ ] [Sync](#sync)
+- [ ] [Messaging](#messages)
+  - [ ] [Life Cycle](#life-cycle)
+  - [ ] [Message Router](#messages-Router)
+  - [ ] [Message Queue](#messages-queue)
 ## Fundamentals
 
 ### Stack
 
-SSV supports a large amount of messages from the network in order to reach consensus between all committee’s operators
-All messages need to be handled for each validator in parallel.
+`SSV.Network` is a decentralized P2P network, consists of operator nodes grouped in multiple subnets.
+The messaging layer is responsible for processing incoming messages from the network layer and broadcast it back to the network.
 
 ### P2P Networking
 
-p2p networking should work as a "black box" for the messages handler. Where the messaging processor gets the msgs from.
+p2p networking works as a "black box" for the messages layer, both receiving and broadcasting messages.
 
-### Life Cycle 
-![commit flow](../resources/messaging-life-cycle.png)
-
-### Messages Router
-Messages can come in various times, even next round's messages can come "early" as other nodes can change round before this node.
-The messages processing should be "smart & dynamic". messages will be processed by multi layer decisions
-1. **Sequence number** - always priorities validator's state seqNum. until seqNum is decided no further message will be processed.   
-2. **Stage** - messages will be processed by time of arrival unless there are quorum of the same stage (prepare, commit). in that case processor will "push" the quorum msg's forward. 
-3. **Round** - Same as **Stage**, current state round have priority unless there is a quorum for a higher round.  
-
-
-## Wire
-
-### IBFT Message
-Sync
-IBFT
-Pre-prepare
-Prepare
-Commit
-Decided
-Signature
-
-## Validation
-### IBFT
+### Validation
+#### IBFT
 Each IBFT message goes through basic validation.
 - Message
   - Checks sign message is not nil
@@ -71,14 +51,14 @@ Each IBFT message goes through basic validation.
   - Deserialize message signature
   - Verify pk’s and root bytes with sig
 
-#### Pre-Prepare
+##### Pre-Prepare
 - Round
   - Validate round from state is equal to message round
 - **UponPrePrepareMsg** Algorithm 2 IBFTController pseudocode for process pi: normal case operation
-upon receiving a valid ⟨PRE-PREPARE, λi, ri, value⟩ message m from leader(λi, round) such that:
-JustifyPrePrepare(m) do
-set timer i to running and expire after t(ri)
-broadcast ⟨PREPARE, λi, ri, value⟩
+  upon receiving a valid ⟨PRE-PREPARE, λi, ri, value⟩ message m from leader(λi, round) such that:
+  JustifyPrePrepare(m) do
+  set timer i to running and expire after t(ri)
+  broadcast ⟨PREPARE, λi, ri, value⟩
 
 #### Prepare
 - Round
@@ -105,13 +85,13 @@ broadcast ⟨PREPARE, λi, ri, value⟩
   - Validate enough signer id’s is not less than threshold size
   - BLS verify signature
   - **uponChangeRoundPartialQuorum**
-  upon receiving a set Frc of f + 1 valid ⟨ROUND-CHANGE, λi, rj, −, −⟩ messages such that:
-  ∀⟨ROUND-CHANGE, λi, rj, −, −⟩ ∈ Frc : rj > ri do
-  let ⟨ROUND-CHANGE, hi, rmin, −, −⟩ ∈ Frc such that:
-  ∀⟨ROUND-CHANGE, λi, rj, −, −⟩ ∈ Frc : rmin ≤ rj
-  ri ← rmin
-  set timer i to running and expire after t(ri)
-  broadcast ⟨ROUND-CHANGE, λi, ri, pri, pvi⟩
+    upon receiving a set Frc of f + 1 valid ⟨ROUND-CHANGE, λi, rj, −, −⟩ messages such that:
+    ∀⟨ROUND-CHANGE, λi, rj, −, −⟩ ∈ Frc : rj > ri do
+    let ⟨ROUND-CHANGE, hi, rmin, −, −⟩ ∈ Frc such that:
+    ∀⟨ROUND-CHANGE, λi, rj, −, −⟩ ∈ Frc : rmin ≤ rj
+    ri ← rmin
+    set timer i to running and expire after t(ri)
+    broadcast ⟨ROUND-CHANGE, λi, ri, pri, pvi⟩
   - Validate Round
   - **uponChangeRoundFullQuorum**
     upon receiving a quorum Qrc of valid ⟨ROUND-CHANGE, λi, ri, −, −⟩ messages such that
@@ -136,15 +116,38 @@ broadcast ⟨PREPARE, λi, ri, value⟩
   - Deserialize message signature
   - Verify pk’s and root bytes with sig
 - Quorum
-  - Validate enough signer id’s is not less than threshold size 
+  - Validate enough signer id’s is not less than threshold size
 - Flow
 
-  ![decided flow](http://via.placeholder.com/200x150) //TODO add flow diagram 
+  ![decided flow](http://via.placeholder.com/200x150) //TODO add flow diagram
 
 ### Sync
 
+## Wire
+
+### Types
+ - IBFT
+   - Pre-prepare
+   - Prepare
+   - Commit
+ - Decided
+ - Signature
+ - Sync
+
+## Messaging
+
+### Life Cycle
+![commit flow](../resources/messaging-life-cycle.png)
+
+### Messages Router
 
 
+### Messages Queue
+Messages can come in various times, even next round's messages can come "early" as other nodes can change round before this node.
+The messages processing should be "smart & dynamic". messages will be processed by multi layer decisions
+1. **Sequence number** - always priorities validator's state seqNum. until seqNum is decided no further message will be processed.
+2. **Stage** - messages will be processed by time of arrival unless there are quorum of the same stage (prepare, commit). in that case processor will "push" the quorum msg's forward.
+3. **Round** - Same as **Stage**, current state round have priority unless there is a quorum for a higher round.
 
 
 
