@@ -60,9 +60,10 @@ func newTestingValidator() *Validator {
 		valCheck: &types.BeaconDataCheck{KeyManager: signer},
 		signer:   signer,
 		share: &Share{
-			pubKey:    testingValidatorPK[:],
-			committee: committee,
-			quorum:    3,
+			pubKey:     testingValidatorPK[:],
+			committee:  committee,
+			quorum:     3,
+			domainType: types.PrimusTestnet,
 		},
 		network: &testingNetwork{},
 	}

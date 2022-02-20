@@ -46,13 +46,17 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 }
 
 func (v *Validator) validatePostConsensusMsg(executionState *dutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
+	if len(SignedMsg.GetSigners()) != 1 {
+		return errors.New("SignedPostConsensusMessage allows 1 signer")
+	}
+
 	if err := SignedMsg.GetSignature().VerifyByNodes(SignedMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
 		return errors.Wrap(err, "failed to verify DutySignature")
 	}
 
 	// validate signing root equal to decided
 	if !bytes.Equal(executionState.postConsensusSigRoot, SignedMsg.message.DutySigningRoot) {
-		return errors.New("pos consensus message signing root is wrong")
+		return errors.New("post consensus message signing root is wrong")
 	}
 
 	if len(SignedMsg.message.Signers) != 1 {

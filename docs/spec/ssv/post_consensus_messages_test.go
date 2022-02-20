@@ -95,5 +95,233 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 }
 
 func TestValidator_validatePostConsensusMsg(t *testing.T) {
-	t.Fail()
+	t.Run("valid", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := sk.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: root,
+			Signers:         []types.NodeID{1},
+		}
+		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
+		require.NoError(t, err)
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte(r).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: root,
+		}
+		require.NoError(t, v.validatePostConsensusMsg(executionState, signedMsg))
+	})
+
+	t.Run("SignedPostConsensusMessage wrong signer count", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := sk.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: root,
+			Signers:         []types.NodeID{1},
+		}
+		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
+		require.NoError(t, err)
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte(r).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: root,
+		}
+
+		signedMsg.signers = []types.NodeID{1, 2}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPostConsensusMessage allows 1 signer")
+		signedMsg.signers = []types.NodeID{}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPostConsensusMessage allows 1 signer")
+	})
+
+	t.Run("invalid SignedPostConsensusMessage sig", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := sk.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: root,
+			Signers:         []types.NodeID{1},
+		}
+
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte([]byte{1, 2, 3, 4}).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: root,
+		}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "failed to verify DutySignature: failed to verify signature")
+	})
+
+	t.Run("wrong post consensus root", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := sk.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: root,
+			Signers:         []types.NodeID{1},
+		}
+		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
+		require.NoError(t, err)
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte(r).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: []byte("wrong root"),
+		}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "post consensus message signing root is wrong")
+	})
+
+	t.Run("too many signers PostConsensusMessage", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := sk.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: root,
+			Signers:         []types.NodeID{1, 2},
+		}
+		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
+		require.NoError(t, err)
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte(r).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: root,
+		}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PostConsensusMessage allows 1 signer")
+	})
+
+	t.Run("no signers PostConsensusMessage", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := sk.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: root,
+			Signers:         []types.NodeID{},
+		}
+		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
+		require.NoError(t, err)
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte(r).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: root,
+		}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PostConsensusMessage allows 1 signer")
+	})
+
+	t.Run("beacon partial sig invalid", func(t *testing.T) {
+		sk := &bls.SecretKey{}
+		sk.SetByCSPRNG()
+
+		wrongSK := &bls.SecretKey{}
+		wrongSK.SetByCSPRNG()
+
+		v := newTestingValidator()
+		v.share.committee[0] = &types.Node{
+			NodeID: 1,
+			PubKey: sk.GetPublicKey().Serialize(),
+		}
+
+		root := []byte{1, 2, 3, 4, 5, 6}
+		sig := wrongSK.SignByte(root).Serialize()
+		msg := &PostConsensusMessage{
+			Height:          1,
+			DutySignature:   sig,
+			DutySigningRoot: []byte{1, 2, 3, 4, 5, 6},
+			Signers:         []types.NodeID{1},
+		}
+		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
+		require.NoError(t, err)
+		signedMsg := &SignedPostConsensusMessage{
+			message:   msg,
+			signature: sk.SignByte(r).Serialize(),
+			signers:   []types.NodeID{1},
+		}
+
+		executionState := &dutyExecutionState{
+			postConsensusSigRoot: root,
+		}
+		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "could not verify beacon partial signature: could not verify signature from iBFT member 1")
+	})
 }
