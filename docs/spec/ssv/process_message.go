@@ -30,8 +30,8 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 			return errors.Wrap(err, "could not get post consensus message from network message")
 		}
 		return v.processPostConsensusSig(dutyRunner, signedMsg)
-	case types.Sync:
-		panic("")
+	case types.SSVSyncMsgType:
+		panic("implement")
 	default:
 		return errors.New("unknown msg")
 	}

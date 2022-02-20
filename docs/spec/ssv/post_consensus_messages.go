@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
 
@@ -13,7 +14,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 		return errors.New("PostConsensusMessage Height doesn't match duty runner's Height'")
 	}
 
-	if err := v.validatePostConsensusPartialSig(postCons, signedMsg); err != nil {
+	if err := v.validatePostConsensusMsg(postCons, signedMsg); err != nil {
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
@@ -44,7 +45,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 	return nil
 }
 
-func (v *Validator) validatePostConsensusPartialSig(executionState *dutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
+func (v *Validator) validatePostConsensusMsg(executionState *dutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
 	if err := SignedMsg.GetSignature().VerifyByNodes(SignedMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
 		return errors.Wrap(err, "failed to verify DutySignature")
 	}
@@ -54,9 +55,43 @@ func (v *Validator) validatePostConsensusPartialSig(executionState *dutyExecutio
 		return errors.New("pos consensus message signing root is wrong")
 	}
 
-	// TODO verify actual sig with signing root
+	if len(SignedMsg.message.Signers) != 1 {
+		return errors.New("PostConsensusMessage allows 1 signer")
+	}
+
+	if err := v.verifyBeaconPartialSignature(SignedMsg.message); err != nil {
+		return errors.Wrap(err, "could not verify beacon partial signature")
+	}
 
 	return nil
+}
+
+func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) error {
+	signer := msg.Signers[0]
+	signature := msg.DutySignature
+	root := msg.DutySigningRoot
+
+	for _, n := range v.share.GetQBFTCommittee() {
+		if n.GetID() == signer {
+			pk := &bls.PublicKey{}
+			if err := pk.Deserialize(n.GetPublicKey()); err != nil {
+				return errors.Wrap(err, "could not deserialized pk")
+			}
+			sig := &bls.Sign{}
+			if err := sig.Deserialize(signature); err != nil {
+				return errors.Wrap(err, "could not deserialized signature")
+			}
+
+			// protect nil root
+			root = ensureRoot(root)
+			// verify
+			if !sig.VerifyByte(pk, root) {
+				return errors.Errorf("could not verify signature from iBFT member %d", signer)
+			}
+			return nil
+		}
+	}
+	return errors.New("beacon partial signature signer not found")
 }
 
 func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPostConsensusMessage, error) {
