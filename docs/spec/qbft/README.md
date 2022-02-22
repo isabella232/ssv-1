@@ -1,4 +1,4 @@
-[<img src="./docs/resources/bloxstaking_header_image.png" >](https://www.bloxstaking.com/)
+[<img src="./../../resources/bloxstaking_header_image.png" >](https://www.bloxstaking.com/)
 
 <br>
 <br>
