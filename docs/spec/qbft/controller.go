@@ -3,6 +3,7 @@ package qbft
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
@@ -48,6 +49,7 @@ type Controller struct {
 	signer          types.SSVSigner
 	valueCheck      proposedValueCheck
 	storage         Storage
+	network         Network
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
@@ -91,6 +93,12 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 	// if previously decided we do not return decided true again
 	if prevDecided {
 		return false, nil, err
+	}
+
+	// Broadcast decided msg
+	if err := c.network.BroadcastDecided(aggregatedCommit); err != nil {
+		//TODO We do not return error here, just Log broadcasting error.
+		return decided, decidedValue, nil
 	}
 
 	return decided, decidedValue, nil

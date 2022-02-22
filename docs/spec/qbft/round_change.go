@@ -124,7 +124,7 @@ func isReceivedProposalJustification(
 }
 
 func validRoundChange(state State, signedMsg *SignedMessage, height uint64, round Round) error {
-	if signedMsg.Message.MsgType != RoundChangeType {
+	if signedMsg.Message.MsgType != RoundChangeMsgType {
 		return errors.New("round change msg type is wrong")
 	}
 	if signedMsg.Message.Height != height {

@@ -62,11 +62,11 @@ func (i *Instance) Start(value []byte, height uint64) {
 func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *SignedMessage, err error) {
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
-		case ProposalType:
+		case ProposalMsgType:
 			return uponProposal(i.state, msg, i.proposeContainer)
-		case PrepareType:
+		case PrepareMsgType:
 			return uponPrepare(i.state, msg, i.prepareContainer, i.commitContainer)
-		case CommitType:
+		case CommitMsgType:
 			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, msg, i.commitContainer)
 			i.decided.Set(decided)
 			if decided {
@@ -75,7 +75,7 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 
 			// TODO - Roberto comment: we should send a decided msg here
 			return err
-		case RoundChangeType:
+		case RoundChangeMsgType:
 			return uponRoundChange(i.state, msg, i.roundChangeContainer, i.valueCheck)
 		default:
 			return errors.New("signed message type not supported")
