@@ -1,4 +1,4 @@
-[<img src="./docs/resources/bloxstaking_header_image.png" >](https://www.bloxstaking.com/)
+[<img src="./../../resources/bloxstaking_header_image.png" >](https://www.bloxstaking.com/)
 
 <br>
 <br>
@@ -116,4 +116,4 @@ type Node struct {
 ## TODO
 - [ ] Message Encoding - chose an encoding protocol and implement
 - [ ] Sync protocol
-- [ ] QBFT test suite
+- [ ] Test coverage
