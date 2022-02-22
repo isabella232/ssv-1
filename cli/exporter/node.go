@@ -25,6 +25,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -46,6 +47,7 @@ type config struct {
 	// TODO: change this after network refactoring
 	NumOfInstances int `yaml:"NumOfInstances" env:"NUM_OF_INSTANCES" env-default:"1" env-description:"number of existing exporter instances"`
 	InstanceID     int `yaml:"InstanceID" env:"INSTANCE_ID" env-default:"0" env-description:"current instance ID"`
+	StaticValidators string `yaml:"StaticValidators" env:"STATIC_VALIDATORS" env-default:"" env-description:"static validators to track"`
 }
 
 var cfg config
@@ -160,6 +162,7 @@ var StartExporterNodeCmd = &cobra.Command{
 		exporterOptions.UseMainTopic = cfg.P2pNetworkConfig.UseMainTopic
 		exporterOptions.NumOfInstances = cfg.NumOfInstances
 		exporterOptions.InstanceID = cfg.InstanceID
+		exporterOptions.StaticValidators = strings.Split(cfg.StaticValidators, ";")
 
 		exporterNode = exporter.New(*exporterOptions)
 

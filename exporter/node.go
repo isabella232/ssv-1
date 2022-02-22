@@ -62,6 +62,8 @@ type Options struct {
 
 	NumOfInstances int
 	InstanceID     int
+
+	StaticValidators []string
 }
 
 // exporter is the internal implementation of Exporter interface
@@ -95,6 +97,8 @@ type exporter struct {
 
 	numOfInstances int
 	instanceID     int
+
+	staticValidators []string
 }
 
 // New creates a new Exporter instance
@@ -143,6 +147,8 @@ func New(opts Options) Exporter {
 
 		numOfInstances: opts.NumOfInstances,
 		instanceID:     opts.InstanceID,
+
+		staticValidators: opts.StaticValidators,
 	}
 
 	if err := e.init(opts); err != nil {
@@ -292,6 +298,14 @@ func (exp *exporter) triggerAllValidators() {
 }
 
 func (exp *exporter) shouldProcessValidator(pubkey string) bool {
+	if len(exp.staticValidators) > 0 {
+		for _, pk := range exp.staticValidators {
+			if pk == pubkey {
+				return true
+			}
+		}
+		return false
+	}
 	val := hexToUint64(pubkey[:10])
 	instance := val % uint64(exp.numOfInstances)
 	exp.logger.Debug("check validator",
