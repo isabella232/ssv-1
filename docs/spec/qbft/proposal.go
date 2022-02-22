@@ -32,7 +32,7 @@ func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContaine
 }
 
 func isValidProposal(state State, signedProposal *SignedMessage, valCheck proposedValueCheck) error {
-	if signedProposal.Message.MsgType != ProposalType {
+	if signedProposal.Message.MsgType != ProposalMsgType {
 		return errors.New("msg type is not proposal")
 	}
 	if signedProposal.Message.Height != state.GetHeight() {

@@ -7,10 +7,11 @@ import (
 type MessageType int
 
 const (
-	ProposalType MessageType = iota
-	PrepareType
-	CommitType
-	RoundChangeType
+	ProposalMsgType MessageType = iota
+	PrepareMsgType
+	CommitMsgType
+	RoundChangeMsgType
+	DecidedMsgType
 )
 
 type ProposalData interface {

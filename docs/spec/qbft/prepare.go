@@ -98,7 +98,7 @@ func validSignedPrepareForHeightRoundAndValue(
 	round Round,
 	value []byte,
 	nodes []*types.Node) error {
-	if signedPrepare.Message.MsgType != PrepareType {
+	if signedPrepare.Message.MsgType != PrepareMsgType {
 		return errors.New("prepare msg type is wrong")
 	}
 	if signedPrepare.Message.Height != height {
