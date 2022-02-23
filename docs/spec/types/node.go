@@ -1,5 +1,6 @@
 package types
 
+// NodeID is a unique ID for the node, used to create shares and verify msgs
 type NodeID uint64
 
 // Node represents an SSV operator node
