@@ -113,6 +113,16 @@ type Node struct {
 }
 ```
 
+### NodeID and share creation example
+NodeID is unique to each node, starting from ID 1 and incrementally going froward. 
+Each ValidatorPK has a committee of nodes, each with a unique ID, share and share public key. 
+
+f(x) = a0 + a1X + a2X^2+a3X^3 + ... + ak-1X^(k-1)\
+f(0) = a0 = secret\
+Share1 = f(NodeID1)\
+Share1 = f(NodeID1)\
+...
+
 ## TODO
 - [ ] Message Encoding - chose an encoding protocol and implement
 - [ ] Sync protocol
