@@ -12,19 +12,19 @@ import (
 func TestValidatorID_MessageIDBelongs(t *testing.T) {
 	t.Run("msg id belongs", func(t *testing.T) {
 		msgID := []byte{1, 2, 3, 4, 1, 0, 0, 0}
-		valID := types.ValidatorID{1, 2, 3, 4}
+		valID := types.ValidatorPK{1, 2, 3, 4}
 		require.True(t, valID.MessageIDBelongs(msgID))
 	})
 
 	t.Run("msg id doesn't belong", func(t *testing.T) {
 		msgID := []byte{1, 2, 3, 4, 1, 0, 0, 0}
-		valID := types.ValidatorID{1, 2, 3, 3}
+		valID := types.ValidatorPK{1, 2, 3, 3}
 		require.False(t, valID.MessageIDBelongs(msgID))
 	})
 
 	t.Run("msg id doesn't belong", func(t *testing.T) {
 		msgID := []byte{1, 2, 3, 4, 1, 0, 0, 0}
-		valID := types.ValidatorID{1, 2, 3, 4, 4}
+		valID := types.ValidatorPK{1, 2, 3, 4, 4}
 		require.False(t, valID.MessageIDBelongs(msgID))
 	})
 }

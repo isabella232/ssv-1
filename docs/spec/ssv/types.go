@@ -29,7 +29,7 @@ type Storage interface {
 
 type Share struct {
 	nodeID     types.NodeID
-	pubKey     types.ValidatorID
+	pubKey     types.ValidatorPK
 	committee  []*types.Node
 	quorum     uint64
 	domainType types.DomainType
