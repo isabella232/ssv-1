@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ValidatorID is an eth2 validator public key
-type ValidatorID []byte
+// ValidatorPK is an eth2 validator public key
+type ValidatorPK []byte
 
 // MessageIDBelongs returns true if message ID belongs to validator
-func (vid ValidatorID) MessageIDBelongs(msgID MessageID) bool {
+func (vid ValidatorPK) MessageIDBelongs(msgID MessageID) bool {
 	toMatch := msgID[:len(vid)]
 	return bytes.Equal(vid, toMatch)
 }
