@@ -5,8 +5,8 @@ type OperatorID uint64
 
 // Operator represents an SSV operator node
 type Operator struct {
-	NodeID OperatorID
-	PubKey []byte
+	OperatorID OperatorID
+	PubKey     []byte
 }
 
 // GetPublicKey returns the public key with which the node is identified with
@@ -16,5 +16,5 @@ func (n *Operator) GetPublicKey() []byte {
 
 // GetID returns the node's ID
 func (n *Operator) GetID() OperatorID {
-	return n.NodeID
+	return n.OperatorID
 }
