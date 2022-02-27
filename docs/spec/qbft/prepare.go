@@ -18,7 +18,7 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 		state.GetHeight(),
 		state.GetRound(),
 		state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData(),
-		state.GetConfig().GetNodes(),
+		state.GetConfig().GetOperators(),
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
 	}
@@ -60,7 +60,7 @@ func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) 
 		state.GetHeight(),
 		state.GetLastPreparedRound(),
 		state.GetLastPreparedValue(),
-		state.GetConfig().GetNodes(),
+		state.GetConfig().GetOperators(),
 	)
 	if state.GetConfig().HasQuorum(prepareMsgs) {
 		return validPrepares
@@ -75,10 +75,10 @@ func validPreparesForHeightRoundAndDigest(
 	height uint64,
 	round Round,
 	value []byte,
-	nodes []*types.Node) *SignedMessage {
+	operators []*types.Operator) *SignedMessage {
 	var aggregatedPrepareMsg *SignedMessage
 	for _, signedMsg := range prepareMessages {
-		if err := validSignedPrepareForHeightRoundAndValue(state, signedMsg, height, round, value, nodes); err == nil {
+		if err := validSignedPrepareForHeightRoundAndValue(state, signedMsg, height, round, value, operators); err == nil {
 			if aggregatedPrepareMsg == nil {
 				aggregatedPrepareMsg = signedMsg
 			} else {
@@ -97,7 +97,7 @@ func validSignedPrepareForHeightRoundAndValue(
 	height uint64,
 	round Round,
 	value []byte,
-	nodes []*types.Node) error {
+	operators []*types.Operator) error {
 	if signedPrepare.Message.MsgType != PrepareMsgType {
 		return errors.New("prepare msg type is wrong")
 	}
@@ -111,7 +111,7 @@ func validSignedPrepareForHeightRoundAndValue(
 		return errors.New("msg identifier wrong")
 	}
 
-	if err := signedPrepare.Signature.VerifyByNodes(signedPrepare, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, nodes); err != nil {
+	if err := signedPrepare.Signature.VerifyByOperators(signedPrepare, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "prepare msg signature invalid")
 	}
 	return nil

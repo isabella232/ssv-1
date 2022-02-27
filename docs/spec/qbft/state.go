@@ -23,10 +23,10 @@ type quorum interface {
 type Config interface {
 	signing
 	quorum
-	// GetNodes returns instance nodes
-	GetNodes() []*types.Node
+	// GetOperators returns the operator committee for this instance
+	GetOperators() []*types.Operator
 	// GetID returns the specific node's ID
-	GetID() types.NodeID
+	GetID() types.OperatorID
 	// GetValueCheck returns value check instance
 	GetValueCheck() proposedValueCheck
 	// GetNetwork returns a p2p Network instance

@@ -9,7 +9,7 @@ import (
 type testSigningRoot struct {
 	root      []byte
 	Signature []byte
-	signers   []NodeID
+	signers   []OperatorID
 }
 
 func (r *testSigningRoot) GetRoot() []byte {
@@ -20,17 +20,17 @@ func (r *testSigningRoot) GetSignature() []byte {
 	return r.Signature
 }
 
-func (r *testSigningRoot) GetSigners() []NodeID {
+func (r *testSigningRoot) GetSigners() []OperatorID {
 	return r.signers
 }
 
 // IsValidSignature returns true if signature is valid (against message and signers)
-func (r *testSigningRoot) IsValidSignature(domain DomainType, nodes []*Node) error {
+func (r *testSigningRoot) IsValidSignature(domain DomainType, nodes []*Operator) error {
 	panic("fail")
 }
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
-func (r *testSigningRoot) MatchedSigners(ids []NodeID) bool {
+func (r *testSigningRoot) MatchedSigners(ids []OperatorID) bool {
 	panic("fail")
 }
 
@@ -171,7 +171,7 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 	sk3.SetByCSPRNG()
 
 	t.Run("valid sig", func(t *testing.T) {
-		nodes := []*Node{
+		nodes := []*Operator{
 			{
 				NodeID: 1,
 				PubKey: sk1.GetPublicKey().Serialize(),
@@ -191,13 +191,13 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 		agg.Add(sk3.SignByte(computedRoot))
 
 		msgRoot.Signature = agg.Serialize()
-		msgRoot.signers = []NodeID{1, 2, 3}
+		msgRoot.signers = []OperatorID{1, 2, 3}
 
-		require.NoError(t, Signature(agg.Serialize()).VerifyByNodes(msgRoot, domain, sigType, nodes))
+		require.NoError(t, Signature(agg.Serialize()).VerifyByOperators(msgRoot, domain, sigType, nodes))
 	})
 
 	t.Run("missing id", func(t *testing.T) {
-		nodes := []*Node{
+		nodes := []*Operator{
 			{
 				NodeID: 1,
 				PubKey: sk1.GetPublicKey().Serialize(),
@@ -213,8 +213,8 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 		agg.Add(sk3.SignByte(computedRoot))
 
 		msgRoot.Signature = agg.Serialize()
-		msgRoot.signers = []NodeID{1, 2, 3}
+		msgRoot.signers = []OperatorID{1, 2, 3}
 
-		require.EqualError(t, Signature(agg.Serialize()).VerifyByNodes(msgRoot, domain, sigType, nodes), "signer not found in nodes")
+		require.EqualError(t, Signature(agg.Serialize()).VerifyByOperators(msgRoot, domain, sigType, nodes), "signer not found in nodes")
 	})
 }
