@@ -55,8 +55,8 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -77,8 +77,8 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -101,8 +101,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -133,8 +133,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -169,8 +169,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -200,8 +200,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -232,8 +232,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -264,8 +264,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}
@@ -299,8 +299,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 
 		v := newTestingValidator()
 		v.share.committee[0] = &types.Operator{
-			NodeID: 1,
-			PubKey: sk.GetPublicKey().Serialize(),
+			OperatorID: 1,
+			PubKey:     sk.GetPublicKey().Serialize(),
 		}
 
 		root := []byte{1, 2, 3, 4, 5, 6}

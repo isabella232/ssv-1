@@ -41,16 +41,16 @@ var testConsensusDataByts, _ = testConsensusData.Encode()
 var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
 var committee = []*types.Operator{
 	{
-		NodeID: 1,
+		OperatorID: 1,
 	},
 	{
-		NodeID: 2,
+		OperatorID: 2,
 	},
 	{
-		NodeID: 3,
+		OperatorID: 3,
 	},
 	{
-		NodeID: 4,
+		OperatorID: 4,
 	},
 }
 
