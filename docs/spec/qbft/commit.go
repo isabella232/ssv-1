@@ -18,7 +18,7 @@ func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer Msg
 		state.GetHeight(),
 		state.GetRound(),
 		state.GetProposalAcceptedForCurrentRound(),
-		state.GetConfig().GetNodes(),
+		state.GetConfig().GetOperators(),
 	); err != nil {
 		return false, nil, nil, errors.Wrap(err, "commit msg invalid")
 	}
@@ -103,7 +103,7 @@ func validateCommit(
 	height uint64,
 	round Round,
 	proposedMsg *SignedMessage,
-	nodes []*types.Node,
+	operators []*types.Operator,
 ) error {
 	if signedCommit.Message.MsgType != CommitMsgType {
 		return errors.New("commit msg type is wrong")
@@ -118,7 +118,7 @@ func validateCommit(
 		return errors.New("proposed data different than commit msg data")
 	}
 
-	if err := signedCommit.Signature.VerifyByNodes(signedCommit, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, nodes); err != nil {
+	if err := signedCommit.Signature.VerifyByOperators(signedCommit, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
 	}
 	return nil

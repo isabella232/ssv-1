@@ -39,7 +39,7 @@ func isValidProposal(state State, signedProposal *SignedMessage, valCheck propos
 		return errors.New("proposal height is wrong")
 	}
 	// TODO - Roberto comment: we should check signedProposal sig (added here https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L573)
-	if !signedProposal.MatchedSigners([]types.NodeID{proposer(state, signedProposal.Message.Round)}) {
+	if !signedProposal.MatchedSigners([]types.OperatorID{proposer(state, signedProposal.Message.Round)}) {
 		return errors.New("proposal leader invalid")
 	}
 	if err := isProposalJustification(
@@ -71,7 +71,7 @@ func isProposalJustification(
 	round Round,
 	value []byte,
 	valCheck proposedValueCheck,
-	roundLeader types.NodeID,
+	roundLeader types.OperatorID,
 ) error {
 	if err := valCheck(value); err != nil {
 		return errors.Wrap(err, "proposal value invalid")
@@ -125,7 +125,7 @@ func isProposalJustification(
 					height,
 					rcm.Message.GetRoundChangeData().GetPreparedRound(),
 					rcm.Message.GetRoundChangeData().GetPreparedValue(),
-					state.GetConfig().GetNodes(),
+					state.GetConfig().GetOperators(),
 				); err != nil {
 					return errors.New("signed prepare not valid")
 				}
@@ -135,7 +135,7 @@ func isProposalJustification(
 	}
 }
 
-func proposer(state State, round Round) types.NodeID {
+func proposer(state State, round Round) types.OperatorID {
 	panic("implement")
 }
 
@@ -161,7 +161,7 @@ func createProposal(state State, value []byte, roundChanged, prepares []*SignedM
 
 	signedMsg := &SignedMessage{
 		Signature: sig,
-		Signers:   []types.NodeID{state.GetConfig().GetID()},
+		Signers:   []types.OperatorID{state.GetConfig().GetID()},
 		Message:   msg,
 	}
 	return signedMsg, nil

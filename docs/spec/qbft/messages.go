@@ -92,19 +92,19 @@ func (msg *Message) DeepCopy() *Message {
 
 type SignedMessage struct {
 	Signature types.Signature
-	Signers   []types.NodeID
+	Signers   []types.OperatorID
 	Message   *Message // message for which this signature is for
 }
 
 func (signedMsg *SignedMessage) GetSignature() types.Signature {
 	return signedMsg.Signature
 }
-func (signedMsg *SignedMessage) GetSigners() []types.NodeID {
+func (signedMsg *SignedMessage) GetSigners() []types.OperatorID {
 	return signedMsg.Signers
 }
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
-func (signedMsg *SignedMessage) MatchedSigners(ids []types.NodeID) bool {
+func (signedMsg *SignedMessage) MatchedSigners(ids []types.OperatorID) bool {
 	panic("implement")
 }
 

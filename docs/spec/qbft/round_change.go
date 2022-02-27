@@ -134,7 +134,7 @@ func validRoundChange(state State, signedMsg *SignedMessage, height uint64, roun
 		return errors.New("round change round is wrong")
 	}
 
-	if err := signedMsg.Signature.VerifyByNodes(signedMsg, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, state.GetConfig().GetNodes()); err != nil {
+	if err := signedMsg.Signature.VerifyByOperators(signedMsg, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, state.GetConfig().GetOperators()); err != nil {
 		return errors.Wrap(err, "round change msg signature invalid")
 	}
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&

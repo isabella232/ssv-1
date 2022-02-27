@@ -63,9 +63,9 @@ type MessageRoot interface {
 type MessageSignature interface {
 	MessageRoot
 	GetSignature() Signature
-	GetSigners() []NodeID
+	GetSigners() []OperatorID
 	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
-	MatchedSigners(ids []NodeID) bool
+	MatchedSigners(ids []OperatorID) bool
 	// Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
 	Aggregate(signedMsg MessageSignature) error
 }
