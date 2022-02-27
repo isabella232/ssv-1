@@ -36,7 +36,7 @@ func TestValidator_signPostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   []byte{1, 2, 3, 4},
 			DutySigningRoot: []byte{1, 1, 1, 1},
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		}
 		sig, err := v.signPostConsensusMsg(msg)
 		require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -66,7 +66,7 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		})
 		require.NoError(t, err)
 	})
@@ -76,7 +76,7 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -88,7 +88,7 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: []byte{1, 2, 3, 4, 5, 5},
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		})
 		require.EqualError(t, err, "could not verify signature from iBFT member 1")
 	})
@@ -100,7 +100,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -111,14 +111,14 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		}
 		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 		require.NoError(t, err)
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte(r).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{
@@ -132,7 +132,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -143,23 +143,23 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		}
 		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 		require.NoError(t, err)
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte(r).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{
 			postConsensusSigRoot: root,
 		}
 
-		signedMsg.signers = []types.NodeID{1, 2}
+		signedMsg.signers = []types.OperatorID{1, 2}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPostConsensusMessage allows 1 signer")
-		signedMsg.signers = []types.NodeID{}
+		signedMsg.signers = []types.OperatorID{}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPostConsensusMessage allows 1 signer")
 	})
 
@@ -168,7 +168,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -179,13 +179,13 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		}
 
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte([]byte{1, 2, 3, 4}).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{
@@ -199,7 +199,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -210,14 +210,14 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		}
 		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 		require.NoError(t, err)
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte(r).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{
@@ -231,7 +231,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -242,14 +242,14 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{1, 2},
+			Signers:         []types.OperatorID{1, 2},
 		}
 		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 		require.NoError(t, err)
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte(r).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{
@@ -263,7 +263,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -274,14 +274,14 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: root,
-			Signers:         []types.NodeID{},
+			Signers:         []types.OperatorID{},
 		}
 		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 		require.NoError(t, err)
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte(r).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{
@@ -298,7 +298,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		wrongSK.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Node{
+		v.share.committee[0] = &types.Operator{
 			NodeID: 1,
 			PubKey: sk.GetPublicKey().Serialize(),
 		}
@@ -309,14 +309,14 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			Height:          1,
 			DutySignature:   sig,
 			DutySigningRoot: []byte{1, 2, 3, 4, 5, 6},
-			Signers:         []types.NodeID{1},
+			Signers:         []types.OperatorID{1},
 		}
 		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 		require.NoError(t, err)
 		signedMsg := &SignedPostConsensusMessage{
 			message:   msg,
 			signature: sk.SignByte(r).Serialize(),
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 		}
 
 		executionState := &dutyExecutionState{

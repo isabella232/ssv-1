@@ -9,44 +9,44 @@ import (
 func TestSignedPostConsensusMessage_MatchedSigners(t *testing.T) {
 	t.Run("matched same order", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 4}
-		require.True(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
+		msg.signers = []types.OperatorID{1, 2, 3, 4}
+		require.True(t, msg.MatchedSigners([]types.OperatorID{1, 2, 3, 4}))
 	})
 
 	t.Run("matched different order", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 4}
-		require.True(t, msg.MatchedSigners([]types.NodeID{2, 1, 4, 3}))
+		msg.signers = []types.OperatorID{1, 2, 3, 4}
+		require.True(t, msg.MatchedSigners([]types.OperatorID{2, 1, 4, 3}))
 	})
 
 	t.Run("matched same order with duplicate", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{3, 1, 2, 3}
-		require.True(t, msg.MatchedSigners([]types.NodeID{3, 1, 2, 3}))
+		msg.signers = []types.OperatorID{3, 1, 2, 3}
+		require.True(t, msg.MatchedSigners([]types.OperatorID{3, 1, 2, 3}))
 	})
 
 	t.Run("matched different duplicate", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 3}
-		require.True(t, msg.MatchedSigners([]types.NodeID{3, 1, 2, 3}))
+		msg.signers = []types.OperatorID{1, 2, 3, 3}
+		require.True(t, msg.MatchedSigners([]types.OperatorID{3, 1, 2, 3}))
 	})
 
 	t.Run("not matched same order", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 4, 4}
-		require.False(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
+		msg.signers = []types.OperatorID{1, 2, 3, 4, 4}
+		require.False(t, msg.MatchedSigners([]types.OperatorID{1, 2, 3, 4}))
 	})
 
 	t.Run("not matched", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{1, 2, 3, 3}
-		require.False(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
+		msg.signers = []types.OperatorID{1, 2, 3, 3}
+		require.False(t, msg.MatchedSigners([]types.OperatorID{1, 2, 3, 4}))
 	})
 
 	t.Run("not matched", func(t *testing.T) {
 		msg := &SignedPostConsensusMessage{}
-		msg.signers = []types.NodeID{1, 2, 3}
-		require.False(t, msg.MatchedSigners([]types.NodeID{1, 2, 3, 4}))
+		msg.signers = []types.OperatorID{1, 2, 3}
+		require.False(t, msg.MatchedSigners([]types.OperatorID{1, 2, 3, 4}))
 	})
 }
 
@@ -113,9 +113,9 @@ func TestSignedPostConsensusMessage_Marshaling(t *testing.T) {
 				Height:          1,
 				DutySignature:   []byte{1, 2, 3, 4},
 				DutySigningRoot: []byte{1, 1, 1, 1},
-				Signers:         []types.NodeID{1},
+				Signers:         []types.OperatorID{1},
 			},
-			signers:   []types.NodeID{1},
+			signers:   []types.OperatorID{1},
 			signature: []byte{1, 2, 3, 4},
 		}
 

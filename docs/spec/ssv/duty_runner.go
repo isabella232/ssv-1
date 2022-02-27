@@ -22,7 +22,7 @@ type dutyExecutionState struct {
 	signedAttestation *spec.Attestation
 	signedProposal    *spec.SignedBeaconBlock
 
-	collectedPartialSigs map[types.NodeID][]byte
+	collectedPartialSigs map[types.OperatorID][]byte
 	postConsensusSigRoot []byte
 	// quorumCount is the number of min signatures needed for quorum
 	quorumCount uint64
@@ -69,7 +69,7 @@ type DutyRunner struct {
 	// dutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
 	dutyExecutionState *dutyExecutionState
 	qbftController     qbft.IController
-	nodeID             types.NodeID
+	operatorID         types.OperatorID
 	share              *Share
 }
 
@@ -132,7 +132,7 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
 		Height:  dr.dutyExecutionState.height,
-		Signers: []types.NodeID{dr.nodeID},
+		Signers: []types.OperatorID{dr.operatorID},
 	}
 	switch dr.beaconRoleType {
 	case beacon.RoleTypeAttester:
@@ -144,7 +144,7 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer 
 		dr.dutyExecutionState.decidedValue = decidedValue
 		dr.dutyExecutionState.signedAttestation = signedAttestation
 		dr.dutyExecutionState.postConsensusSigRoot = ensureRoot(r)
-		dr.dutyExecutionState.collectedPartialSigs = map[types.NodeID][]byte{}
+		dr.dutyExecutionState.collectedPartialSigs = map[types.OperatorID][]byte{}
 
 		ret.DutySigningRoot = dr.dutyExecutionState.postConsensusSigRoot
 		ret.DutySignature = dr.dutyExecutionState.signedAttestation.Signature[:]

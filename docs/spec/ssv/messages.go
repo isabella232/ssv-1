@@ -13,7 +13,7 @@ type PostConsensusMessage struct {
 	Height          uint64
 	DutySignature   []byte // The beacon chain partial signature for a duty
 	DutySigningRoot []byte // the root signed in DutySignature
-	Signers         []types.NodeID
+	Signers         []types.OperatorID
 }
 
 // Encode returns a msg encoded bytes or error
@@ -38,7 +38,7 @@ func (pcsm *PostConsensusMessage) GetRoot() ([]byte, error) {
 type SignedPostConsensusMessage struct {
 	message   *PostConsensusMessage
 	signature types.Signature
-	signers   []types.NodeID
+	signers   []types.OperatorID
 }
 
 // Encode returns a msg encoded bytes or error
@@ -86,9 +86,9 @@ func (spcsm *SignedPostConsensusMessage) Decode(data []byte) error {
 	}
 
 	if d["signers"] != nil {
-		spcsm.signers = make([]types.NodeID, 0)
+		spcsm.signers = make([]types.OperatorID, 0)
 		for _, s := range d["signers"].([]interface{}) {
-			spcsm.signers = append(spcsm.signers, types.NodeID(s.(float64)))
+			spcsm.signers = append(spcsm.signers, types.OperatorID(s.(float64)))
 		}
 	}
 
@@ -99,7 +99,7 @@ func (spcsm *SignedPostConsensusMessage) GetSignature() types.Signature {
 	return spcsm.signature
 }
 
-func (spcsm *SignedPostConsensusMessage) GetSigners() []types.NodeID {
+func (spcsm *SignedPostConsensusMessage) GetSigners() []types.OperatorID {
 	return spcsm.signers
 }
 
@@ -142,13 +142,13 @@ func (spcsm *SignedPostConsensusMessage) Aggregate(signedMsg types.MessageSignat
 }
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
-func (spcsm *SignedPostConsensusMessage) MatchedSigners(ids []types.NodeID) bool {
-	toMatchCnt := make(map[types.NodeID]int)
+func (spcsm *SignedPostConsensusMessage) MatchedSigners(ids []types.OperatorID) bool {
+	toMatchCnt := make(map[types.OperatorID]int)
 	for _, id := range ids {
 		toMatchCnt[id]++
 	}
 
-	foundCnt := make(map[types.NodeID]int)
+	foundCnt := make(map[types.OperatorID]int)
 	for _, id := range spcsm.GetSigners() {
 		foundCnt[id]++
 	}

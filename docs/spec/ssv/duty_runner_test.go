@@ -11,7 +11,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	t.Run("add to empty", func(t *testing.T) {
 		s := newTestingDutyExecutionState()
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{1},
+			Signers: []types.OperatorID{1},
 		})
 
 		require.Len(t, s.collectedPartialSigs, 1)
@@ -20,13 +20,13 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	t.Run("add multiple", func(t *testing.T) {
 		s := newTestingDutyExecutionState()
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{1},
+			Signers: []types.OperatorID{1},
 		})
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{2},
+			Signers: []types.OperatorID{2},
 		})
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{3},
+			Signers: []types.OperatorID{3},
 		})
 
 		require.Len(t, s.collectedPartialSigs, 3)
@@ -35,13 +35,13 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	t.Run("add duplicate", func(t *testing.T) {
 		s := newTestingDutyExecutionState()
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{1},
+			Signers: []types.OperatorID{1},
 		})
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{1},
+			Signers: []types.OperatorID{1},
 		})
 		s.AddPartialSig(&PostConsensusMessage{
-			Signers: []types.NodeID{3},
+			Signers: []types.OperatorID{3},
 		})
 
 		require.Len(t, s.collectedPartialSigs, 2)
@@ -156,7 +156,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		inst := newTestingQBFTInstance()
 		inst.decided = true
 		dr.dutyExecutionState = &dutyExecutionState{
-			collectedPartialSigs: make(map[types.NodeID][]byte),
+			collectedPartialSigs: make(map[types.OperatorID][]byte),
 			runningInstance:      inst,
 			quorumCount:          3,
 			decidedValue: &consensusData{
@@ -164,9 +164,9 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 				AttestationData: nil,
 			},
 		}
-		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.NodeID{1}, DutySignature: []byte{1, 2, 3, 4}})
-		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.NodeID{2}, DutySignature: []byte{1, 2, 3, 4}})
-		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.NodeID{3}, DutySignature: []byte{1, 2, 3, 4}})
+		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{1}, DutySignature: []byte{1, 2, 3, 4}})
+		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{2}, DutySignature: []byte{1, 2, 3, 4}})
+		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{3}, DutySignature: []byte{1, 2, 3, 4}})
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
 			Slot:   12,
@@ -209,7 +209,7 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		dr.dutyExecutionState = &dutyExecutionState{
-			collectedPartialSigs: make(map[types.NodeID][]byte),
+			collectedPartialSigs: make(map[types.OperatorID][]byte),
 			quorumCount:          3,
 		}
 		decidedValue := &consensusData{

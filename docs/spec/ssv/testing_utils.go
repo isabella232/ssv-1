@@ -39,7 +39,7 @@ var testConsensusData = &consensusData{
 }
 var testConsensusDataByts, _ = testConsensusData.Encode()
 var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
-var committee = []*types.Node{
+var committee = []*types.Operator{
 	{
 		NodeID: 1,
 	},
@@ -71,7 +71,7 @@ func newTestingValidator() *Validator {
 
 func newTestingDutyExecutionState() *dutyExecutionState {
 	return &dutyExecutionState{
-		collectedPartialSigs: make(map[types.NodeID][]byte),
+		collectedPartialSigs: make(map[types.OperatorID][]byte),
 	}
 }
 
@@ -201,7 +201,7 @@ func newTestingDutyRunner() *DutyRunner {
 		validatorPK:    testingValidatorPK[:],
 		storage:        newTestingStorage(),
 		qbftController: newTestingQBFTController([]byte{1, 2, 3, 4}),
-		nodeID:         1,
+		operatorID:     1,
 		share: &Share{
 			pubKey:    testingValidatorPK[:],
 			committee: committee,

@@ -50,7 +50,7 @@ func (v *Validator) validatePostConsensusMsg(executionState *dutyExecutionState,
 		return errors.New("SignedPostConsensusMessage allows 1 signer")
 	}
 
-	if err := SignedMsg.GetSignature().VerifyByNodes(SignedMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
+	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.domainType, types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
 		return errors.Wrap(err, "failed to verify DutySignature")
 	}
 
@@ -107,6 +107,6 @@ func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPost
 	return &SignedPostConsensusMessage{
 		message:   msg,
 		signature: signature,
-		signers:   []types.NodeID{v.share.GetNodeID()},
+		signers:   []types.OperatorID{v.share.GetOperatorID()},
 	}, nil
 }
