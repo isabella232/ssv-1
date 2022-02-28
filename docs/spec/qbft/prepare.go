@@ -111,6 +111,10 @@ func validSignedPrepareForHeightRoundAndValue(
 		return errors.New("msg identifier wrong")
 	}
 
+	if len(signedPrepare.GetSigners()) != 1 {
+		return errors.New("prepare msg allows 1 signer")
+	}
+
 	if err := signedPrepare.Signature.VerifyByOperators(signedPrepare, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "prepare msg signature invalid")
 	}

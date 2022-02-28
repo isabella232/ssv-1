@@ -118,6 +118,11 @@ func validateCommit(
 		return errors.New("proposed data different than commit msg data")
 	}
 
+	if len(signedCommit.GetSigners()) != 1 {
+		return errors.New("commit msg allows 1 signer")
+	}
+	// TODO how to process decided msgs with multiple signer?
+
 	if err := signedCommit.Signature.VerifyByOperators(signedCommit, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
 	}
