@@ -7,7 +7,7 @@ import (
 
 func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContainer MsgContainer) error {
 	valCheck := state.GetConfig().GetValueCheck()
-	if err := isValidProposal(state, signedProposal, valCheck); err != nil {
+	if err := isValidProposal(state, signedProposal, valCheck, state.GetConfig().GetOperators()); err != nil {
 		return errors.New("proposal invalid")
 	}
 	if !proposeMsgContainer.AddIfDoesntExist(signedProposal) {
@@ -31,14 +31,24 @@ func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContaine
 	return nil
 }
 
-func isValidProposal(state State, signedProposal *SignedMessage, valCheck proposedValueCheck) error {
+func isValidProposal(
+	state State,
+	signedProposal *SignedMessage,
+	valCheck proposedValueCheck,
+	operators []*types.Operator,
+) error {
 	if signedProposal.Message.MsgType != ProposalMsgType {
 		return errors.New("msg type is not proposal")
 	}
 	if signedProposal.Message.Height != state.GetHeight() {
 		return errors.New("proposal height is wrong")
 	}
-	// TODO - Roberto comment: we should check signedProposal sig (added here https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L573)
+	if len(signedProposal.GetSigners()) != 1 {
+		return errors.New("proposal msg allows 1 signer")
+	}
+	if err := signedProposal.Signature.VerifyByOperators(signedProposal, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+		return errors.Wrap(err, "proposal msg signature invalid")
+	}
 	if !signedProposal.MatchedSigners([]types.OperatorID{proposer(state, signedProposal.Message.Round)}) {
 		return errors.New("proposal leader invalid")
 	}
