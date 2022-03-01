@@ -19,7 +19,7 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 		state.Height,
 		state.Round,
 		state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData(),
-		config.GetOperators(),
+		state.Share.GetQBFTCommittee(),
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
 	}
@@ -28,7 +28,7 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 		return nil // uponPrepare was already called
 	}
 
-	if !config.HasQuorum(prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.Round)) {
+	if !state.Share.HasQuorum(len(prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.Round))) {
 		return nil // no quorum yet
 	}
 
@@ -62,9 +62,9 @@ func getRoundChangeJustification(state State, config Config, prepareMsgContainer
 		state.Height,
 		state.LastPreparedRound,
 		state.LastPreparedValue,
-		config.GetOperators(),
+		state.Share.GetQBFTCommittee(),
 	)
-	if config.HasQuorum(prepareMsgs) {
+	if state.Share.HasQuorum(len(prepareMsgs)) {
 		return validPrepares
 	}
 	return nil

@@ -47,7 +47,7 @@ func (i *Instance) Start(value []byte, height uint64) {
 		i.state.Height = height
 
 		// propose if this node is the proposer
-		if proposer(i.state, FirstRound) == i.config.GetID() {
+		if proposer(i.state, FirstRound) == i.state.Share.GetOperatorID() {
 			proposal, err := createProposal(i.state, i.config, i.startValue, nil, nil)
 			if err != nil {
 				// TODO log
