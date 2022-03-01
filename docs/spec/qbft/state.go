@@ -43,3 +43,8 @@ type State struct {
 	LastPreparedValue               []byte
 	ProposalAcceptedForCurrentRound *SignedMessage
 }
+
+// GetRoot returns the state's deterministic root
+func (s *State) GetRoot() []byte {
+	panic("implement")
+}
