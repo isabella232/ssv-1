@@ -39,7 +39,6 @@ type State struct {
 	ID                              []byte // instance identifier
 	Round                           Round
 	Height                          uint64
-	Config                          Config
 	LastPreparedRound               Round
 	LastPreparedValue               []byte
 	ProposalAcceptedForCurrentRound *SignedMessage

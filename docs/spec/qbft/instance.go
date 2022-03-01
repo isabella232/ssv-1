@@ -24,6 +24,7 @@ type IInstance interface {
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
 	state      State
+	config     Config
 	valueCheck proposedValueCheck
 
 	proposeContainer     MsgContainer
@@ -46,12 +47,12 @@ func (i *Instance) Start(value []byte, height uint64) {
 		i.state.Height = height
 
 		// propose if this node is the proposer
-		if proposer(i.state, FirstRound) == i.state.Config.GetID() {
-			proposal, err := createProposal(i.state, i.startValue, nil, nil)
+		if proposer(i.state, FirstRound) == i.config.GetID() {
+			proposal, err := createProposal(i.state, i.config, i.startValue, nil, nil)
 			if err != nil {
 				// TODO log
 			}
-			if err := i.state.Config.GetNetwork().Broadcast(proposal); err != nil {
+			if err := i.config.GetNetwork().Broadcast(proposal); err != nil {
 				// TODO - log
 			}
 		}
@@ -63,11 +64,11 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
 		case ProposalMsgType:
-			return uponProposal(i.state, msg, i.proposeContainer)
+			return uponProposal(i.state, i.config, msg, i.proposeContainer)
 		case PrepareMsgType:
-			return uponPrepare(i.state, msg, i.prepareContainer, i.commitContainer)
+			return uponPrepare(i.state, i.config, msg, i.prepareContainer, i.commitContainer)
 		case CommitMsgType:
-			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, msg, i.commitContainer)
+			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, i.config, msg, i.commitContainer)
 			i.decided.Set(decided)
 			if decided {
 				i.decidedValue.Set(decidedValue)
@@ -76,7 +77,7 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 			// TODO - Roberto comment: we should send a decided msg here
 			return err
 		case RoundChangeMsgType:
-			return uponRoundChange(i.state, msg, i.roundChangeContainer, i.valueCheck)
+			return uponRoundChange(i.state, i.config, msg, i.roundChangeContainer, i.valueCheck)
 		default:
 			return errors.New("signed message type not supported")
 		}
