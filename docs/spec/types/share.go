@@ -31,15 +31,15 @@ func (share *Share) GetQuorumCount() uint64 {
 	return share.quorum
 }
 
-// HasQuorum returns true if at least 2f+1 signatures present
+// HasQuorum returns true if at least 2f+1 items are present (cnt is the number of items). It assumes nothing about those items, not their type or structure
 // https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L259
-func (share *Share) HasQuorum([]MessageSignature) bool {
+func (share *Share) HasQuorum(cnt int) bool {
 	panic("implement")
 }
 
-// HasPartialQuorum returns true if at least f+1 signatures present
+// HasPartialQuorum returns true if at least f+1 items present (cnt is the number of items). It assumes nothing about those items, not their type or structure.
 // https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L244
-func (share *Share) HasPartialQuorum([]MessageSignature) bool {
+func (share *Share) HasPartialQuorum(cnt int) bool {
 	panic("implement")
 }
 

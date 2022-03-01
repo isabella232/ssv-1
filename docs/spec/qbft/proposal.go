@@ -96,7 +96,7 @@ func isProposalJustification(
 		}
 		return nil
 	} else {
-		if !config.HasQuorum(roundChangeMsgs) {
+		if !state.Share.HasQuorum(len(roundChangeMsgs)) {
 			return errors.New("change round has not quorum")
 		}
 
@@ -122,7 +122,7 @@ func isProposalJustification(
 			}
 			return nil
 		} else {
-			if !config.HasQuorum(prepareMsgs) {
+			if !state.Share.HasQuorum(len(prepareMsgs)) {
 				return errors.New("change round has not quorum")
 			}
 

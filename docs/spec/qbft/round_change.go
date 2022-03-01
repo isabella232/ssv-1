@@ -64,7 +64,7 @@ func hasReceivedPartialQuorum(state State, config Config, roundChangeMsgContaine
 		}
 	}
 
-	return config.HasPartialQuorum(rc), rc
+	return state.Share.HasPartialQuorum(len(rc)), rc
 }
 
 func hasReceivedProposalJustification(

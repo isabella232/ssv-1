@@ -47,7 +47,7 @@ func commitQuorumForValue(state State, config Config, commitMsgContainer MsgCont
 		}
 	}
 
-	return config.HasQuorum(valueFiltered), valueFiltered
+	return state.Share.HasQuorum(len(valueFiltered)), valueFiltered
 }
 
 func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
