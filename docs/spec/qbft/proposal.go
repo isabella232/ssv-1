@@ -6,8 +6,8 @@ import (
 )
 
 func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContainer MsgContainer) error {
-	valCheck := state.GetConfig().GetValueCheck()
-	if err := isValidProposal(state, signedProposal, valCheck, state.GetConfig().GetOperators()); err != nil {
+	valCheck := state.Config.GetValueCheck()
+	if err := isValidProposal(state, signedProposal, valCheck, state.Config.GetOperators()); err != nil {
 		return errors.New("proposal invalid")
 	}
 	if !proposeMsgContainer.AddIfDoesntExist(signedProposal) {
@@ -17,14 +17,14 @@ func uponProposal(state State, signedProposal *SignedMessage, proposeMsgContaine
 	newRound := signedProposal.Message.Round
 
 	// set state to new round and proposal accepted
-	state.SetProposalAcceptedForCurrentRound(signedProposal)
-	if signedProposal.Message.Round > state.GetRound() {
-		state.GetConfig().GetTimer().TimeoutForRound(signedProposal.Message.Round)
+	state.ProposalAcceptedForCurrentRound = signedProposal
+	if signedProposal.Message.Round > state.Round {
+		state.Config.GetTimer().TimeoutForRound(signedProposal.Message.Round)
 	}
-	state.SetRound(newRound)
+	state.Round = newRound
 
 	prepare := createPrepare(state, newRound, signedProposal.Message.GetProposalData().GetData())
-	if err := state.GetConfig().GetNetwork().Broadcast(prepare); err != nil {
+	if err := state.Config.GetNetwork().Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
 
@@ -40,13 +40,13 @@ func isValidProposal(
 	if signedProposal.Message.MsgType != ProposalMsgType {
 		return errors.New("msg type is not proposal")
 	}
-	if signedProposal.Message.Height != state.GetHeight() {
+	if signedProposal.Message.Height != state.Height {
 		return errors.New("proposal height is wrong")
 	}
 	if len(signedProposal.GetSigners()) != 1 {
 		return errors.New("proposal msg allows 1 signer")
 	}
-	if err := signedProposal.Signature.VerifyByOperators(signedProposal, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedProposal.Signature.VerifyByOperators(signedProposal, state.Config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "proposal msg signature invalid")
 	}
 	if !signedProposal.MatchedSigners([]types.OperatorID{proposer(state, signedProposal.Message.Round)}) {
@@ -56,7 +56,7 @@ func isValidProposal(
 		state,
 		signedProposal.Message.GetProposalData().GetRoundChangeJustification(),
 		signedProposal.Message.GetProposalData().GetPrepareJustification(),
-		state.GetHeight(),
+		state.Height,
 		signedProposal.Message.Round,
 		signedProposal.Message.GetProposalData().GetData(),
 		valCheck,
@@ -65,8 +65,8 @@ func isValidProposal(
 		return errors.Wrap(err, "proposal not justified")
 	}
 
-	if (state.GetProposalAcceptedForCurrentRound() == nil && signedProposal.Message.Round == state.GetRound()) ||
-		(state.GetProposalAcceptedForCurrentRound() != nil && signedProposal.Message.Round > state.GetRound()) {
+	if (state.ProposalAcceptedForCurrentRound == nil && signedProposal.Message.Round == state.Round) ||
+		(state.ProposalAcceptedForCurrentRound != nil && signedProposal.Message.Round > state.Round) {
 		return nil
 	}
 	return errors.New("proposal is not valid with current state")
@@ -93,7 +93,7 @@ func isProposalJustification(
 		}
 		return nil
 	} else {
-		if !state.GetConfig().HasQuorum(roundChangeMsgs) {
+		if !state.Config.HasQuorum(roundChangeMsgs) {
 			return errors.New("change round has not quorum")
 		}
 
@@ -119,7 +119,7 @@ func isProposalJustification(
 			}
 			return nil
 		} else {
-			if !state.GetConfig().HasQuorum(prepareMsgs) {
+			if !state.Config.HasQuorum(prepareMsgs) {
 				return errors.New("change round has not quorum")
 			}
 
@@ -135,7 +135,7 @@ func isProposalJustification(
 					height,
 					rcm.Message.GetRoundChangeData().GetPreparedRound(),
 					rcm.Message.GetRoundChangeData().GetPreparedValue(),
-					state.GetConfig().GetOperators(),
+					state.Config.GetOperators(),
 				); err != nil {
 					return errors.New("signed prepare not valid")
 				}
@@ -164,14 +164,14 @@ func createProposal(state State, value []byte, roundChanged, prepares []*SignedM
 	*/
 	panic("implement")
 	msg := &Message{}
-	sig, err := state.GetConfig().GetSigner().SignRoot(msg, types.QBFTSigType, state.GetConfig().GetSigningPubKey())
+	sig, err := state.Config.GetSigner().SignRoot(msg, types.QBFTSigType, state.Config.GetSigningPubKey())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed signing proposal msg")
 	}
 
 	signedMsg := &SignedMessage{
 		Signature: sig,
-		Signers:   []types.OperatorID{state.GetConfig().GetID()},
+		Signers:   []types.OperatorID{state.Config.GetID()},
 		Message:   msg,
 	}
 	return signedMsg, nil

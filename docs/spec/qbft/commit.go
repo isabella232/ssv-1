@@ -8,17 +8,17 @@ import (
 
 // uponCommit returns true if a quorum of commit messages was received.
 func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, *SignedMessage, error) {
-	if state.GetProposalAcceptedForCurrentRound() == nil {
+	if state.ProposalAcceptedForCurrentRound == nil {
 		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
 
 	if err := validateCommit(
 		state,
 		signedCommit,
-		state.GetHeight(),
-		state.GetRound(),
-		state.GetProposalAcceptedForCurrentRound(),
-		state.GetConfig().GetOperators(),
+		state.Height,
+		state.Round,
+		state.ProposalAcceptedForCurrentRound,
+		state.Config.GetOperators(),
 	); err != nil {
 		return false, nil, nil, errors.Wrap(err, "commit msg invalid")
 	}
@@ -38,7 +38,7 @@ func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer Msg
 }
 
 func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []byte) (bool, []*SignedMessage) {
-	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.Height, state.Round)
 	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
 		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
@@ -46,7 +46,7 @@ func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []
 		}
 	}
 
-	return state.GetConfig().HasQuorum(valueFiltered), valueFiltered
+	return state.Config.HasQuorum(valueFiltered), valueFiltered
 }
 
 func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
@@ -123,7 +123,7 @@ func validateCommit(
 	}
 	// TODO how to process decided msgs with multiple signer?
 
-	if err := signedCommit.Signature.VerifyByOperators(signedCommit, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedCommit.Signature.VerifyByOperators(signedCommit, state.Config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
 	}
 	return nil

@@ -7,13 +7,13 @@ type MessageEncoder interface {
 	Decode(data []byte) error
 }
 
-type MessageRoot interface {
+type Root interface {
 	// GetRoot returns the root used for signing and verification
 	GetRoot() ([]byte, error)
 }
 
 type MessageSignature interface {
-	MessageRoot
+	Root
 	GetSignature() Signature
 	GetSigners() []OperatorID
 	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance

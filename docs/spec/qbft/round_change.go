@@ -12,7 +12,7 @@ func uponRoundChange(
 	valCheck proposedValueCheck,
 ) error {
 	// TODO - Roberto comment: could happen we received a round change before we switched the round and this msg will be rejected (lost)
-	if err := validRoundChange(state, signedRoundChange, state.GetHeight(), state.GetRound()); err != nil {
+	if err := validRoundChange(state, signedRoundChange, state.Height, state.Round); err != nil {
 		return errors.Wrap(err, "round change msg invalid")
 	}
 	if !roundChangeMsgContainer.AddIfDoesntExist(signedRoundChange) {
@@ -21,31 +21,31 @@ func uponRoundChange(
 
 	if highestJustifiedRoundChangeMsg := hasReceivedProposalJustification(state, signedRoundChange, roundChangeMsgContainer, valCheck); highestJustifiedRoundChangeMsg != nil {
 		// check if this node is the proposer
-		if proposer(state, highestJustifiedRoundChangeMsg.Message.Round) != state.GetConfig().GetID() {
+		if proposer(state, highestJustifiedRoundChangeMsg.Message.Round) != state.Config.GetID() {
 			return nil
 		}
 
 		proposal, err := createProposal(
 			state,
 			highestJustifiedRoundChangeMsg.Message.GetRoundChangeData().GetNextProposalData(),
-			roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound()), // TODO - might be optimized to include only necessary quorum
+			roundChangeMsgContainer.MessagesForHeightAndRound(state.Height, state.Round), // TODO - might be optimized to include only necessary quorum
 			highestJustifiedRoundChangeMsg.Message.GetRoundChangeData().GetRoundChangeJustification(),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to create proposal")
 		}
 
-		if err := state.GetConfig().GetNetwork().Broadcast(proposal); err != nil {
+		if err := state.Config.GetNetwork().Broadcast(proposal); err != nil {
 			return errors.Wrap(err, "failed to broadcast proposal message")
 		}
 	} else if partialQuorum, rcs := hasReceivedPartialQuorum(state, roundChangeMsgContainer); partialQuorum {
 		newRound := minRound(rcs)
 
-		state.SetRound(newRound)
-		state.SetProposalAcceptedForCurrentRound(nil)
+		state.Round = newRound
+		state.ProposalAcceptedForCurrentRound = nil
 
 		roundChange := createRoundChange(state, newRound)
-		if err := state.GetConfig().GetNetwork().Broadcast(roundChange); err != nil {
+		if err := state.Config.GetNetwork().Broadcast(roundChange); err != nil {
 			return errors.Wrap(err, "failed to broadcast round change message")
 		}
 	}
@@ -53,16 +53,16 @@ func uponRoundChange(
 }
 
 func hasReceivedPartialQuorum(state State, roundChangeMsgContainer MsgContainer) (bool, []*SignedMessage) {
-	all := roundChangeMsgContainer.AllMessagedForHeight(state.GetHeight())
+	all := roundChangeMsgContainer.AllMessagedForHeight(state.Height)
 
 	rc := make([]*SignedMessage, 0)
 	for _, msg := range all {
-		if msg.Message.Round > state.GetRound() {
+		if msg.Message.Round > state.Round {
 			rc = append(rc, msg)
 		}
 	}
 
-	return state.GetConfig().HasPartialQuorum(rc), rc
+	return state.Config.HasPartialQuorum(rc), rc
 }
 
 func hasReceivedProposalJustification(
@@ -71,7 +71,7 @@ func hasReceivedProposalJustification(
 	roundChangeMsgContainer MsgContainer,
 	valCheck proposedValueCheck,
 ) *SignedMessage {
-	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+	roundChanges := roundChangeMsgContainer.MessagesForHeightAndRound(state.Height, state.Round)
 
 	// TODO - optimization, if no round change quorum can return false
 
@@ -105,7 +105,7 @@ func isReceivedProposalJustification(
 		state,
 		roundChanges,
 		prepares,
-		state.GetHeight(),
+		state.Height,
 		newRound,
 		value,
 		valCheck,
@@ -114,8 +114,8 @@ func isReceivedProposalJustification(
 		return errors.Wrap(err, "round change ")
 	}
 
-	noPrevProposal := state.GetProposalAcceptedForCurrentRound() == nil && state.GetRound() == newRound
-	prevProposal := state.GetProposalAcceptedForCurrentRound() != nil && newRound > state.GetRound()
+	noPrevProposal := state.ProposalAcceptedForCurrentRound == nil && state.Round == newRound
+	prevProposal := state.ProposalAcceptedForCurrentRound != nil && newRound > state.Round
 
 	if !noPrevProposal && !prevProposal {
 		return errors.New("prev proposal and new round mismatch")
@@ -138,7 +138,7 @@ func validRoundChange(state State, signedMsg *SignedMessage, height uint64, roun
 		return errors.New("round change msg allows 1 signer")
 	}
 
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, state.GetConfig().GetOperators()); err != nil {
+	if err := signedMsg.Signature.VerifyByOperators(signedMsg, state.Config.GetSignatureDomainType(), types.QBFTSigType, state.Config.GetOperators()); err != nil {
 		return errors.Wrap(err, "round change msg signature invalid")
 	}
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&

@@ -42,16 +42,16 @@ type Instance struct {
 func (i *Instance) Start(value []byte, height uint64) {
 	i.startOnce.Do(func() {
 		i.startValue = value
-		i.state.SetRound(FirstRound)
-		i.state.SetHeight(height)
+		i.state.Round = FirstRound
+		i.state.Height = height
 
 		// propose if this node is the proposer
-		if proposer(i.state, FirstRound) == i.state.GetConfig().GetID() {
+		if proposer(i.state, FirstRound) == i.state.Config.GetID() {
 			proposal, err := createProposal(i.state, i.startValue, nil, nil)
 			if err != nil {
 				// TODO log
 			}
-			if err := i.state.GetConfig().GetNetwork().Broadcast(proposal); err != nil {
+			if err := i.state.Config.GetNetwork().Broadcast(proposal); err != nil {
 				// TODO - log
 			}
 		}
@@ -94,5 +94,5 @@ func (i *Instance) IsDecided() (bool, []byte) {
 
 // GetHeight interface implementation
 func (i *Instance) GetHeight() uint64 {
-	return i.state.GetHeight()
+	return i.state.Height
 }

@@ -8,17 +8,17 @@ import (
 
 func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
 	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
-	if state.GetProposalAcceptedForCurrentRound() == nil {
+	if state.ProposalAcceptedForCurrentRound == nil {
 		return errors.New("not proposal accepted for prepare")
 	}
 
 	if err := validSignedPrepareForHeightRoundAndValue(
 		state,
 		signedPrepare,
-		state.GetHeight(),
-		state.GetRound(),
-		state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData(),
-		state.GetConfig().GetOperators(),
+		state.Height,
+		state.Round,
+		state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData(),
+		state.Config.GetOperators(),
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
 	}
@@ -27,7 +27,7 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 		return nil // uponPrepare was already called
 	}
 
-	if !state.GetConfig().HasQuorum(prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())) {
+	if !state.Config.HasQuorum(prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.Round)) {
 		return nil // no quorum yet
 	}
 
@@ -35,13 +35,13 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 		return nil // already moved to commit stage
 	}
 
-	proposedValue := state.GetProposalAcceptedForCurrentRound().Message.GetProposalData().GetData()
+	proposedValue := state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData()
 
-	state.SetLastPreparedValue(proposedValue)
-	state.SetLastPreparedRound(state.GetRound())
+	state.LastPreparedValue = proposedValue
+	state.LastPreparedRound = state.Round
 
 	commitMsg := createCommit(state, proposedValue)
-	if err := state.GetConfig().GetNetwork().Broadcast(commitMsg); err != nil {
+	if err := state.Config.GetNetwork().Broadcast(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
 
@@ -49,20 +49,20 @@ func uponPrepare(state State, signedPrepare *SignedMessage, prepareMsgContainer,
 }
 
 func getRoundChangeJustification(state State, prepareMsgContainer MsgContainer) *SignedMessage {
-	if state.GetLastPreparedValue() == nil {
+	if state.LastPreparedValue == nil {
 		return nil
 	}
 
-	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetLastPreparedRound())
+	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.LastPreparedRound)
 	validPrepares := validPreparesForHeightRoundAndDigest(
 		state,
 		prepareMsgs,
-		state.GetHeight(),
-		state.GetLastPreparedRound(),
-		state.GetLastPreparedValue(),
-		state.GetConfig().GetOperators(),
+		state.Height,
+		state.LastPreparedRound,
+		state.LastPreparedValue,
+		state.Config.GetOperators(),
 	)
-	if state.GetConfig().HasQuorum(prepareMsgs) {
+	if state.Config.HasQuorum(prepareMsgs) {
 		return validPrepares
 	}
 	return nil
@@ -115,7 +115,7 @@ func validSignedPrepareForHeightRoundAndValue(
 		return errors.New("prepare msg allows 1 signer")
 	}
 
-	if err := signedPrepare.Signature.VerifyByOperators(signedPrepare, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedPrepare.Signature.VerifyByOperators(signedPrepare, state.Config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "prepare msg signature invalid")
 	}
 	return nil

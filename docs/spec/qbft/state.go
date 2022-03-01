@@ -35,30 +35,12 @@ type Config interface {
 	GetTimer() Timer
 }
 
-type State interface {
-	// GetInstanceIdentifier returns the instance identifier this msg belongs to
-	GetInstanceIdentifier() []byte
-	// GetRound returns the round for which the msg was sent
-	GetRound() Round
-	// SetRound will set round
-	SetRound(newRound Round)
-	// GetHeight returns the current height
-	GetHeight() uint64
-	// SetHeight sets the current height
-	SetHeight(height uint64) uint64
-	// GetConfig returns instance config
-	GetConfig() Config
-	// GetLastPreparedRound returns the latest prepared round, NoRound if not prepared
-	GetLastPreparedRound() Round
-	// SetLastPreparedRound sets the latest prepared round
-	SetLastPreparedRound(round Round)
-	// GetLastPreparedValue returns the latest prepared value, nil if not prepared
-	GetLastPreparedValue() []byte
-	// SetLastPreparedValue sets the latest prepared value
-	SetLastPreparedValue(value []byte)
-
-	// GetProposalAcceptedForCurrentRound returns the set proposal for current round, nil if not set
-	GetProposalAcceptedForCurrentRound() *SignedMessage
-	// SetProposalAcceptedForCurrentRound sets the variable
-	SetProposalAcceptedForCurrentRound(msg *SignedMessage)
+type State struct {
+	ID                              []byte // instance identifier
+	Round                           Round
+	Height                          uint64
+	Config                          Config
+	LastPreparedRound               Round
+	LastPreparedValue               []byte
+	ProposalAcceptedForCurrentRound *SignedMessage
 }
