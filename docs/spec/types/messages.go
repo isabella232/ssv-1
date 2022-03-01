@@ -1,5 +1,8 @@
 package types
 
+// ValidatorPK is an eth2 validator public key
+type ValidatorPK []byte
+
 type MessageEncoder interface {
 	// Encode returns a msg encoded bytes or error
 	Encode() ([]byte, error)

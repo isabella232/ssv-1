@@ -22,7 +22,7 @@ func uponRoundChange(
 
 	if highestJustifiedRoundChangeMsg := hasReceivedProposalJustification(state, config, signedRoundChange, roundChangeMsgContainer, valCheck); highestJustifiedRoundChangeMsg != nil {
 		// check if this node is the proposer
-		if proposer(state, highestJustifiedRoundChangeMsg.Message.Round) != config.GetID() {
+		if proposer(state, highestJustifiedRoundChangeMsg.Message.Round) != state.Share.GetOperatorID() {
 			return nil
 		}
 
@@ -144,7 +144,7 @@ func validRoundChange(state State, config Config, signedMsg *SignedMessage, heig
 		return errors.New("round change msg allows 1 signer")
 	}
 
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSigType, config.GetOperators()); err != nil {
+	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSigType, state.Share.GetQBFTCommittee()); err != nil {
 		return errors.Wrap(err, "round change msg signature invalid")
 	}
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&

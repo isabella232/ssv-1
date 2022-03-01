@@ -19,7 +19,7 @@ func uponCommit(state State, config Config, signedCommit *SignedMessage, commitM
 		state.Height,
 		state.Round,
 		state.ProposalAcceptedForCurrentRound,
-		config.GetOperators(),
+		state.Share.GetQBFTCommittee(),
 	); err != nil {
 		return false, nil, nil, errors.Wrap(err, "commit msg invalid")
 	}

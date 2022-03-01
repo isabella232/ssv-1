@@ -19,7 +19,7 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 		state.Height,
 		state.Round,
 		state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData(),
-		config.GetOperators(),
+		state.Share.GetQBFTCommittee(),
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
 	}
@@ -62,7 +62,7 @@ func getRoundChangeJustification(state State, config Config, prepareMsgContainer
 		state.Height,
 		state.LastPreparedRound,
 		state.LastPreparedValue,
-		config.GetOperators(),
+		state.Share.GetQBFTCommittee(),
 	)
 	if config.HasQuorum(prepareMsgs) {
 		return validPrepares
