@@ -7,11 +7,11 @@ type Timer interface {
 	TimeoutForRound(round Round)
 }
 
-func uponRoundTimeout(state State) error {
-	state.SetRound(state.GetRound() + 1)
-	roundChange := createRoundChange(state, state.GetRound())
+func uponRoundTimeout(state State, config Config) error {
+	state.Round++
+	roundChange := createRoundChange(state, state.Round)
 
-	if err := state.GetConfig().GetNetwork().Broadcast(roundChange); err != nil {
+	if err := config.GetNetwork().Broadcast(roundChange); err != nil {
 		return errors.Wrap(err, "failed to broadcast round change message")
 	}
 

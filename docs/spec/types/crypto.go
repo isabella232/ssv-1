@@ -27,7 +27,7 @@ func (s Signature) VerifyByOperators(data MessageSignature, domain DomainType, s
 	return s.VerifyMultiPubKey(data, domain, sigType, pks)
 }
 
-func (s Signature) VerifyMultiPubKey(data MessageRoot, domain DomainType, sigType SignatureType, pks [][]byte) error {
+func (s Signature) VerifyMultiPubKey(data Root, domain DomainType, sigType SignatureType, pks [][]byte) error {
 	var aggPK *bls.PublicKey
 	for _, pkByts := range pks {
 		pk := &bls.PublicKey{}
@@ -49,7 +49,7 @@ func (s Signature) VerifyMultiPubKey(data MessageRoot, domain DomainType, sigTyp
 	return s.Verify(data, domain, sigType, aggPK.Serialize())
 }
 
-func (s Signature) Verify(data MessageRoot, domain DomainType, sigType SignatureType, pkByts []byte) error {
+func (s Signature) Verify(data Root, domain DomainType, sigType SignatureType, pkByts []byte) error {
 	sign := &bls.Sign{}
 	if err := sign.Deserialize(s); err != nil {
 		return errors.Wrap(err, "failed to deserialize signature")
@@ -70,10 +70,10 @@ func (s Signature) Verify(data MessageRoot, domain DomainType, sigType Signature
 	return nil
 }
 
-func ComputeSigningRoot(data MessageRoot, domain SignatureDomain) ([]byte, error) {
+func ComputeSigningRoot(data Root, domain SignatureDomain) ([]byte, error) {
 	dataRoot, err := data.GetRoot()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not get root from MessageRoot")
+		return nil, errors.Wrap(err, "could not get root from Root")
 	}
 
 	ret := sha256.Sum256(append(dataRoot, domain...))

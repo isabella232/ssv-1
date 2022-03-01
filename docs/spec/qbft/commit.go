@@ -7,18 +7,19 @@ import (
 )
 
 // uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, *SignedMessage, error) {
-	if state.GetProposalAcceptedForCurrentRound() == nil {
+func uponCommit(state State, config Config, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, *SignedMessage, error) {
+	if state.ProposalAcceptedForCurrentRound == nil {
 		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
 
 	if err := validateCommit(
 		state,
+		config,
 		signedCommit,
-		state.GetHeight(),
-		state.GetRound(),
-		state.GetProposalAcceptedForCurrentRound(),
-		state.GetConfig().GetOperators(),
+		state.Height,
+		state.Round,
+		state.ProposalAcceptedForCurrentRound,
+		config.GetOperators(),
 	); err != nil {
 		return false, nil, nil, errors.Wrap(err, "commit msg invalid")
 	}
@@ -27,7 +28,7 @@ func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer Msg
 	}
 
 	value := signedCommit.Message.GetCommitData().GetData()
-	if quorum, commitMsgs := commitQuorumForValue(state, commitMsgContainer, value); quorum {
+	if quorum, commitMsgs := commitQuorumForValue(state, config, commitMsgContainer, value); quorum {
 		agg, err := aggregateCommitMsgs(commitMsgs)
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
@@ -37,8 +38,8 @@ func uponCommit(state State, signedCommit *SignedMessage, commitMsgContainer Msg
 	return false, nil, nil, nil
 }
 
-func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []byte) (bool, []*SignedMessage) {
-	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.GetHeight(), state.GetRound())
+func commitQuorumForValue(state State, config Config, commitMsgContainer MsgContainer, value []byte) (bool, []*SignedMessage) {
+	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.Height, state.Round)
 	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
 		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
@@ -46,7 +47,7 @@ func commitQuorumForValue(state State, commitMsgContainer MsgContainer, value []
 		}
 	}
 
-	return state.GetConfig().HasQuorum(valueFiltered), valueFiltered
+	return config.HasQuorum(valueFiltered), valueFiltered
 }
 
 func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
@@ -99,6 +100,7 @@ func createCommit(state State, value []byte) *SignedMessage {
 
 func validateCommit(
 	state State,
+	config Config,
 	signedCommit *SignedMessage,
 	height uint64,
 	round Round,
@@ -123,7 +125,7 @@ func validateCommit(
 	}
 	// TODO how to process decided msgs with multiple signer?
 
-	if err := signedCommit.Signature.VerifyByOperators(signedCommit, state.GetConfig().GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedCommit.Signature.VerifyByOperators(signedCommit, config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
 	}
 	return nil

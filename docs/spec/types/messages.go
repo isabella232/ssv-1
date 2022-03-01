@@ -54,14 +54,14 @@ type MessageEncoder interface {
 	Decode(data []byte) error
 }
 
-type MessageRoot interface {
+type Root interface {
 	// GetRoot returns the root used for signing and verification
 	GetRoot() ([]byte, error)
 }
 
 // MessageSignature includes all functions relevant for a signed message (QBFT message, post consensus msg, etc)
 type MessageSignature interface {
-	MessageRoot
+	Root
 	GetSignature() Signature
 	GetSigners() []OperatorID
 	// MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
