@@ -14,7 +14,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 			Signers: []types.OperatorID{1},
 		})
 
-		require.Len(t, s.collectedPartialSigs, 1)
+		require.Len(t, s.CollectedPartialSigs, 1)
 	})
 
 	t.Run("add multiple", func(t *testing.T) {
@@ -29,7 +29,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 			Signers: []types.OperatorID{3},
 		})
 
-		require.Len(t, s.collectedPartialSigs, 3)
+		require.Len(t, s.CollectedPartialSigs, 3)
 	})
 
 	t.Run("add duplicate", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 			Signers: []types.OperatorID{3},
 		})
 
-		require.Len(t, s.collectedPartialSigs, 2)
+		require.Len(t, s.CollectedPartialSigs, 2)
 	})
 }
 
@@ -61,8 +61,8 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		dr := newTestingDutyRunner()
 		inst := newTestingQBFTInstance()
 		inst.decided = false
-		dr.State.DutyExecutionState = &dutyExecutionState{
-			runningInstance: inst,
+		dr.State.DutyExecutionState = &DutyExecutionState{
+			RunningInstance: inst,
 		}
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
@@ -80,10 +80,10 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.State.DutyExecutionState = &dutyExecutionState{
-			runningInstance: inst,
-			quorumCount:     3,
-			decidedValue: &consensusData{
+		dr.State.DutyExecutionState = &DutyExecutionState{
+			RunningInstance: inst,
+			Quorum:          3,
+			DecidedValue: &consensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -105,10 +105,10 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.State.DutyExecutionState = &dutyExecutionState{
-			runningInstance: inst,
-			quorumCount:     3,
-			decidedValue: &consensusData{
+		dr.State.DutyExecutionState = &DutyExecutionState{
+			RunningInstance: inst,
+			Quorum:          3,
+			DecidedValue: &consensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -130,10 +130,10 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.State.DutyExecutionState = &dutyExecutionState{
-			runningInstance: inst,
-			quorumCount:     3,
-			decidedValue: &consensusData{
+		dr.State.DutyExecutionState = &DutyExecutionState{
+			RunningInstance: inst,
+			Quorum:          3,
+			DecidedValue: &consensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -155,11 +155,11 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.State.DutyExecutionState = &dutyExecutionState{
-			collectedPartialSigs: make(map[types.OperatorID][]byte),
-			runningInstance:      inst,
-			quorumCount:          3,
-			decidedValue: &consensusData{
+		dr.State.DutyExecutionState = &DutyExecutionState{
+			CollectedPartialSigs: make(map[types.OperatorID][]byte),
+			RunningInstance:      inst,
+			Quorum:               3,
+			DecidedValue: &consensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -186,9 +186,9 @@ func TestDutyRunner_StartNewInstance(t *testing.T) {
 		dr := newTestingDutyRunner()
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
 		require.NotNil(t, dr.State.DutyExecutionState)
-		require.EqualValues(t, 1, dr.State.DutyExecutionState.height)
-		require.NotNil(t, dr.State.DutyExecutionState.runningInstance)
-		require.EqualValues(t, 3, dr.State.DutyExecutionState.quorumCount)
+		require.EqualValues(t, 1, dr.State.DutyExecutionState.Height)
+		require.NotNil(t, dr.State.DutyExecutionState.RunningInstance)
+		require.EqualValues(t, 3, dr.State.DutyExecutionState.Quorum)
 	})
 }
 
@@ -208,9 +208,9 @@ func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
 func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		dr := newTestingDutyRunner()
-		dr.State.DutyExecutionState = &dutyExecutionState{
-			collectedPartialSigs: make(map[types.OperatorID][]byte),
-			quorumCount:          3,
+		dr.State.DutyExecutionState = &DutyExecutionState{
+			CollectedPartialSigs: make(map[types.OperatorID][]byte),
+			Quorum:               3,
 		}
 		decidedValue := &consensusData{
 			Duty: &beacon.Duty{
@@ -222,9 +222,9 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 		}
 		_, err := dr.DecideRunningInstance(decidedValue, &testingKeyManager{})
 		require.NoError(t, err)
-		require.NotNil(t, dr.State.DutyExecutionState.decidedValue)
-		require.NotNil(t, dr.State.DutyExecutionState.signedAttestation)
-		require.NotNil(t, dr.State.DutyExecutionState.postConsensusSigRoot)
-		require.NotNil(t, dr.State.DutyExecutionState.collectedPartialSigs)
+		require.NotNil(t, dr.State.DutyExecutionState.DecidedValue)
+		require.NotNil(t, dr.State.DutyExecutionState.SignedAttestation)
+		require.NotNil(t, dr.State.DutyExecutionState.PostConsensusSigRoot)
+		require.NotNil(t, dr.State.DutyExecutionState.CollectedPartialSigs)
 	})
 }

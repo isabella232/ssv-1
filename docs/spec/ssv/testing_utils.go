@@ -69,9 +69,9 @@ func newTestingValidator() *Validator {
 	}
 }
 
-func newTestingDutyExecutionState() *dutyExecutionState {
-	return &dutyExecutionState{
-		collectedPartialSigs: make(map[types.OperatorID][]byte),
+func newTestingDutyExecutionState() *DutyExecutionState {
+	return &DutyExecutionState{
+		CollectedPartialSigs: make(map[types.OperatorID][]byte),
 	}
 }
 

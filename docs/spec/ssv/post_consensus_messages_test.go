@@ -121,8 +121,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: root,
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: root,
 		}
 		require.NoError(t, v.validatePostConsensusMsg(executionState, signedMsg))
 	})
@@ -153,8 +153,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: root,
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: root,
 		}
 
 		signedMsg.signers = []types.OperatorID{1, 2}
@@ -188,8 +188,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: root,
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: root,
 		}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "failed to verify DutySignature: failed to verify signature")
 	})
@@ -220,8 +220,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: []byte("wrong root"),
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: []byte("wrong root"),
 		}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "post consensus message signing root is wrong")
 	})
@@ -252,8 +252,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: root,
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: root,
 		}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PostConsensusMessage allows 1 signer")
 	})
@@ -284,8 +284,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: root,
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: root,
 		}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PostConsensusMessage allows 1 signer")
 	})
@@ -319,8 +319,8 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 			signers:   []types.OperatorID{1},
 		}
 
-		executionState := &dutyExecutionState{
-			postConsensusSigRoot: root,
+		executionState := &DutyExecutionState{
+			PostConsensusSigRoot: root,
 		}
 		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "could not verify beacon partial signature: could not verify signature from iBFT member 1")
 	})

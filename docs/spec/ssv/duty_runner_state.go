@@ -10,6 +10,6 @@ type DutyRunnerState struct {
 	BeaconRoleType beacon.RoleType
 	Share          *types.Share
 	// DutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
-	DutyExecutionState *dutyExecutionState
+	DutyExecutionState *DutyExecutionState
 	QBFTController     qbft.IController
 }

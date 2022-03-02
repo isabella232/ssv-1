@@ -45,7 +45,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 	return nil
 }
 
-func (v *Validator) validatePostConsensusMsg(executionState *dutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
+func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
 	if len(SignedMsg.GetSigners()) != 1 {
 		return errors.New("SignedPostConsensusMessage allows 1 signer")
 	}
@@ -55,7 +55,7 @@ func (v *Validator) validatePostConsensusMsg(executionState *dutyExecutionState,
 	}
 
 	// validate signing root equal to decided
-	if !bytes.Equal(executionState.postConsensusSigRoot, SignedMsg.message.DutySigningRoot) {
+	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.message.DutySigningRoot) {
 		return errors.New("post consensus message signing root is wrong")
 	}
 

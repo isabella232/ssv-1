@@ -36,12 +36,12 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 		return errors.New("duty runner validator pk != duty.PubKey")
 	}
 
-	if decided, _ := dr.State.DutyExecutionState.runningInstance.IsDecided(); !decided {
+	if decided, _ := dr.State.DutyExecutionState.RunningInstance.IsDecided(); !decided {
 		return errors.New("consensus on duty is running")
 	}
 
 	if !dr.State.DutyExecutionState.HasPostConsensusSigQuorum() &&
-		dr.State.DutyExecutionState.decidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
+		dr.State.DutyExecutionState.DecidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
 		return errors.New("post consensus sig collection is running")
 	}
 	return nil
@@ -57,17 +57,17 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	}
 	newInstance := dr.State.QBFTController.InstanceForHeight(dr.State.QBFTController.GetHeight())
 
-	dr.State.DutyExecutionState = &dutyExecutionState{
-		runningInstance: newInstance,
-		height:          dr.State.QBFTController.GetHeight(),
-		quorumCount:     dr.State.Share.Quorum,
+	dr.State.DutyExecutionState = &DutyExecutionState{
+		RunningInstance: newInstance,
+		Height:          dr.State.QBFTController.GetHeight(),
+		Quorum:          dr.State.Share.Quorum,
 	}
 	return dr.State.QBFTController.StartNewInstance(value)
 }
 
-// PostConsensusStateForHeight returns a dutyExecutionState instance for a specific Height
-func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionState {
-	if dr.State.DutyExecutionState != nil && dr.State.DutyExecutionState.runningInstance.GetHeight() == height {
+// PostConsensusStateForHeight returns a DutyExecutionState instance for a specific Height
+func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *DutyExecutionState {
+	if dr.State.DutyExecutionState != nil && dr.State.DutyExecutionState.RunningInstance.GetHeight() == height {
 		return dr.State.DutyExecutionState
 	}
 	return nil
@@ -76,7 +76,7 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 // DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusMessage to be broadcasted or error
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
-		Height:  dr.State.DutyExecutionState.height,
+		Height:  dr.State.DutyExecutionState.Height,
 		Signers: []types.OperatorID{dr.State.Share.OperatorID},
 	}
 	switch dr.State.BeaconRoleType {
@@ -86,13 +86,13 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer 
 			return nil, errors.Wrap(err, "failed to sign attestation")
 		}
 
-		dr.State.DutyExecutionState.decidedValue = decidedValue
-		dr.State.DutyExecutionState.signedAttestation = signedAttestation
-		dr.State.DutyExecutionState.postConsensusSigRoot = ensureRoot(r)
-		dr.State.DutyExecutionState.collectedPartialSigs = map[types.OperatorID][]byte{}
+		dr.State.DutyExecutionState.DecidedValue = decidedValue
+		dr.State.DutyExecutionState.SignedAttestation = signedAttestation
+		dr.State.DutyExecutionState.PostConsensusSigRoot = ensureRoot(r)
+		dr.State.DutyExecutionState.CollectedPartialSigs = map[types.OperatorID][]byte{}
 
-		ret.DutySigningRoot = dr.State.DutyExecutionState.postConsensusSigRoot
-		ret.DutySignature = dr.State.DutyExecutionState.signedAttestation.Signature[:]
+		ret.DutySigningRoot = dr.State.DutyExecutionState.PostConsensusSigRoot
+		ret.DutySignature = dr.State.DutyExecutionState.SignedAttestation.Signature[:]
 
 		return ret, nil
 	default:

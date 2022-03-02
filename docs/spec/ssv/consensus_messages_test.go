@@ -30,6 +30,6 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 		dr.State.QBFTController.(*testingQBFTController).returnDecidedValue = testConsensusDataByts
 
 		require.NoError(t, v.processConsensusMsg(dr, &qbft.SignedMessage{}))
-		require.NotNil(t, dr.State.DutyExecutionState.decidedValue)
+		require.NotNil(t, dr.State.DutyExecutionState.DecidedValue)
 	})
 }
