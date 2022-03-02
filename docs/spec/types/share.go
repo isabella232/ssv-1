@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 )
 
-// Share holds all info about the QBFT/ SSV committee for msg signing and verification
+// Share holds all info about the QBFT/ SSV Committee for msg signing and verification
 type Share struct {
-	operatorID OperatorID
-	pubKey     ValidatorPK
-	committee  []*Operator
+	OperatorID OperatorID
+	PubKey     ValidatorPK
+	Committee  []*Operator
 	quorum     uint64
-	domainType DomainType
+	DomainType DomainType
 }
 
 // GetOperatorID returns the node ID for this share
 func (share *Share) GetOperatorID() OperatorID {
-	return share.operatorID
+	return share.OperatorID
 }
 
 // GetValidatorPubKey returns the validator public key to which the share is associated with
@@ -24,7 +24,7 @@ func (share *Share) GetValidatorPubKey() ValidatorPK {
 }
 
 func (share *Share) GetQBFTCommittee() []*Operator {
-	return share.committee
+	return share.Committee
 }
 
 func (share *Share) GetQuorumCount() uint64 {
@@ -44,7 +44,7 @@ func (share *Share) HasPartialQuorum(cnt int) bool {
 }
 
 func (share *Share) GetDomainType() DomainType {
-	return share.domainType
+	return share.DomainType
 }
 
 func (share *Share) Encode() ([]byte, error) {

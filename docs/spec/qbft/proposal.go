@@ -7,7 +7,7 @@ import (
 
 func uponProposal(state State, config Config, signedProposal *SignedMessage, proposeMsgContainer MsgContainer) error {
 	valCheck := config.GetValueCheck()
-	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.GetQBFTCommittee()); err != nil {
+	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.Committee); err != nil {
 		return errors.New("proposal invalid")
 	}
 	if !proposeMsgContainer.AddIfDoesntExist(signedProposal) {
@@ -139,7 +139,7 @@ func isProposalJustification(
 					height,
 					rcm.Message.GetRoundChangeData().GetPreparedRound(),
 					rcm.Message.GetRoundChangeData().GetPreparedValue(),
-					state.Share.GetQBFTCommittee(),
+					state.Share.Committee,
 				); err != nil {
 					return errors.New("signed prepare not valid")
 				}
@@ -175,7 +175,7 @@ func createProposal(state State, config Config, value []byte, roundChanged, prep
 
 	signedMsg := &SignedMessage{
 		Signature: sig,
-		Signers:   []types.OperatorID{state.Share.GetOperatorID()},
+		Signers:   []types.OperatorID{state.Share.OperatorID},
 		Message:   msg,
 	}
 	return signedMsg, nil
