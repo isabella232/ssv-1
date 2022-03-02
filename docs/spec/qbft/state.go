@@ -1,6 +1,9 @@
 package qbft
 
-import "github.com/bloxapp/ssv/docs/spec/types"
+import (
+	"encoding/json"
+	"github.com/bloxapp/ssv/docs/spec/types"
+)
 
 type signing interface {
 	// GetSigner returns a signer instance
@@ -22,7 +25,7 @@ type Config interface {
 }
 
 type State struct {
-	Share                           types.Share
+	Share                           *types.Share
 	ID                              []byte // instance identifier
 	Round                           Round
 	Height                          uint64
@@ -34,4 +37,14 @@ type State struct {
 // GetRoot returns the state's deterministic root
 func (s *State) GetRoot() []byte {
 	panic("implement")
+}
+
+// Encode returns a msg encoded bytes or error
+func (s *State) Encode() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// Decode returns error if decoding failed
+func (s *State) Decode(data []byte) error {
+	return json.Unmarshal(data, &s)
 }

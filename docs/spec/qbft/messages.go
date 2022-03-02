@@ -1,6 +1,7 @@
 package qbft
 
 import (
+	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
@@ -72,12 +73,12 @@ func (msg *Message) GetRoundChangeData() RoundChangeData {
 
 // Encode returns a msg encoded bytes or error
 func (msg *Message) Encode() ([]byte, error) {
-	panic("implement")
+	return json.Marshal(msg)
 }
 
 // Decode returns error if decoding failed
 func (msg *Message) Decode(data []byte) error {
-	panic("implement")
+	return json.Unmarshal(data, &msg)
 }
 
 // GetRoot returns the root used for signing and verification
@@ -115,12 +116,12 @@ func (signedMsg *SignedMessage) Aggregate(sig types.MessageSignature) error {
 
 // Encode returns a msg encoded bytes or error
 func (signedMsg *SignedMessage) Encode() ([]byte, error) {
-	panic("implement")
+	return json.Marshal(signedMsg)
 }
 
 // Decode returns error if decoding failed
 func (signedMsg *SignedMessage) Decode(data []byte) error {
-	panic("implement")
+	return json.Unmarshal(data, &signedMsg)
 }
 
 // GetRoot returns the root used for signing and verification
