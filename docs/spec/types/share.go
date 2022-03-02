@@ -19,7 +19,7 @@ func (share *Share) GetOperatorID() OperatorID {
 }
 
 // GetValidatorPubKey returns the validator public key to which the share is associated with
-func (share *Share) GetValidatorPubKey() []byte {
+func (share *Share) GetValidatorPubKey() ValidatorPK {
 	return share.pubKey
 }
 

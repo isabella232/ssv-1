@@ -27,44 +27,6 @@ type Network interface {
 type Storage interface {
 }
 
-type Share struct {
-	operatorID types.OperatorID
-	pubKey     types.ValidatorPK
-	committee  []*types.Operator
-	quorum     uint64
-	domainType types.DomainType
-}
-
-// GetOperatorID returns the node ID for this share
-func (share *Share) GetOperatorID() types.OperatorID {
-	return share.operatorID
-}
-
-// GetValidatorPubKey returns the validator public key to which the share is associated with
-func (share *Share) GetValidatorPubKey() []byte {
-	return share.pubKey
-}
-
-func (share *Share) GetQBFTCommittee() []*types.Operator {
-	return share.committee
-}
-
-func (share *Share) GetQuorumCount() uint64 {
-	return share.quorum
-}
-
-func (share *Share) GetDomainType() types.DomainType {
-	return share.domainType
-}
-
-func (share *Share) Encode() ([]byte, error) {
-	return json.Marshal(share)
-}
-
-func (share *Share) Decode(data []byte) error {
-	return json.Unmarshal(data, share)
-}
-
 // consensusData holds all relevant duty and data decided on by consensus
 type consensusData struct {
 	Duty            *beacon.Duty

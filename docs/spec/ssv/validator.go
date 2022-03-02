@@ -12,7 +12,7 @@ type Validator struct {
 	network     Network
 	beacon      beacon.Beacon
 	storage     Storage
-	share       *Share
+	share       *types.Share
 	dutyRunners DutyRunners
 	signer      types.KeyManager
 	valCheck    *types.BeaconDataCheck

@@ -70,7 +70,7 @@ type DutyRunner struct {
 	dutyExecutionState *dutyExecutionState
 	qbftController     qbft.IController
 	operatorID         types.OperatorID
-	share              *Share
+	share              *types.Share
 }
 
 // CanStartNewDuty returns nil if:

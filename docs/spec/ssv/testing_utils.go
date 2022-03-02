@@ -59,7 +59,7 @@ func newTestingValidator() *Validator {
 	return &Validator{
 		valCheck: &types.BeaconDataCheck{KeyManager: signer},
 		signer:   signer,
-		share: &Share{
+		share: &types.Share{
 			pubKey:     testingValidatorPK[:],
 			committee:  committee,
 			quorum:     3,
