@@ -197,16 +197,17 @@ func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleT
 
 func newTestingDutyRunner() *DutyRunner {
 	return &DutyRunner{
-		beaconRoleType: beacon.RoleTypeAttester,
-		validatorPK:    testingValidatorPK[:],
-		storage:        newTestingStorage(),
-		qbftController: newTestingQBFTController([]byte{1, 2, 3, 4}),
-		operatorID:     1,
-		share: &types.Share{
-			PubKey:    testingValidatorPK[:],
-			Committee: committee,
-			Quorum:    3,
+		State: &DutyRunnerState{
+			BeaconRoleType: beacon.RoleTypeAttester,
+			Share: &types.Share{
+				PubKey:     testingValidatorPK[:],
+				Committee:  committee,
+				Quorum:     3,
+				OperatorID: 1,
+			},
+			QBFTController: newTestingQBFTController([]byte{1, 2, 3, 4}),
 		},
+		storage: newTestingStorage(),
 	}
 }
 

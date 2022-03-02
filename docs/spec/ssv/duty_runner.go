@@ -4,7 +4,6 @@ import (
 	"bytes"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -12,65 +11,11 @@ import (
 // PostConsensusSigCollectionSlotTimeout represents for how many slots the post consensus sig collection has timeout for
 const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
 
-// dutyExecutionState holds all the relevant progress the duty execution progress
-type dutyExecutionState struct {
-	height          uint64
-	runningInstance qbft.IInstance
-
-	decidedValue *consensusData
-
-	signedAttestation *spec.Attestation
-	signedProposal    *spec.SignedBeaconBlock
-
-	collectedPartialSigs map[types.OperatorID][]byte
-	postConsensusSigRoot []byte
-	// quorumCount is the number of min signatures needed for quorum
-	quorumCount uint64
-
-	finised bool
-}
-
-func (pcs *dutyExecutionState) AddPartialSig(sigMsg *PostConsensusMessage) error {
-	if len(sigMsg.Signers) != 1 {
-		return errors.New("PostConsensusMessage has != 1 Signers")
-	}
-
-	if pcs.collectedPartialSigs[sigMsg.Signers[0]] == nil {
-		pcs.collectedPartialSigs[sigMsg.Signers[0]] = sigMsg.DutySignature
-	}
-	return nil
-}
-
-// ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig
-func (pcs *dutyExecutionState) ReconstructAttestationSig() (*spec.Attestation, error) {
-	panic("implement")
-}
-
-func (pcs *dutyExecutionState) HasPostConsensusSigQuorum() bool {
-	return uint64(len(pcs.collectedPartialSigs)) >= pcs.quorumCount
-}
-
-// SetFinished will mark this execution state as finished
-func (pcs *dutyExecutionState) SetFinished() {
-	pcs.finised = true
-}
-
-// IsFinished returns true if this execution state is finished
-func (pcs *dutyExecutionState) IsFinished() bool {
-	return pcs.finised
-}
-
 // DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
 // Prev duty must finish before the next one can start.
 type DutyRunner struct {
-	beaconRoleType beacon.RoleType
-	validatorPK    []byte
-	storage        Storage
-	// dutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
-	dutyExecutionState *dutyExecutionState
-	qbftController     qbft.IController
-	operatorID         types.OperatorID
-	share              *types.Share
+	State   *DutyRunnerState
+	storage Storage
 }
 
 // CanStartNewDuty returns nil if:
@@ -80,23 +25,23 @@ type DutyRunner struct {
 // else returns an error
 // Will return error if not same role type
 func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
-	if dr.dutyExecutionState == nil {
+	if dr.State.DutyExecutionState == nil {
 		return nil
 	}
 
-	if dr.beaconRoleType != duty.Type {
+	if dr.State.BeaconRoleType != duty.Type {
 		return errors.New("duty runner role != duty.MsgType")
 	}
-	if !bytes.Equal(dr.validatorPK, duty.PubKey[:]) {
+	if !bytes.Equal(dr.State.Share.PubKey, duty.PubKey[:]) {
 		return errors.New("duty runner validator pk != duty.PubKey")
 	}
 
-	if decided, _ := dr.dutyExecutionState.runningInstance.IsDecided(); !decided {
+	if decided, _ := dr.State.DutyExecutionState.runningInstance.IsDecided(); !decided {
 		return errors.New("consensus on duty is running")
 	}
 
-	if !dr.dutyExecutionState.HasPostConsensusSigQuorum() &&
-		dr.dutyExecutionState.decidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
+	if !dr.State.DutyExecutionState.HasPostConsensusSigQuorum() &&
+		dr.State.DutyExecutionState.decidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
 		return errors.New("post consensus sig collection is running")
 	}
 	return nil
@@ -107,23 +52,23 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	if value == nil {
 		return errors.New("new instance value nil")
 	}
-	if err := dr.qbftController.StartNewInstance(value); err != nil {
+	if err := dr.State.QBFTController.StartNewInstance(value); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}
-	newInstance := dr.qbftController.InstanceForHeight(dr.qbftController.GetHeight())
+	newInstance := dr.State.QBFTController.InstanceForHeight(dr.State.QBFTController.GetHeight())
 
-	dr.dutyExecutionState = &dutyExecutionState{
+	dr.State.DutyExecutionState = &dutyExecutionState{
 		runningInstance: newInstance,
-		height:          dr.qbftController.GetHeight(),
-		quorumCount:     dr.share.Quorum,
+		height:          dr.State.QBFTController.GetHeight(),
+		quorumCount:     dr.State.Share.Quorum,
 	}
-	return dr.qbftController.StartNewInstance(value)
+	return dr.State.QBFTController.StartNewInstance(value)
 }
 
 // PostConsensusStateForHeight returns a dutyExecutionState instance for a specific Height
 func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionState {
-	if dr.dutyExecutionState != nil && dr.dutyExecutionState.runningInstance.GetHeight() == height {
-		return dr.dutyExecutionState
+	if dr.State.DutyExecutionState != nil && dr.State.DutyExecutionState.runningInstance.GetHeight() == height {
+		return dr.State.DutyExecutionState
 	}
 	return nil
 }
@@ -131,23 +76,23 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *dutyExecutionS
 // DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusMessage to be broadcasted or error
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
-		Height:  dr.dutyExecutionState.height,
-		Signers: []types.OperatorID{dr.operatorID},
+		Height:  dr.State.DutyExecutionState.height,
+		Signers: []types.OperatorID{dr.State.Share.OperatorID},
 	}
-	switch dr.beaconRoleType {
+	switch dr.State.BeaconRoleType {
 	case beacon.RoleTypeAttester:
 		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, decidedValue.Duty.PubKey[:])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign attestation")
 		}
 
-		dr.dutyExecutionState.decidedValue = decidedValue
-		dr.dutyExecutionState.signedAttestation = signedAttestation
-		dr.dutyExecutionState.postConsensusSigRoot = ensureRoot(r)
-		dr.dutyExecutionState.collectedPartialSigs = map[types.OperatorID][]byte{}
+		dr.State.DutyExecutionState.decidedValue = decidedValue
+		dr.State.DutyExecutionState.signedAttestation = signedAttestation
+		dr.State.DutyExecutionState.postConsensusSigRoot = ensureRoot(r)
+		dr.State.DutyExecutionState.collectedPartialSigs = map[types.OperatorID][]byte{}
 
-		ret.DutySigningRoot = dr.dutyExecutionState.postConsensusSigRoot
-		ret.DutySignature = dr.dutyExecutionState.signedAttestation.Signature[:]
+		ret.DutySigningRoot = dr.State.DutyExecutionState.postConsensusSigRoot
+		ret.DutySignature = dr.State.DutyExecutionState.signedAttestation.Signature[:]
 
 		return ret, nil
 	default:

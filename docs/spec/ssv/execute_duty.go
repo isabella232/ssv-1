@@ -17,7 +17,7 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 	}
 
 	input := &consensusData{}
-	switch dutyRunner.beaconRoleType {
+	switch dutyRunner.State.BeaconRoleType {
 	case beacon.RoleTypeAttester:
 		attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 		if err != nil {

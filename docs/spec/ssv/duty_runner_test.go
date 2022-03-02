@@ -61,7 +61,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		dr := newTestingDutyRunner()
 		inst := newTestingQBFTInstance()
 		inst.decided = false
-		dr.dutyExecutionState = &dutyExecutionState{
+		dr.State.DutyExecutionState = &dutyExecutionState{
 			runningInstance: inst,
 		}
 		err := dr.CanStartNewDuty(&beacon.Duty{
@@ -80,7 +80,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.dutyExecutionState = &dutyExecutionState{
+		dr.State.DutyExecutionState = &dutyExecutionState{
 			runningInstance: inst,
 			quorumCount:     3,
 			decidedValue: &consensusData{
@@ -105,7 +105,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.dutyExecutionState = &dutyExecutionState{
+		dr.State.DutyExecutionState = &dutyExecutionState{
 			runningInstance: inst,
 			quorumCount:     3,
 			decidedValue: &consensusData{
@@ -130,7 +130,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.dutyExecutionState = &dutyExecutionState{
+		dr.State.DutyExecutionState = &dutyExecutionState{
 			runningInstance: inst,
 			quorumCount:     3,
 			decidedValue: &consensusData{
@@ -155,7 +155,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := newTestingQBFTInstance()
 		inst.decided = true
-		dr.dutyExecutionState = &dutyExecutionState{
+		dr.State.DutyExecutionState = &dutyExecutionState{
 			collectedPartialSigs: make(map[types.OperatorID][]byte),
 			runningInstance:      inst,
 			quorumCount:          3,
@@ -164,9 +164,9 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 				AttestationData: nil,
 			},
 		}
-		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{1}, DutySignature: []byte{1, 2, 3, 4}})
-		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{2}, DutySignature: []byte{1, 2, 3, 4}})
-		dr.dutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{3}, DutySignature: []byte{1, 2, 3, 4}})
+		dr.State.DutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{1}, DutySignature: []byte{1, 2, 3, 4}})
+		dr.State.DutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{2}, DutySignature: []byte{1, 2, 3, 4}})
+		dr.State.DutyExecutionState.AddPartialSig(&PostConsensusMessage{Signers: []types.OperatorID{3}, DutySignature: []byte{1, 2, 3, 4}})
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
 			Slot:   12,
@@ -185,10 +185,10 @@ func TestDutyRunner_StartNewInstance(t *testing.T) {
 	t.Run("valid start", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
-		require.NotNil(t, dr.dutyExecutionState)
-		require.EqualValues(t, 1, dr.dutyExecutionState.height)
-		require.NotNil(t, dr.dutyExecutionState.runningInstance)
-		require.EqualValues(t, 3, dr.dutyExecutionState.quorumCount)
+		require.NotNil(t, dr.State.DutyExecutionState)
+		require.EqualValues(t, 1, dr.State.DutyExecutionState.height)
+		require.NotNil(t, dr.State.DutyExecutionState.runningInstance)
+		require.EqualValues(t, 3, dr.State.DutyExecutionState.quorumCount)
 	})
 }
 
@@ -208,7 +208,7 @@ func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
 func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		dr := newTestingDutyRunner()
-		dr.dutyExecutionState = &dutyExecutionState{
+		dr.State.DutyExecutionState = &dutyExecutionState{
 			collectedPartialSigs: make(map[types.OperatorID][]byte),
 			quorumCount:          3,
 		}
@@ -222,9 +222,9 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 		}
 		_, err := dr.DecideRunningInstance(decidedValue, &testingKeyManager{})
 		require.NoError(t, err)
-		require.NotNil(t, dr.dutyExecutionState.decidedValue)
-		require.NotNil(t, dr.dutyExecutionState.signedAttestation)
-		require.NotNil(t, dr.dutyExecutionState.postConsensusSigRoot)
-		require.NotNil(t, dr.dutyExecutionState.collectedPartialSigs)
+		require.NotNil(t, dr.State.DutyExecutionState.decidedValue)
+		require.NotNil(t, dr.State.DutyExecutionState.signedAttestation)
+		require.NotNil(t, dr.State.DutyExecutionState.postConsensusSigRoot)
+		require.NotNil(t, dr.State.DutyExecutionState.collectedPartialSigs)
 	})
 }
