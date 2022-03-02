@@ -11,8 +11,8 @@ const (
 
 // Network is a collection of funcs for the QBFT network
 type Network interface {
-	Broadcast(msg types.MessageEncoder) error
-	BroadcastDecided(msg types.MessageEncoder) error
+	Broadcast(msg types.Encoder) error
+	BroadcastDecided(msg types.Encoder) error
 }
 
 type Storage interface {
