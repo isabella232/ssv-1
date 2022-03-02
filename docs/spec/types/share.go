@@ -14,24 +14,6 @@ type Share struct {
 	DomainType    DomainType
 }
 
-// GetOperatorID returns the node ID for this share
-func (share *Share) GetOperatorID() OperatorID {
-	return share.OperatorID
-}
-
-// GetValidatorPubKey returns the validator public key to which the share is associated with
-func (share *Share) GetValidatorPubKey() ValidatorPK {
-	return share.PubKey
-}
-
-func (share *Share) GetQBFTCommittee() []*Operator {
-	return share.Committee
-}
-
-func (share *Share) GetQuorumCount() uint64 {
-	return share.Quorum
-}
-
 // HasQuorum returns true if at least 2f+1 items are present (cnt is the number of items). It assumes nothing about those items, not their type or structure
 // https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L259
 func (share *Share) HasQuorum(cnt int) bool {
@@ -42,10 +24,6 @@ func (share *Share) HasQuorum(cnt int) bool {
 // https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/main/dafny/spec/L1/node_auxiliary_functions.dfy#L244
 func (share *Share) HasPartialQuorum(cnt int) bool {
 	panic("implement")
-}
-
-func (share *Share) GetDomainType() DomainType {
-	return share.DomainType
 }
 
 func (share *Share) Encode() ([]byte, error) {
