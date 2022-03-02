@@ -9,8 +9,8 @@ import (
 
 func TestValidateMsg(t *testing.T) {
 	v := &Validator{
-		share: &Share{
-			pubKey: []byte{1, 2, 3, 4},
+		share: &types.Share{
+			PubKey: []byte{1, 2, 3, 4},
 		},
 		dutyRunners: DutyRunners{
 			beacon.RoleTypeAttester: &DutyRunner{},

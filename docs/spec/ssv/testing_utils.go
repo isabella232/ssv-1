@@ -60,10 +60,10 @@ func newTestingValidator() *Validator {
 		valCheck: &types.BeaconDataCheck{KeyManager: signer},
 		signer:   signer,
 		share: &types.Share{
-			pubKey:     testingValidatorPK[:],
-			committee:  committee,
-			quorum:     3,
-			domainType: types.PrimusTestnet,
+			PubKey:     testingValidatorPK[:],
+			Committee:  committee,
+			Quorum:     3,
+			DomainType: types.PrimusTestnet,
 		},
 		network: &testingNetwork{},
 	}
@@ -202,10 +202,10 @@ func newTestingDutyRunner() *DutyRunner {
 		storage:        newTestingStorage(),
 		qbftController: newTestingQBFTController([]byte{1, 2, 3, 4}),
 		operatorID:     1,
-		share: &Share{
-			pubKey:    testingValidatorPK[:],
-			committee: committee,
-			quorum:    3,
+		share: &types.Share{
+			PubKey:    testingValidatorPK[:],
+			Committee: committee,
+			Quorum:    3,
 		},
 	}
 }
@@ -237,7 +237,7 @@ func (km *testingKeyManager) IsAttestationSlashable(data *spec.AttestationData) 
 	return nil
 }
 
-func (km *testingKeyManager) SignRoot(data types.MessageRoot, sigType types.SignatureType, pk []byte) (types.Signature, error) {
+func (km *testingKeyManager) SignRoot(data types.Root, sigType types.SignatureType, pk []byte) (types.Signature, error) {
 	root, _ := types.ComputeSigningRoot(data, types.ComputeSignatureDomain(km.domain, sigType))
 	return km.sk.SignByte(root).Serialize(), nil
 }

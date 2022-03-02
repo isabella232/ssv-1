@@ -50,7 +50,7 @@ func (v *Validator) validatePostConsensusMsg(executionState *dutyExecutionState,
 		return errors.New("SignedPostConsensusMessage allows 1 signer")
 	}
 
-	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.GetDomainType(), types.PostConsensusSigType, v.share.GetQBFTCommittee()); err != nil {
+	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.DomainType, types.PostConsensusSigType, v.share.Committee); err != nil {
 		return errors.Wrap(err, "failed to verify DutySignature")
 	}
 
@@ -75,7 +75,7 @@ func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) erro
 	signature := msg.DutySignature
 	root := msg.DutySigningRoot
 
-	for _, n := range v.share.GetQBFTCommittee() {
+	for _, n := range v.share.Committee {
 		if n.GetID() == signer {
 			pk := &bls.PublicKey{}
 			if err := pk.Deserialize(n.GetPublicKey()); err != nil {
@@ -99,7 +99,7 @@ func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) erro
 }
 
 func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPostConsensusMessage, error) {
-	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.GetValidatorPubKey())
+	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.PubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compute PostConsensusMessage root")
 	}
@@ -107,6 +107,6 @@ func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPost
 	return &SignedPostConsensusMessage{
 		message:   msg,
 		signature: signature,
-		signers:   []types.OperatorID{v.share.GetOperatorID()},
+		signers:   []types.OperatorID{v.share.OperatorID},
 	}, nil
 }

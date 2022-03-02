@@ -6,11 +6,12 @@ import (
 
 // Share holds all info about the QBFT/ SSV Committee for msg signing and verification
 type Share struct {
-	OperatorID OperatorID
-	PubKey     ValidatorPK
-	Committee  []*Operator
-	quorum     uint64
-	DomainType DomainType
+	OperatorID    OperatorID
+	PubKey        ValidatorPK
+	Committee     []*Operator
+	Quorum        uint64
+	PartialQuorum uint64
+	DomainType    DomainType
 }
 
 // GetOperatorID returns the node ID for this share
@@ -20,7 +21,7 @@ func (share *Share) GetOperatorID() OperatorID {
 
 // GetValidatorPubKey returns the validator public key to which the share is associated with
 func (share *Share) GetValidatorPubKey() ValidatorPK {
-	return share.pubKey
+	return share.PubKey
 }
 
 func (share *Share) GetQBFTCommittee() []*Operator {
@@ -28,7 +29,7 @@ func (share *Share) GetQBFTCommittee() []*Operator {
 }
 
 func (share *Share) GetQuorumCount() uint64 {
-	return share.quorum
+	return share.Quorum
 }
 
 // HasQuorum returns true if at least 2f+1 items are present (cnt is the number of items). It assumes nothing about those items, not their type or structure

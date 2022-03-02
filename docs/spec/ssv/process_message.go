@@ -38,7 +38,7 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 }
 
 func (v *Validator) validateMessage(msg types.SSVMessage) error {
-	if !v.share.GetValidatorPubKey().MessageIDBelongs(msg.GetID()) {
+	if !v.share.PubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}
 

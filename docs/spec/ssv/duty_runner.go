@@ -115,7 +115,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	dr.dutyExecutionState = &dutyExecutionState{
 		runningInstance: newInstance,
 		height:          dr.qbftController.GetHeight(),
-		quorumCount:     dr.share.GetQuorumCount(),
+		quorumCount:     dr.share.Quorum,
 	}
 	return dr.qbftController.StartNewInstance(value)
 }

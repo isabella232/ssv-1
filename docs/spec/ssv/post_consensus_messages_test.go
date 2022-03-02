@@ -54,7 +54,7 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -76,7 +76,7 @@ func TestValidator_verifyBeaconPartialSignature(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -100,7 +100,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -132,7 +132,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -168,7 +168,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -199,7 +199,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -231,7 +231,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -263,7 +263,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		sk.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
@@ -298,7 +298,7 @@ func TestValidator_validatePostConsensusMsg(t *testing.T) {
 		wrongSK.SetByCSPRNG()
 
 		v := newTestingValidator()
-		v.share.committee[0] = &types.Operator{
+		v.share.Committee[0] = &types.Operator{
 			OperatorID: 1,
 			PubKey:     sk.GetPublicKey().Serialize(),
 		}
