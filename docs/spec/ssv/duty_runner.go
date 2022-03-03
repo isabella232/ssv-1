@@ -59,7 +59,6 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 
 	dr.State.DutyExecutionState = &DutyExecutionState{
 		RunningInstance: newInstance,
-		Height:          dr.State.QBFTController.GetHeight(),
 		Quorum:          dr.State.Share.Quorum,
 	}
 	return dr.State.QBFTController.StartNewInstance(value)
@@ -76,7 +75,7 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *DutyExecutionS
 // DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusMessage to be broadcasted or error
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
-		Height:  dr.State.DutyExecutionState.Height,
+		Height:  dr.State.DutyExecutionState.RunningInstance.GetHeight(),
 		Signers: []types.OperatorID{dr.State.Share.OperatorID},
 	}
 	switch dr.State.BeaconRoleType {

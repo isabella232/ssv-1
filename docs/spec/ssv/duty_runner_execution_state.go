@@ -1,15 +1,16 @@
 package ssv
 
 import (
+	"encoding/json"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
+	"github.com/prysmaticlabs/go-ssz"
 )
 
 // DutyExecutionState holds all the relevant progress the duty execution progress
 type DutyExecutionState struct {
-	Height          uint64
 	RunningInstance qbft.IInstance
 
 	DecidedValue *consensusData
@@ -53,4 +54,52 @@ func (pcs *DutyExecutionState) SetFinished() {
 // IsFinished returns true if this execution state is finished
 func (pcs *DutyExecutionState) IsFinished() bool {
 	return pcs.Finished
+}
+
+// Encode returns the encoded struct in bytes or error
+func (pcs *DutyExecutionState) Encode() ([]byte, error) {
+	m := make(map[string]interface{})
+
+	if pcs.RunningInstance != nil {
+		byts, err := pcs.RunningInstance.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode RunningInstance")
+		}
+		m["running_instance"] = byts
+	}
+
+	if pcs.DecidedValue != nil {
+		byts, err := pcs.DecidedValue.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode DecidedValue")
+		}
+		m["decided_value"] = byts
+	}
+
+	if pcs.SignedAttestation != nil {
+		byts, err := ssz.Marshal(pcs.SignedAttestation)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode SignedAttestation")
+		}
+		m["signed_att"] = byts
+	}
+
+	if pcs.SignedProposal != nil {
+		byts, err := ssz.Marshal(pcs.SignedProposal)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode SignedProposal")
+		}
+		m["signed_proposal"] = byts
+	}
+
+	m["collected_partial_sigs"] = pcs.CollectedPartialSigs
+	m["post_consensus_root"] = pcs.PostConsensusSigRoot
+	m["quorum"] = pcs.Quorum
+	m["finished"] = pcs.Finished
+	return json.Marshal(m)
+}
+
+// Decode returns error if decoding failed
+func (pcs *DutyExecutionState) Decode(data []byte) error {
+	panic("implement")
 }

@@ -132,6 +132,16 @@ func (tContr *testingQBFTController) GetIdentifier() []byte {
 	return tContr.identifier
 }
 
+// Encode returns the encoded struct in bytes or error
+func (tContr *testingQBFTController) Encode() ([]byte, error) {
+	panic("implement")
+}
+
+// Decode returns error if decoding failed
+func (tContr *testingQBFTController) Decode(data []byte) error {
+	panic("implement")
+}
+
 type testingQBFTInstance struct {
 	height  uint64
 	decided bool
@@ -163,6 +173,16 @@ func (tInstance *testingQBFTInstance) IsDecided() (bool, []byte) {
 // GetHeight implementation
 func (tInstance *testingQBFTInstance) GetHeight() uint64 {
 	return tInstance.height
+}
+
+// Encode returns the encoded struct in bytes or error
+func (tInstance *testingQBFTInstance) Encode() ([]byte, error) {
+	panic("implement")
+}
+
+// Decode returns error if decoding failed
+func (tInstance *testingQBFTInstance) Decode(data []byte) error {
+	panic("implement")
 }
 
 type testingStorage struct {
@@ -199,7 +219,7 @@ func newTestingDutyRunner() *DutyRunner {
 	return &DutyRunner{
 		State: &DutyRunnerState{
 			BeaconRoleType: beacon.RoleTypeAttester,
-			Share: &types.Share{
+			Share: types.Share{
 				PubKey:     testingValidatorPK[:],
 				Committee:  committee,
 				Quorum:     3,
