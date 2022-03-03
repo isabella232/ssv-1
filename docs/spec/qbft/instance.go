@@ -1,8 +1,9 @@
 package qbft
 
 import (
+	"encoding/json"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/utils"
-	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
 	"sync"
 )
@@ -10,6 +11,7 @@ import (
 type proposedValueCheck func(data []byte) error
 
 type IInstance interface {
+	types.Encoder
 	// Start will start the new instance with a specific value and height
 	Start(value []byte, height uint64)
 	// ProcessMsg will process a signed msg
@@ -32,8 +34,8 @@ type Instance struct {
 	commitContainer      MsgContainer
 	roundChangeContainer MsgContainer
 
-	decided      *threadsafe.SafeBool
-	decidedValue *threadsafe.SafeBytes
+	decided      bool
+	decidedValue []byte
 	processMsgF  *utils.ThreadSafeF
 	startOnce    sync.Once
 	startValue   []byte
@@ -69,9 +71,9 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 			return uponPrepare(i.state, i.config, msg, i.prepareContainer, i.commitContainer)
 		case CommitMsgType:
 			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, i.config, msg, i.commitContainer)
-			i.decided.Set(decided)
+			i.decided = decided
 			if decided {
-				i.decidedValue.Set(decidedValue)
+				i.decidedValue = decidedValue
 			}
 
 			// TODO - Roberto comment: we should send a decided msg here
@@ -85,15 +87,60 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	if res != nil {
 		return false, nil, nil, res.(error)
 	}
-	return i.decided.Get(), i.decidedValue.Get(), aggregatedCommit, nil
+	return i.decided, i.decidedValue, aggregatedCommit, nil
 }
 
 // IsDecided interface implementation
 func (i *Instance) IsDecided() (bool, []byte) {
-	return i.decided.Get(), i.decidedValue.Get()
+	return i.decided, i.decidedValue
 }
 
 // GetHeight interface implementation
 func (i *Instance) GetHeight() uint64 {
 	return i.state.Height
+}
+
+// Encode implementation
+func (i *Instance) Encode() ([]byte, error) {
+	m := make(map[string]interface{})
+
+	byts, err := i.state.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode state")
+	}
+	m["state"] = byts
+
+	byts, err = i.proposeContainer.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode proposeContainer")
+	}
+	m["propose_container"] = byts
+
+	byts, err = i.prepareContainer.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode prepareContainer")
+	}
+	m["prepare_container"] = byts
+
+	byts, err = i.commitContainer.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode commitContainer")
+	}
+	m["commit_container"] = byts
+
+	byts, err = i.roundChangeContainer.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode roundChangeContainer")
+	}
+	m["round_change_container"] = byts
+
+	m["decided"] = i.decided
+	m["decided_value"] = i.decidedValue
+	m["start_value"] = i.startValue
+	return json.Marshal(m)
+}
+
+// Decode implementation
+func (i *Instance) Decode(data []byte) error {
+	panic("implement")
 }

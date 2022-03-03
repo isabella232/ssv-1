@@ -1,6 +1,9 @@
 package qbft
 
+import "github.com/bloxapp/ssv/docs/spec/types"
+
 type MsgContainer interface {
+	types.Encoder
 	// AllMessagedForHeight returns all messages for the specific height
 	AllMessagedForHeight(height uint64) []*SignedMessage
 	// MessagesForHeightAndRound returns all msgs for height and round, empty slice otherwise

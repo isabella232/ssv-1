@@ -2,10 +2,10 @@ package qbft
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/bloxapp/ssv/docs/spec/types"
-	"github.com/bloxapp/ssv/utils/threadsafe"
 	"github.com/pkg/errors"
 )
 
@@ -27,6 +27,7 @@ func (i instances) FindInstance(height uint64) IInstance {
 }
 
 type IController interface {
+	types.Encoder
 	// StartNewInstance will start a new QBFT instance, if can't will return error
 	StartNewInstance(value []byte) error
 	// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
@@ -43,7 +44,7 @@ type IController interface {
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
 type Controller struct {
 	identifier []byte
-	height     *threadsafe.SafeUint64 // incremental height for instances
+	height     uint64 // incremental height for instances
 	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	storedInstances instances
 	signer          types.SSVSigner
@@ -110,11 +111,11 @@ func (c *Controller) InstanceForHeight(height uint64) IInstance {
 
 // GetHeight returns the current running instance height or, if not started, the last decided height
 func (c *Controller) GetHeight() uint64 {
-	return c.height.Get()
+	return c.height
 }
 
 func (c *Controller) bumpHeight() {
-	c.height.Set(c.height.Get() + 1)
+	c.height++
 }
 
 // GetIdentifier returns QBFT identifier, used to identify messages
@@ -141,5 +142,30 @@ func (c *Controller) canStartInstance(value []byte) error {
 	if err := c.valueCheck(value); err != nil {
 		return errors.Wrap(err, "value invalid")
 	}
+	panic("implement")
+}
+
+// Encode implementation
+func (c *Controller) Encode() ([]byte, error) {
+	m := make(map[string]interface{})
+
+	m["id"] = c.identifier
+	m["height"] = c.height
+
+	instances := make([][]byte, 0)
+	for _, i := range c.storedInstances {
+		byts, err := i.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode instance")
+		}
+		instances = append(instances, byts)
+	}
+	m["instances"] = instances
+
+	return json.Marshal(m)
+}
+
+// Decode implementation
+func (c *Controller) Decode(data []byte) error {
 	panic("implement")
 }
