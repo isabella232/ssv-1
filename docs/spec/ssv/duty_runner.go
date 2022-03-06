@@ -4,7 +4,6 @@ import (
 	"bytes"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -56,10 +55,10 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	if err := dr.State.QBFTController.StartNewInstance(value); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}
-	newInstance := dr.State.QBFTController.InstanceForHeight(dr.State.QBFTController.GetHeight())
+	newInstance := dr.State.QBFTController.InstanceForHeight(dr.State.QBFTController.Height)
 
 	dr.State.DutyExecutionState = &DutyExecutionState{
-		RunningInstance: newInstance.(*qbft.Instance),
+		RunningInstance: newInstance,
 		Quorum:          dr.State.Share.Quorum,
 	}
 	return dr.State.QBFTController.StartNewInstance(value)
