@@ -1,8 +1,10 @@
 package qbft
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/pkg/errors"
 )
 
 type MessageType int
@@ -83,7 +85,12 @@ func (msg *Message) Decode(data []byte) error {
 
 // GetRoot returns the root used for signing and verification
 func (msg *Message) GetRoot() ([]byte, error) {
-	panic("implement")
+	marshaledRoot, err := msg.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode PostConsensusMessage")
+	}
+	ret := sha256.Sum256(marshaledRoot)
+	return ret[:], nil
 }
 
 // DeepCopy returns a new instance of Message, deep copied
