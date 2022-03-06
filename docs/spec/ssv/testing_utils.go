@@ -92,7 +92,9 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 func newTestingQBFTController(identifier []byte) *qbft.Controller {
 	ret := qbft.NewController(
 		newTestingKeyManager(),
-		nil,
+		func(data []byte) error {
+			return nil
+		},
 		newTestingStorage(),
 		nil,
 	)
