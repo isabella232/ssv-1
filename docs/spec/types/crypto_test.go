@@ -12,11 +12,11 @@ type testSigningRoot struct {
 	signers   []OperatorID
 }
 
-func (r *testSigningRoot) GetRoot() []byte {
-	return r.root
+func (r *testSigningRoot) GetRoot() ([]byte, error) {
+	return r.root, nil
 }
 
-func (r *testSigningRoot) GetSignature() []byte {
+func (r *testSigningRoot) GetSignature() Signature {
 	return r.Signature
 }
 
@@ -44,7 +44,9 @@ func TestComputeSigningRoot(t *testing.T) {
 		root := &testSigningRoot{root: []byte{1, 2, 3, 4}}
 		domain := PrimusTestnet
 		sigType := QBFTSigType
-		require.EqualValues(t, []byte{0x8e, 0x9e, 0xa8, 0x82, 0x0, 0x46, 0xb7, 0x5d, 0xe9, 0x0, 0xb5, 0xdc, 0x1c, 0xb, 0xa5, 0x82, 0xf7, 0xc6, 0x79, 0xc7, 0x3d, 0x20, 0xf, 0x95, 0x81, 0x23, 0xa5, 0xbc, 0x2f, 0x2c, 0xd8, 0x3e}, ComputeSigningRoot(root, ComputeSignatureDomain(domain, sigType)))
+		byts, err := ComputeSigningRoot(root, ComputeSignatureDomain(domain, sigType))
+		require.NoError(t, err)
+		require.EqualValues(t, []byte{0x8e, 0x9e, 0xa8, 0x82, 0x0, 0x46, 0xb7, 0x5d, 0xe9, 0x0, 0xb5, 0xdc, 0x1c, 0xb, 0xa5, 0x82, 0xf7, 0xc6, 0x79, 0xc7, 0x3d, 0x20, 0xf, 0x95, 0x81, 0x23, 0xa5, 0xbc, 0x2f, 0x2c, 0xd8, 0x3e}, byts)
 	})
 }
 
@@ -57,7 +59,8 @@ func TestSignature_Verify(t *testing.T) {
 	domain := PrimusTestnet
 	sigType := QBFTSigType
 
-	computedRoot := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	require.NoError(t, err)
 
 	sk := &bls.SecretKey{}
 	sk.SetByCSPRNG()
@@ -87,7 +90,8 @@ func TestSignature_VerifyMultiPubKey(t *testing.T) {
 	domain := PrimusTestnet
 	sigType := QBFTSigType
 
-	computedRoot := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	require.NoError(t, err)
 
 	sk1 := &bls.SecretKey{}
 	sk1.SetByCSPRNG()
@@ -159,7 +163,8 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 	domain := PrimusTestnet
 	sigType := QBFTSigType
 
-	computedRoot := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	require.NoError(t, err)
 
 	sk1 := &bls.SecretKey{}
 	sk1.SetByCSPRNG()
@@ -173,16 +178,16 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 	t.Run("valid sig", func(t *testing.T) {
 		nodes := []*Operator{
 			{
-				NodeID: 1,
-				PubKey: sk1.GetPublicKey().Serialize(),
+				OperatorID: 1,
+				PubKey:     sk1.GetPublicKey().Serialize(),
 			},
 			{
-				NodeID: 2,
-				PubKey: sk2.GetPublicKey().Serialize(),
+				OperatorID: 2,
+				PubKey:     sk2.GetPublicKey().Serialize(),
 			},
 			{
-				NodeID: 3,
-				PubKey: sk3.GetPublicKey().Serialize(),
+				OperatorID: 3,
+				PubKey:     sk3.GetPublicKey().Serialize(),
 			},
 		}
 
@@ -199,12 +204,12 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 	t.Run("missing id", func(t *testing.T) {
 		nodes := []*Operator{
 			{
-				NodeID: 1,
-				PubKey: sk1.GetPublicKey().Serialize(),
+				OperatorID: 1,
+				PubKey:     sk1.GetPublicKey().Serialize(),
 			},
 			{
-				NodeID: 2,
-				PubKey: sk2.GetPublicKey().Serialize(),
+				OperatorID: 2,
+				PubKey:     sk2.GetPublicKey().Serialize(),
 			},
 		}
 
@@ -215,6 +220,6 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 		msgRoot.Signature = agg.Serialize()
 		msgRoot.signers = []OperatorID{1, 2, 3}
 
-		require.EqualError(t, Signature(agg.Serialize()).VerifyByOperators(msgRoot, domain, sigType, nodes), "signer not found in nodes")
+		require.EqualError(t, Signature(agg.Serialize()).VerifyByOperators(msgRoot, domain, sigType, nodes), "signer not found in operators")
 	})
 }
