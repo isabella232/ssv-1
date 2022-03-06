@@ -8,7 +8,6 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/utils/threshold"
 	"github.com/herumi/bls-eth-go-binary/bls"
-	"github.com/pkg/errors"
 )
 
 var testDuty = &beacon.Duty{
@@ -91,10 +90,14 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 //}
 
 func newTestingQBFTController(identifier []byte) *qbft.Controller {
-	ret := &qbft.Controller{
-		Height:     0,
-		Identifier: identifier,
-	}
+	ret := qbft.NewController(
+		newTestingKeyManager(),
+		nil,
+		newTestingStorage(),
+		nil,
+	)
+	ret.Height = 0
+	ret.Identifier = identifier
 	ret.StartNewInstance([]byte{1, 2, 3, 4})
 	return ret
 }
@@ -109,34 +112,31 @@ func newTestingQBFTInstance() *qbft.Instance {
 }
 
 type testingStorage struct {
-	storage map[string]map[beacon.RoleType]*consensusData
+	storage map[string]*qbft.SignedMessage
 }
 
 func newTestingStorage() *testingStorage {
 	return &testingStorage{
-		storage: make(map[string]map[beacon.RoleType]*consensusData),
+		storage: make(map[string]*qbft.SignedMessage),
 	}
 }
 
 // SaveHighestDecided saves the Decided value as highest for a validator PK and role
-func (s *testingStorage) SaveHighestDecided(validatorPK []byte, role beacon.RoleType, decidedValue *consensusData) error {
-	if s.storage[hex.EncodeToString(validatorPK)] == nil {
-		s.storage[hex.EncodeToString(validatorPK)] = make(map[beacon.RoleType]*consensusData)
-	}
-	s.storage[hex.EncodeToString(validatorPK)][role] = decidedValue
+func (s *testingStorage) SaveHighestDecided(signedMsg *qbft.SignedMessage) error {
+	s.storage[hex.EncodeToString(signedMsg.Message.Identifier)] = signedMsg
 	return nil
 }
 
-// GetHighestDecided returns the saved Decided value (highest) for a validator PK and role
-func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleType) (*consensusData, error) {
-	if s.storage[hex.EncodeToString(validatorPK)] == nil {
-		return nil, errors.New("can't find validator PK")
-	}
-	if value, found := s.storage[hex.EncodeToString(validatorPK)][role]; found {
-		return value, nil
-	}
-	return nil, errors.New("can't find role")
-}
+//// GetHighestDecided returns the saved Decided value (highest) for a validator PK and role
+//func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleType) (*consensusData, error) {
+//	if s.storage[hex.EncodeToString(validatorPK)] == nil {
+//		return nil, errors.New("can't find validator PK")
+//	}
+//	if value, found := s.storage[hex.EncodeToString(validatorPK)][role]; found {
+//		return value, nil
+//	}
+//	return s.storage[hex.EncodeToString(signedMsg.Message.Identifier)], errors.New("can't find role")
+//}
 
 func newTestingDutyRunner() *DutyRunner {
 	return &DutyRunner{
