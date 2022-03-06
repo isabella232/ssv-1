@@ -26,7 +26,7 @@ type Config interface {
 
 type State struct {
 	Share                           *types.Share
-	ID                              []byte // instance identifier
+	ID                              []byte // instance Identifier
 	Round                           Round
 	Height                          uint64
 	LastPreparedRound               Round

@@ -42,7 +42,7 @@ func isValidProposal(
 		return errors.New("msg type is not proposal")
 	}
 	if signedProposal.Message.Height != state.Height {
-		return errors.New("proposal height is wrong")
+		return errors.New("proposal Height is wrong")
 	}
 	if len(signedProposal.GetSigners()) != 1 {
 		return errors.New("proposal msg allows 1 signer")

@@ -70,7 +70,7 @@ func getRoundChangeJustification(state State, config Config, prepareMsgContainer
 	return nil
 }
 
-// validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific height and round
+// validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific Height and round
 func validPreparesForHeightRoundAndDigest(
 	state State,
 	config Config,
@@ -106,13 +106,13 @@ func validSignedPrepareForHeightRoundAndValue(
 		return errors.New("prepare msg type is wrong")
 	}
 	if signedPrepare.Message.Height != height {
-		return errors.New("msg height wrong")
+		return errors.New("msg Height wrong")
 	}
 	if signedPrepare.Message.Round != round {
 		return errors.New("msg round wrong")
 	}
 	if bytes.Compare(signedPrepare.Message.GetPrepareData().GetData(), value) != 0 {
-		return errors.New("msg identifier wrong")
+		return errors.New("msg Identifier wrong")
 	}
 
 	if len(signedPrepare.GetSigners()) != 1 {

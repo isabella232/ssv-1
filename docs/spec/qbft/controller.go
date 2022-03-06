@@ -28,8 +28,8 @@ func (i instances) FindInstance(height uint64) *Instance {
 
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
 type Controller struct {
-	identifier []byte
-	height     uint64 // incremental height for instances
+	Identifier []byte
+	Height     uint64 // incremental Height for instances
 	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	storedInstances instances
 	signer          types.SSVSigner
@@ -46,21 +46,21 @@ func (c *Controller) StartNewInstance(value []byte) error {
 
 	c.bumpHeight()
 	newInstance := c.addAndStoreNewInstance()
-	newInstance.Start(value, c.GetHeight())
+	newInstance.Start(value, c.Height)
 
 	return nil
 }
 
-// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
-// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
+// ProcessMsg processes a new msg, returns true if Decided, non nil byte slice if Decided (Decided value) and error
+// Decided returns just once per instance as true, following messages (for example additional commit msgs) will not return Decided true
 func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
-	if !bytes.Equal(c.GetIdentifier(), msg.Message.Identifier) {
-		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to identifier %x", c.GetIdentifier()))
+	if !bytes.Equal(c.Identifier, msg.Message.Identifier) {
+		return false, nil, errors.New(fmt.Sprintf("message doesn't belong to Identifier %x", c.Identifier))
 	}
 
 	inst := c.InstanceForHeight(msg.Message.Height)
 	if inst == nil {
-		return false, nil, errors.New(fmt.Sprintf("instance for height %d,  identifier %x not found", msg.Message.Height, c.GetIdentifier()))
+		return false, nil, errors.New(fmt.Sprintf("instance for Height %d,  Identifier %x not found", msg.Message.Height, c.Identifier))
 	}
 
 	prevDecided, _ := inst.IsDecided()
@@ -69,19 +69,19 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 		return false, nil, errors.Wrap(err, "could not process msg")
 	}
 
-	// save the highest decided
-	if decided && inst.GetHeight() == c.GetHeight() { // It's the highest instance
+	// save the highest Decided
+	if decided && inst.GetHeight() == c.Height { // It's the highest instance
 		if err := c.storage.SaveHighestDecided(aggregatedCommit); err != nil {
 			// LOG
 		}
 	}
 
-	// if previously decided we do not return decided true again
+	// if previously Decided we do not return Decided true again
 	if prevDecided {
 		return false, nil, err
 	}
 
-	// Broadcast decided msg
+	// Broadcast Decided msg
 	if err := c.network.BroadcastDecided(aggregatedCommit); err != nil {
 		//TODO We do not return error here, just Log broadcasting error.
 		return decided, decidedValue, nil
@@ -94,18 +94,13 @@ func (c *Controller) InstanceForHeight(height uint64) *Instance {
 	return c.storedInstances.FindInstance(height)
 }
 
-// GetHeight returns the current running instance height or, if not started, the last decided height
-func (c *Controller) GetHeight() uint64 {
-	return c.height
-}
-
 func (c *Controller) bumpHeight() {
-	c.height++
+	c.Height++
 }
 
-// GetIdentifier returns QBFT identifier, used to identify messages
+// GetIdentifier returns QBFT Identifier, used to identify messages
 func (c *Controller) GetIdentifier() []byte {
-	return c.identifier
+	return c.Identifier
 }
 
 // addAndStoreNewInstance returns creates a new QBFT instance, stores it in an array and returns it
@@ -115,12 +110,12 @@ func (c *Controller) addAndStoreNewInstance() Instance {
 
 func (c *Controller) canStartInstance(value []byte) error {
 	// check prev instance
-	inst := c.storedInstances.FindInstance(c.GetHeight())
+	inst := c.storedInstances.FindInstance(c.Height)
 	if inst == nil {
 		return errors.New("could not find previous instance")
 	}
 	if decided, _ := inst.IsDecided(); !decided {
-		return errors.New("previous instance hasn't decided")
+		return errors.New("previous instance hasn't Decided")
 	}
 
 	// check value
@@ -134,8 +129,8 @@ func (c *Controller) canStartInstance(value []byte) error {
 func (c *Controller) Encode() ([]byte, error) {
 	m := make(map[string]interface{})
 
-	m["id"] = c.identifier
-	m["height"] = c.height
+	m["id"] = c.Identifier
+	m["Height"] = c.Height
 
 	instances := make([][]byte, 0)
 	for _, i := range c.storedInstances {

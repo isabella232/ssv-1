@@ -68,13 +68,13 @@ func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
 	return ret, nil
 }
 
-// didSendCommitForHeightAndRound returns true if sent commit msg for specific height and round
+// didSendCommitForHeightAndRound returns true if sent commit msg for specific Height and round
 func didSendCommitForHeightAndRound(state State, commitMsgContainer MsgContainer) bool {
 	/**
 	!exists m :: && m in current.messagesReceived
 	                            && m.Commit?
 	                            && var uPayload := m.commitPayload.unsignedPayload;
-	                            && uPayload.height == |current.blockchain|
+	                            && uPayload.Height == |current.blockchain|
 	                            && uPayload.round == current.round
 	                            && recoverSignedCommitAuthor(m.commitPayload) == current.id
 	*/
@@ -111,7 +111,7 @@ func validateCommit(
 		return errors.New("commit msg type is wrong")
 	}
 	if signedCommit.Message.Height != height {
-		return errors.New("commit height is wrong")
+		return errors.New("commit Height is wrong")
 	}
 	if signedCommit.Message.Round != round {
 		return errors.New("commit round is wrong")
@@ -123,7 +123,7 @@ func validateCommit(
 	if len(signedCommit.GetSigners()) != 1 {
 		return errors.New("commit msg allows 1 signer")
 	}
-	// TODO how to process decided msgs with multiple signer?
+	// TODO how to process Decided msgs with multiple signer?
 
 	if err := signedCommit.Signature.VerifyByOperators(signedCommit, config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
