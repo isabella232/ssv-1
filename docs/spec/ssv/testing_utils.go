@@ -57,6 +57,7 @@ var committee = []*types.Operator{
 
 func newTestingValidator() *Validator {
 	signer := newTestingKeyManager()
+	dutyRunner := newTestingDutyRunner()
 	return &Validator{
 		valCheck: &types.BeaconDataCheck{KeyManager: signer},
 		signer:   signer,
@@ -67,6 +68,9 @@ func newTestingValidator() *Validator {
 			DomainType: types.PrimusTestnet,
 		},
 		network: &testingNetwork{},
+		dutyRunners: DutyRunners{
+			beacon.RoleTypeAttester: dutyRunner,
+		},
 	}
 }
 
@@ -87,10 +91,12 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 //}
 
 func newTestingQBFTController(identifier []byte) *qbft.Controller {
-	return &qbft.Controller{
+	ret := &qbft.Controller{
 		Height:     0,
 		Identifier: identifier,
 	}
+	ret.StartNewInstance([]byte{1, 2, 3, 4})
+	return ret
 }
 
 func newTestingQBFTInstance() *qbft.Instance {
