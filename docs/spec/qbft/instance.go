@@ -21,7 +21,7 @@ type Instance struct {
 	commitContainer      MsgContainer
 	roundChangeContainer MsgContainer
 
-	decided      bool
+	Decided      bool
 	decidedValue []byte
 	processMsgF  *utils.ThreadSafeF
 	startOnce    sync.Once
@@ -58,12 +58,12 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 			return uponPrepare(i.state, i.config, msg, i.prepareContainer, i.commitContainer)
 		case CommitMsgType:
 			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, i.config, msg, i.commitContainer)
-			i.decided = decided
+			i.Decided = decided
 			if decided {
 				i.decidedValue = decidedValue
 			}
 
-			// TODO - Roberto comment: we should send a decided msg here
+			// TODO - Roberto comment: we should send a Decided msg here
 			return err
 		case RoundChangeMsgType:
 			return uponRoundChange(i.state, i.config, msg, i.roundChangeContainer, i.valueCheck)
@@ -74,12 +74,12 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	if res != nil {
 		return false, nil, nil, res.(error)
 	}
-	return i.decided, i.decidedValue, aggregatedCommit, nil
+	return i.Decided, i.decidedValue, aggregatedCommit, nil
 }
 
 // IsDecided interface implementation
 func (i *Instance) IsDecided() (bool, []byte) {
-	return i.decided, i.decidedValue
+	return i.Decided, i.decidedValue
 }
 
 // GetHeight interface implementation
@@ -121,7 +121,7 @@ func (i *Instance) Encode() ([]byte, error) {
 	}
 	m["round_change_container"] = byts
 
-	m["decided"] = i.decided
+	m["Decided"] = i.Decided
 	m["decided_value"] = i.decidedValue
 	m["start_value"] = i.startValue
 	return json.Marshal(m)

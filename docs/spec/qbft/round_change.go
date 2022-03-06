@@ -134,7 +134,7 @@ func validRoundChange(state State, config Config, signedMsg *SignedMessage, heig
 		return errors.New("round change msg type is wrong")
 	}
 	if signedMsg.Message.Height != height {
-		return errors.New("round change height is wrong")
+		return errors.New("round change Height is wrong")
 	}
 	if signedMsg.Message.Round != round {
 		return errors.New("round change round is wrong")

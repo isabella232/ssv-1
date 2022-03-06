@@ -16,6 +16,6 @@ type Network interface {
 }
 
 type Storage interface {
-	// SaveHighestDecided saves (and potentially overrides) the highest decided for a specific instance
+	// SaveHighestDecided saves (and potentially overrides) the highest Decided for a specific instance
 	SaveHighestDecided(signedMsg *SignedMessage) error
 }
