@@ -109,9 +109,9 @@ func (c *Controller) addAndStoreNewInstance() Instance {
 }
 
 func (c *Controller) canStartInstance(value []byte) error {
-	// check prev instance
+	// check prev instance if prev instance is not the first instance
 	inst := c.storedInstances.FindInstance(c.Height)
-	if inst == nil {
+	if c.Height != 0 && inst == nil {
 		return errors.New("could not find previous instance")
 	}
 	if decided, _ := inst.IsDecided(); !decided {
