@@ -12,7 +12,7 @@ type proposedValueCheck func(data []byte) error
 // Instance is a single QBFT instance that starts with a Start call (including a value).
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
-	state      State
+	State      State
 	config     Config
 	valueCheck proposedValueCheck
 
@@ -32,12 +32,12 @@ type Instance struct {
 func (i *Instance) Start(value []byte, height uint64) {
 	i.startOnce.Do(func() {
 		i.startValue = value
-		i.state.Round = FirstRound
-		i.state.Height = height
+		i.State.Round = FirstRound
+		i.State.Height = height
 
 		// propose if this node is the proposer
-		if proposer(i.state, FirstRound) == i.state.Share.OperatorID {
-			proposal, err := createProposal(i.state, i.config, i.startValue, nil, nil)
+		if proposer(i.State, FirstRound) == i.State.Share.OperatorID {
+			proposal, err := createProposal(i.State, i.config, i.startValue, nil, nil)
 			if err != nil {
 				// TODO log
 			}
@@ -53,11 +53,11 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
 		case ProposalMsgType:
-			return uponProposal(i.state, i.config, msg, i.proposeContainer)
+			return uponProposal(i.State, i.config, msg, i.proposeContainer)
 		case PrepareMsgType:
-			return uponPrepare(i.state, i.config, msg, i.prepareContainer, i.commitContainer)
+			return uponPrepare(i.State, i.config, msg, i.prepareContainer, i.commitContainer)
 		case CommitMsgType:
-			decided, decidedValue, aggregatedCommit, err = uponCommit(i.state, i.config, msg, i.commitContainer)
+			decided, decidedValue, aggregatedCommit, err = uponCommit(i.State, i.config, msg, i.commitContainer)
 			i.Decided = decided
 			if decided {
 				i.decidedValue = decidedValue
@@ -66,7 +66,7 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 			// TODO - Roberto comment: we should send a Decided msg here
 			return err
 		case RoundChangeMsgType:
-			return uponRoundChange(i.state, i.config, msg, i.roundChangeContainer, i.valueCheck)
+			return uponRoundChange(i.State, i.config, msg, i.roundChangeContainer, i.valueCheck)
 		default:
 			return errors.New("signed message type not supported")
 		}
@@ -84,18 +84,18 @@ func (i *Instance) IsDecided() (bool, []byte) {
 
 // GetHeight interface implementation
 func (i *Instance) GetHeight() uint64 {
-	return i.state.Height
+	return i.State.Height
 }
 
 // Encode implementation
 func (i *Instance) Encode() ([]byte, error) {
 	m := make(map[string]interface{})
 
-	byts, err := i.state.Encode()
+	byts, err := i.State.Encode()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not encode state")
+		return nil, errors.Wrap(err, "could not encode State")
 	}
-	m["state"] = byts
+	m["State"] = byts
 
 	byts, err = i.proposeContainer.Encode()
 	if err != nil {
