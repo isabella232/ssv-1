@@ -54,7 +54,7 @@ func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState,
 		return errors.Wrap(err, "failed to verify DutySignature")
 	}
 
-	// validate signing root equal to decided
+	// validate signing root equal to Decided
 	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.message.DutySigningRoot) {
 		return errors.New("post consensus message signing root is wrong")
 	}

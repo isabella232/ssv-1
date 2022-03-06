@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
@@ -76,9 +77,9 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 }
 
 type testingQBFTController struct {
-	instances  map[uint64]*testingQBFTInstance
-	height     uint64
-	identifier []byte
+	Instances  map[uint64]*testingQBFTInstance
+	Height     uint64
+	Identifier []byte
 
 	failProcessMsg     bool
 	returnDecided      bool
@@ -87,23 +88,23 @@ type testingQBFTController struct {
 
 func newTestingQBFTController(identifier []byte) *testingQBFTController {
 	return &testingQBFTController{
-		identifier: identifier,
-		height:     0,
-		instances:  make(map[uint64]*testingQBFTInstance),
+		Identifier: identifier,
+		Height:     0,
+		Instances:  make(map[uint64]*testingQBFTInstance),
 	}
 }
 
 // StartNewInstance will start a new QBFT instance, if can't will return error
 func (tContr *testingQBFTController) StartNewInstance(value []byte) error {
 	inst := newTestingQBFTInstance()
-	tContr.height++
-	inst.height = tContr.height
-	tContr.instances[inst.height] = inst
+	tContr.Height++
+	inst.Height = tContr.Height
+	tContr.Instances[inst.Height] = inst
 	return nil
 }
 
-// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
-// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
+// ProcessMsg processes a new msg, returns true if Decided, non nil byte slice if Decided (Decided value) and error
+// Decided returns just once per instance as true, following messages (for example additional commit msgs) will not return Decided true
 func (tContr *testingQBFTController) ProcessMsg(msg *qbft.SignedMessage) (bool, []byte, error) {
 	if tContr.failProcessMsg {
 		return false, nil, errors.New("failed process msg")
@@ -116,41 +117,41 @@ func (tContr *testingQBFTController) ProcessMsg(msg *qbft.SignedMessage) (bool, 
 
 // InstanceForHeight returns an instance for a specific Height, nil if not found
 func (tContr *testingQBFTController) InstanceForHeight(height uint64) qbft.IInstance {
-	if inst, found := tContr.instances[height]; found {
+	if inst, found := tContr.Instances[height]; found {
 		return inst
 	}
 	return nil
 }
 
-// GetHeight returns the current running instance Height or, if not started, the last decided Height
+// GetHeight returns the current running instance Height or, if not started, the last Decided Height
 func (tContr *testingQBFTController) GetHeight() uint64 {
-	return tContr.height
+	return tContr.Height
 }
 
-// GetIdentifier returns QBFT identifier, used to identify messages
+// GetIdentifier returns QBFT Identifier, used to identify messages
 func (tContr *testingQBFTController) GetIdentifier() []byte {
-	return tContr.identifier
+	return tContr.Identifier
 }
 
 // Encode returns the encoded struct in bytes or error
 func (tContr *testingQBFTController) Encode() ([]byte, error) {
-	panic("implement")
+	return json.Marshal(tContr)
 }
 
 // Decode returns error if decoding failed
 func (tContr *testingQBFTController) Decode(data []byte) error {
-	panic("implement")
+	return json.Unmarshal(data, &tContr)
 }
 
 type testingQBFTInstance struct {
-	height  uint64
-	decided bool
+	Height  uint64
+	Decided bool
 }
 
 func newTestingQBFTInstance() *testingQBFTInstance {
 	return &testingQBFTInstance{
-		height:  1,
-		decided: false,
+		Height:  1,
+		Decided: false,
 	}
 }
 
@@ -167,22 +168,22 @@ func (tInstance *testingQBFTInstance) ProcessMsg(msg *qbft.SignedMessage) (decid
 
 // IsDecided implementation
 func (tInstance *testingQBFTInstance) IsDecided() (bool, []byte) {
-	return tInstance.decided, nil
+	return tInstance.Decided, nil
 }
 
 // GetHeight implementation
 func (tInstance *testingQBFTInstance) GetHeight() uint64 {
-	return tInstance.height
+	return tInstance.Height
 }
 
 // Encode returns the encoded struct in bytes or error
 func (tInstance *testingQBFTInstance) Encode() ([]byte, error) {
-	panic("implement")
+	return json.Marshal(tInstance)
 }
 
 // Decode returns error if decoding failed
 func (tInstance *testingQBFTInstance) Decode(data []byte) error {
-	panic("implement")
+	return json.Unmarshal(data, &tInstance)
 }
 
 type testingStorage struct {
@@ -195,7 +196,7 @@ func newTestingStorage() *testingStorage {
 	}
 }
 
-// SaveHighestDecided saves the decided value as highest for a validator PK and role
+// SaveHighestDecided saves the Decided value as highest for a validator PK and role
 func (s *testingStorage) SaveHighestDecided(validatorPK []byte, role beacon.RoleType, decidedValue *consensusData) error {
 	if s.storage[hex.EncodeToString(validatorPK)] == nil {
 		s.storage[hex.EncodeToString(validatorPK)] = make(map[beacon.RoleType]*consensusData)
@@ -204,7 +205,7 @@ func (s *testingStorage) SaveHighestDecided(validatorPK []byte, role beacon.Role
 	return nil
 }
 
-// GetHighestDecided returns the saved decided value (highest) for a validator PK and role
+// GetHighestDecided returns the saved Decided value (highest) for a validator PK and role
 func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleType) (*consensusData, error) {
 	if s.storage[hex.EncodeToString(validatorPK)] == nil {
 		return nil, errors.New("can't find validator PK")

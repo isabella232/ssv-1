@@ -60,7 +60,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 	t.Run("running instance", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		inst := newTestingQBFTInstance()
-		inst.decided = false
+		inst.Decided = false
 		dr.State.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 		}
@@ -71,7 +71,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		require.EqualError(t, err, "consensus on duty is running")
 	})
 
-	t.Run("decided but still collecting sigs", func(t *testing.T) {
+	t.Run("Decided but still collecting sigs", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		duty := &beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
@@ -79,7 +79,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingValidatorPK,
 		}
 		inst := newTestingQBFTInstance()
-		inst.decided = true
+		inst.Decided = true
 		dr.State.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
@@ -96,7 +96,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		require.EqualError(t, err, "post consensus sig collection is running")
 	})
 
-	t.Run("decided, not collected enough sigs but passed PostConsensusSigCollectionSlotTimeout slots", func(t *testing.T) {
+	t.Run("Decided, not collected enough sigs but passed PostConsensusSigCollectionSlotTimeout slots", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		duty := &beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
@@ -104,7 +104,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingValidatorPK,
 		}
 		inst := newTestingQBFTInstance()
-		inst.decided = true
+		inst.Decided = true
 		dr.State.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
@@ -121,7 +121,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		require.EqualError(t, err, "post consensus sig collection is running")
 	})
 
-	t.Run("decided, not collected enough sigs but passed > PostConsensusSigCollectionSlotTimeout slots", func(t *testing.T) {
+	t.Run("Decided, not collected enough sigs but passed > PostConsensusSigCollectionSlotTimeout slots", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		duty := &beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
@@ -129,7 +129,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingValidatorPK,
 		}
 		inst := newTestingQBFTInstance()
-		inst.decided = true
+		inst.Decided = true
 		dr.State.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
@@ -146,7 +146,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("decided, collected enough sigs", func(t *testing.T) {
+	t.Run("Decided, collected enough sigs", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		duty := &beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
@@ -154,7 +154,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingValidatorPK,
 		}
 		inst := newTestingQBFTInstance()
-		inst.decided = true
+		inst.Decided = true
 		dr.State.DutyExecutionState = &DutyExecutionState{
 			CollectedPartialSigs: make(map[types.OperatorID][]byte),
 			RunningInstance:      inst,

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -20,8 +21,8 @@ type DutyRunner struct {
 
 // CanStartNewDuty returns nil if:
 // - no running instance exists or
-// - a QBFT instance decided and all post consensus sigs collectd or
-// - a QBFT instance decided and 32 slots passed from decided duty
+// - a QBFT instance Decided and all post consensus sigs collectd or
+// - a QBFT instance Decided and 32 slots passed from Decided duty
 // else returns an error
 // Will return error if not same role type
 func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
@@ -58,7 +59,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	newInstance := dr.State.QBFTController.InstanceForHeight(dr.State.QBFTController.GetHeight())
 
 	dr.State.DutyExecutionState = &DutyExecutionState{
-		RunningInstance: newInstance,
+		RunningInstance: newInstance.(*qbft.Instance),
 		Quorum:          dr.State.Share.Quorum,
 	}
 	return dr.State.QBFTController.StartNewInstance(value)
@@ -72,7 +73,7 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *DutyExecutionS
 	return nil
 }
 
-// DecideRunningInstance sets the decided duty and partially signs the decided data, returns a PostConsensusMessage to be broadcasted or error
+// DecideRunningInstance sets the Decided duty and partially signs the Decided data, returns a PostConsensusMessage to be broadcasted or error
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
 		Height:  dr.State.DutyExecutionState.RunningInstance.GetHeight(),

@@ -13,7 +13,7 @@ type DutyRunnerState struct {
 	Share          types.Share
 	// DutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
 	DutyExecutionState *DutyExecutionState
-	QBFTController     qbft.IController
+	QBFTController     *qbft.Controller
 }
 
 // Encode returns the encoded struct in bytes or error

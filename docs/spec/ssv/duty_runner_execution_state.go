@@ -11,7 +11,7 @@ import (
 
 // DutyExecutionState holds all the relevant progress the duty execution progress
 type DutyExecutionState struct {
-	RunningInstance qbft.IInstance
+	RunningInstance *qbft.Instance
 
 	DecidedValue *consensusData
 
@@ -101,5 +101,41 @@ func (pcs *DutyExecutionState) Encode() ([]byte, error) {
 
 // Decode returns error if decoding failed
 func (pcs *DutyExecutionState) Decode(data []byte) error {
-	panic("implement")
+	m := make(map[string]interface{})
+	if err := json.Unmarshal(data, &m); err != nil {
+		return errors.Wrap(err, "could not unmarshal DutyExecutionState map")
+	}
+
+	if m["running_instance"] != nil {
+		pcs.RunningInstance = &qbft.Instance{}
+		if err := pcs.RunningInstance.Decode(m["running_instance"].([]byte)); err != nil {
+			return errors.Wrap(err, "could not decode RunningInstance")
+		}
+	}
+
+	if m["decided_value"] != nil {
+		pcs.DecidedValue = &consensusData{}
+		if err := pcs.DecidedValue.Decode(m["decided_value"].([]byte)); err != nil {
+			return errors.Wrap(err, "could not decode DecidedValue")
+		}
+	}
+
+	if m["signed_att"] != nil {
+		pcs.SignedAttestation = &spec.Attestation{}
+		if err := ssz.Unmarshal(m["signed_att"].([]byte), &pcs.SignedAttestation); err != nil {
+			return errors.Wrap(err, "could not decode SignedAttestation")
+		}
+	}
+
+	if m["signed_proposal"] != nil {
+		pcs.SignedProposal = &spec.SignedBeaconBlock{}
+		if err := ssz.Unmarshal(m["signed_proposal"].([]byte), &pcs.SignedProposal); err != nil {
+			return errors.Wrap(err, "could not decode SignedProposal")
+		}
+	}
+
+	//if m["collected_partial_sigs"] != nil {
+	//
+	//}
+	return nil
 }

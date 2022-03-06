@@ -27,7 +27,7 @@ type Network interface {
 type Storage interface {
 }
 
-// consensusData holds all relevant duty and data decided on by consensus
+// consensusData holds all relevant duty and data Decided on by consensus
 type consensusData struct {
 	Duty            *beacon.Duty
 	AttestationData *phase0.AttestationData
