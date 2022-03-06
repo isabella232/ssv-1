@@ -42,6 +42,7 @@ var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2
 var committee = []*types.Operator{
 	{
 		OperatorID: 1,
+		PubKey:     qbft.TestingSK.GetPublicKey().Serialize(),
 	},
 	{
 		OperatorID: 2,
@@ -52,14 +53,6 @@ var committee = []*types.Operator{
 	{
 		OperatorID: 4,
 	},
-}
-var testingIdentifier = []byte{1, 2, 3, 4}
-var testingQBFTMsg = &qbft.Message{
-	MsgType:    qbft.ProposalMsgType,
-	Height:     1,
-	Round:      1,
-	Identifier: testingIdentifier,
-	Data:       []byte{1, 2, 3, 4},
 }
 
 func newTestingValidator() *Validator {

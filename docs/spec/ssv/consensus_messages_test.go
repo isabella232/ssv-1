@@ -1,25 +1,17 @@
 package ssv
 
 import (
-	"fmt"
-	"github.com/bloxapp/ssv/docs/spec/types"
-	"github.com/herumi/bls-eth-go-binary/bls"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestValidator_ProcessConsensusMsg(t *testing.T) {
 	t.Run("non decided qbft msg", func(t *testing.T) {
-		sk := &bls.SecretKey{}
-		sk.SetByCSPRNG()
-		fmt.Printf("sk: %s\npk: %s\n", sk.GetHexString(), sk.GetPublicKey().GetHexString())
+		v := newTestingValidator()
+		dr := newTestingDutyRunner()
 
-		computedRoot, _ := types.ComputeSigningRoot(testingQBFTMsg, types.ComputeSignatureDomain(types.PrimusTestnet, types.QBFTSigType))
-		fmt.Printf("%x\n", computedRoot)
-
-		//v := newTestingValidator()
-		//dr := newTestingDutyRunner()
-		//
-		//require.NoError(t, v.processConsensusMsg(dr, &qbft.SignedMessage{}))
+		require.NoError(t, v.processConsensusMsg(dr, qbft.TestingSignedMsg))
 	})
 
 	t.Run("failed msg processing", func(t *testing.T) {
