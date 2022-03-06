@@ -2,25 +2,12 @@ package qbft
 
 import (
 	"encoding/json"
-	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/utils"
 	"github.com/pkg/errors"
 	"sync"
 )
 
 type proposedValueCheck func(data []byte) error
-
-type IInstance interface {
-	types.Encoder
-	// Start will start the new instance with a specific value and height
-	Start(value []byte, height uint64)
-	// ProcessMsg will process a signed msg
-	ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *SignedMessage, err error)
-	// IsDecided will return true and a non-empty byte slice if instance decided.
-	IsDecided() (bool, []byte)
-	// GetHeight returns the instance's height
-	GetHeight() uint64
-}
 
 // Instance is a single QBFT instance that starts with a Start call (including a value).
 // Every new msg the ProcessMsg function needs to be called

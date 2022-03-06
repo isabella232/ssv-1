@@ -13,9 +13,9 @@ import (
 // guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
 const HistoricalInstanceCapacity int = 5
 
-type instances [HistoricalInstanceCapacity]IInstance
+type instances [HistoricalInstanceCapacity]*Instance
 
-func (i instances) FindInstance(height uint64) IInstance {
+func (i instances) FindInstance(height uint64) *Instance {
 	for _, inst := range i {
 		if inst != nil {
 			if inst.GetHeight() == height {
@@ -24,21 +24,6 @@ func (i instances) FindInstance(height uint64) IInstance {
 		}
 	}
 	return nil
-}
-
-type IController interface {
-	types.Encoder
-	// StartNewInstance will start a new QBFT instance, if can't will return error
-	StartNewInstance(value []byte) error
-	// ProcessMsg processes a new msg, returns true if decided, non nil byte slice if decided (decided value) and error
-	// decided returns just once per instance as true, following messages (for example additional commit msgs) will not return decided true
-	ProcessMsg(msg *SignedMessage) (bool, []byte, error)
-	// InstanceForHeight returns an instance for a specific height, nil if not found
-	InstanceForHeight(height uint64) IInstance
-	// GetHeight returns the current running instance height or, if not started, the last decided height
-	GetHeight() uint64
-	// GetIdentifier returns QBFT identifier, used to identify messages
-	GetIdentifier() []byte
 }
 
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
@@ -105,7 +90,7 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 	return decided, decidedValue, nil
 }
 
-func (c *Controller) InstanceForHeight(height uint64) IInstance {
+func (c *Controller) InstanceForHeight(height uint64) *Instance {
 	return c.storedInstances.FindInstance(height)
 }
 
