@@ -109,20 +109,24 @@ func (c *Controller) addAndStoreNewInstance() Instance {
 }
 
 func (c *Controller) canStartInstance(value []byte) error {
-	// check prev instance if prev instance is not the first instance
-	inst := c.storedInstances.FindInstance(c.Height)
-	if c.Height != 0 && inst == nil {
-		return errors.New("could not find previous instance")
-	}
-	if decided, _ := inst.IsDecided(); !decided {
-		return errors.New("previous instance hasn't Decided")
+	if c.Height != 0 {
+		// check prev instance if prev instance is not the first instance
+		inst := c.storedInstances.FindInstance(c.Height)
+		if inst == nil {
+			return errors.New("could not find previous instance")
+		}
+		if decided, _ := inst.IsDecided(); !decided {
+			return errors.New("previous instance hasn't Decided")
+		}
 	}
 
 	// check value
 	if err := c.valueCheck(value); err != nil {
 		return errors.Wrap(err, "value invalid")
 	}
-	panic("implement")
+
+	// TODO - complete more checks
+	return nil
 }
 
 // Encode implementation
