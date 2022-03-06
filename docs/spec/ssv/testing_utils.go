@@ -2,7 +2,6 @@ package ssv
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
@@ -54,6 +53,14 @@ var committee = []*types.Operator{
 		OperatorID: 4,
 	},
 }
+var testingIdentifier = []byte{1, 2, 3, 4}
+var testingQBFTMsg = &qbft.Message{
+	MsgType:    qbft.ProposalMsgType,
+	Height:     1,
+	Round:      1,
+	Identifier: testingIdentifier,
+	Data:       []byte{1, 2, 3, 4},
+}
 
 func newTestingValidator() *Validator {
 	signer := newTestingKeyManager()
@@ -93,98 +100,13 @@ func newTestingQBFTController(identifier []byte) *qbft.Controller {
 	}
 }
 
-//// StartNewInstance will start a new QBFT instance, if can't will return error
-//func (tContr *testingQBFTController) StartNewInstance(value []byte) error {
-//	inst := newTestingQBFTInstance()
-//	tContr.Height++
-//	inst.Height = tContr.Height
-//	tContr.Instances[inst.Height] = inst
-//	return nil
-//}
-//
-//// ProcessMsg processes a new msg, returns true if Decided, non nil byte slice if Decided (Decided value) and error
-//// Decided returns just once per instance as true, following messages (for example additional commit msgs) will not return Decided true
-//func (tContr *testingQBFTController) ProcessMsg(msg *qbft.SignedMessage) (bool, []byte, error) {
-//	if tContr.failProcessMsg {
-//		return false, nil, errors.New("failed process msg")
-//	}
-//	if tContr.returnDecided {
-//		return true, tContr.returnDecidedValue, nil
-//	}
-//	return false, nil, nil
-//}
-//
-//// InstanceForHeight returns an instance for a specific Height, nil if not found
-//func (tContr *testingQBFTController) InstanceForHeight(height uint64) qbft.IInstance {
-//	if inst, found := tContr.Instances[height]; found {
-//		return inst
-//	}
-//	return nil
-//}
-//
-//// GetHeight returns the current running instance Height or, if not started, the last Decided Height
-//func (tContr *testingQBFTController) GetHeight() uint64 {
-//	return tContr.Height
-//}
-//
-//// GetIdentifier returns QBFT Identifier, used to identify messages
-//func (tContr *testingQBFTController) GetIdentifier() []byte {
-//	return tContr.Identifier
-//}
-//
-//// Encode returns the encoded struct in bytes or error
-//func (tContr *testingQBFTController) Encode() ([]byte, error) {
-//	return json.Marshal(tContr)
-//}
-//
-//// Decode returns error if decoding failed
-//func (tContr *testingQBFTController) Decode(data []byte) error {
-//	return json.Unmarshal(data, &tContr)
-//}
-
-type testingQBFTInstance struct {
-	Height  uint64
-	Decided bool
-}
-
 func newTestingQBFTInstance() *qbft.Instance {
-	return &qbft.Instance{}
-
-	return &testingQBFTInstance{
-		Height:  1,
+	return &qbft.Instance{
+		State: qbft.State{
+			Height: 1,
+		},
 		Decided: false,
 	}
-}
-
-// Start implementation
-func (tInstance *testingQBFTInstance) Start(value []byte, height uint64) {
-
-}
-
-// ProcessMsg implementation
-func (tInstance *testingQBFTInstance) ProcessMsg(msg *qbft.SignedMessage) (decided bool, decidedValue []byte, aggCommit *qbft.SignedMessage, err error) {
-	return false, nil, nil, nil
-
-}
-
-// IsDecided implementation
-func (tInstance *testingQBFTInstance) IsDecided() (bool, []byte) {
-	return tInstance.Decided, nil
-}
-
-// GetHeight implementation
-func (tInstance *testingQBFTInstance) GetHeight() uint64 {
-	return tInstance.Height
-}
-
-// Encode returns the encoded struct in bytes or error
-func (tInstance *testingQBFTInstance) Encode() ([]byte, error) {
-	return json.Marshal(tInstance)
-}
-
-// Decode returns error if decoding failed
-func (tInstance *testingQBFTInstance) Decode(data []byte) error {
-	return json.Unmarshal(data, &tInstance)
 }
 
 type testingStorage struct {
