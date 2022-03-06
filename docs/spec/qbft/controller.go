@@ -38,6 +38,21 @@ type Controller struct {
 	network         Network
 }
 
+func NewController(
+	signer types.SSVSigner,
+	valueCheck proposedValueCheck,
+	storage Storage,
+	network Network,
+) *Controller {
+	return &Controller{
+		storedInstances: instances{},
+		signer:          signer,
+		valueCheck:      valueCheck,
+		storage:         storage,
+		network:         network,
+	}
+}
+
 // StartNewInstance will start a new QBFT instance, if can't will return error
 func (c *Controller) StartNewInstance(value []byte) error {
 	if err := c.canStartInstance(value); err != nil {
