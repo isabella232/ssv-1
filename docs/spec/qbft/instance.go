@@ -97,29 +97,37 @@ func (i *Instance) Encode() ([]byte, error) {
 	}
 	m["State"] = byts
 
-	byts, err = i.proposeContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode proposeContainer")
+	if i.proposeContainer != nil {
+		byts, err = i.proposeContainer.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode proposeContainer")
+		}
+		m["propose_container"] = byts
 	}
-	m["propose_container"] = byts
 
-	byts, err = i.prepareContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode prepareContainer")
+	if i.prepareContainer != nil {
+		byts, err = i.prepareContainer.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode prepareContainer")
+		}
+		m["prepare_container"] = byts
 	}
-	m["prepare_container"] = byts
 
-	byts, err = i.commitContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode commitContainer")
+	if i.commitContainer != nil {
+		byts, err = i.commitContainer.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode commitContainer")
+		}
+		m["commit_container"] = byts
 	}
-	m["commit_container"] = byts
 
-	byts, err = i.roundChangeContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode roundChangeContainer")
+	if i.roundChangeContainer != nil {
+		byts, err = i.roundChangeContainer.Encode()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not encode roundChangeContainer")
+		}
+		m["round_change_container"] = byts
 	}
-	m["round_change_container"] = byts
 
 	m["Decided"] = i.Decided
 	m["decided_value"] = i.decidedValue
