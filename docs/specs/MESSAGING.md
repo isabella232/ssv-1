@@ -2,7 +2,7 @@
 
 | Authors                                 | Status | Last Revision |
 |:----------------------------------------|:-------|:--------------|
-| [@niv-blox](https://github.com/nivBlox) | WIP    | FEB 14        |
+| [@niv-blox](https://github.com/nivBlox) | WIP    | MARCH 8       |
 
 This document contains the messaging specification for `SSV.Network`.
 
@@ -15,12 +15,18 @@ This document contains the messaging specification for `SSV.Network`.
     - [x] [IBFT](#ibft)
     - [ ] [Decided](#decided)
     - [ ] [Sync](#sync)
-- [ ] [Wire](#wire)
-  - [ ] [IBFT message](#ibft-message)
+- [X] [Wire](#wire)
 - [ ] [Messaging](#messages)
-  - [ ] [Life Cycle](#life-cycle)
-  - [ ] [Message Router](#messages-Router)
+  - [X] [Life Cycle](#life-cycle)
+  - [X] [Validator Controller](#validator-controller)
+  - [X] [Validator](#validator)
+  - [X] [Duty Runner](#duty-runner)
+  - [ ] [QBFT Controller](#qbft-controller)
+  - [ ] [Instance](#instance)
+  - [ ] [Worker](#worker)
+  - [ ] [Message Broker](#message-broker)
   - [ ] [Message Queue](#messages-queue)
+  - [ ] [Scoring](#scoring)
 ## Fundamentals
 
 ### Stack
@@ -124,23 +130,80 @@ Each IBFT message goes through basic validation.
 ### Sync
 
 ## Wire
+All the messages that are being transmitted over the network must be wrapped with the following structure:
 
-### Types
- - IBFT
-   - Pre-prepare
-   - Prepare
-   - Commit
- - Decided
- - Signature
- - Sync
+```SSVMessage
+type SSVMessage struct {
+	MsgType MsgType
+	MsgID   MessageID
+	Data    []byte
+}
+```
+```ConsensusMsgType
+type PostConsensusMessage struct {
+	Height          uint64
+	DutySignature   []byte // The beacon chain partial signature for a duty
+	DutySigningRoot []byte // the root signed in DutySignature
+	Signers         []types.OperatorID
+```
+```PostConsensusMsgType
+type PostConsensusMessage struct {
+	Height          uint64
+	DutySignature   []byte // The beacon chain partial signature for a duty
+	DutySigningRoot []byte // the root signed in DutySignature
+	Signers         []types.OperatorID
+}
+```
+
+```SyncMsgType```
+
 
 ## Messaging
 
 ### Life Cycle
 ![commit flow](../resources/messaging-life-cycle.png)
 
-### Messages Router
+### Validator Controller
+Network interface expose "process message" function with channel. this channel serves messages.
+v.c pass those messages to internal channel with buffer (128) if the buffer is full new msg's are ignored until buffer freed.
+there is a go-routing that listen to this channel buffer and for each message check validator public key from the identifier and checks if exist in map.
+if so, call the proper validator "processMessage" func. if not, add to queue for the [workers](#worker) to process it.
 
+### Validator 
+
+validator struct holds bool field "readMode". 
+"processMessage" implementation - 
+get msg as a parameter and checks if validator is on read mode.
+if so, start validation pipeline. if not, add to queue in order to not be a blocker.
+queue is handled with [message broker](#message-broker). 
+
+### Duty Runner
+
+Manage duty by specific type (attest, propose, sync-committee, aggregate).
+Duty runner hold instance of [qbft controller](#qbft-controller).
+
+### QBFT Controller
+
+- Implement "processMessage" func. 
+- Holds array of [instances](#instance). 
+
+### Instance
+
+Reaching consensus with messages getting with "processMessage" func. 
+
+### worker
+
+Workers work simultaneous and fetch messages from the queue and process them (process is an interface func)
+in validator controller their process job is to create validator instance based on the msg pk and call "processMessage" func.
+
+### Message Broker
+
+Need to support more than on goroutine in order to prevent blocking other duty runners.
+In order to achieve that, for each duty type we are creating a go routing that loop for specific duty type and pull the msg.
+once the msg processing is done the "worker" checks if there are more msg's with the same type in the queue.
+if so, keep pulling msg's. if not, close worker.
+
+[//]: # (once worker done with process the message it's checks if more messag)
 
 ### Messages Queue
 Messages can come in various times, even next round's messages can come "early" as other nodes can change round before this node.
@@ -149,6 +212,6 @@ The messages processing should be "smart & dynamic". messages will be processed 
 2. **Stage** - messages will be processed by time of arrival unless there are quorum of the same stage (prepare, commit). in that case processor will "push" the quorum msg's forward.
 3. **Round** - Same as **Stage**, current state round have priority unless there is a quorum for a higher round.
 
-
+### Scoring
 
 
