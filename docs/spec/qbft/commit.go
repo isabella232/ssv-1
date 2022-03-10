@@ -7,7 +7,7 @@ import (
 )
 
 // uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state State, config Config, signedCommit *SignedMessage, commitMsgContainer MsgContainer) (bool, []byte, *SignedMessage, error) {
+func uponCommit(state State, config Config, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
@@ -23,12 +23,17 @@ func uponCommit(state State, config Config, signedCommit *SignedMessage, commitM
 	); err != nil {
 		return false, nil, nil, errors.Wrap(err, "commit msg invalid")
 	}
-	if !commitMsgContainer.AddIfDoesntExist(signedCommit) {
+
+	addMsg, err := commitMsgContainer.AddIfDoesntExist(signedCommit)
+	if err != nil {
+		return false, nil, nil, errors.Wrap(err, "could not add commit msg to container")
+	}
+	if !addMsg {
 		return false, nil, nil, nil // uponCommit was already called
 	}
 
 	value := signedCommit.Message.GetCommitData().GetData()
-	if quorum, commitMsgs := commitQuorumForValue(state, config, commitMsgContainer, value); quorum {
+	if quorum, commitMsgs := commitQuorumForValue(state, commitMsgContainer, value); quorum {
 		agg, err := aggregateCommitMsgs(commitMsgs)
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
@@ -38,8 +43,8 @@ func uponCommit(state State, config Config, signedCommit *SignedMessage, commitM
 	return false, nil, nil, nil
 }
 
-func commitQuorumForValue(state State, config Config, commitMsgContainer MsgContainer, value []byte) (bool, []*SignedMessage) {
-	commitMsgs := commitMsgContainer.MessagesForHeightAndRound(state.Height, state.Round)
+func commitQuorumForValue(state State, commitMsgContainer *MsgContainer, value []byte) (bool, []*SignedMessage) {
+	commitMsgs := commitMsgContainer.MessagesForRound(state.Round)
 	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
 		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
@@ -69,7 +74,7 @@ func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
 }
 
 // didSendCommitForHeightAndRound returns true if sent commit msg for specific Height and round
-func didSendCommitForHeightAndRound(state State, commitMsgContainer MsgContainer) bool {
+func didSendCommitForHeightAndRound(state State, commitMsgContainer *MsgContainer) bool {
 	/**
 	!exists m :: && m in current.messagesReceived
 	                            && m.Commit?

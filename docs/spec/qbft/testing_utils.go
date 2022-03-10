@@ -33,3 +33,57 @@ var TestingSK = func() *bls.SecretKey {
 	ret.SetByCSPRNG()
 	return ret
 }()
+
+var testingInstanceStruct = &Instance{
+	State: State{
+		Share: &types.Share{
+			OperatorID:    1,
+			PubKey:        TestingSK.GetPublicKey().Serialize(),
+			DomainType:    types.PrimusTestnet,
+			Quorum:        3,
+			PartialQuorum: 2,
+			Committee: []*types.Operator{
+				{
+					OperatorID: 1,
+					PubKey:     TestingSK.GetPublicKey().Serialize(),
+				},
+			},
+		},
+		ID:                              []byte{1, 2, 3, 4},
+		Round:                           1,
+		Height:                          1,
+		LastPreparedRound:               1,
+		LastPreparedValue:               []byte{1, 2, 3, 4},
+		ProposalAcceptedForCurrentRound: TestingSignedMsg,
+	},
+	proposeContainer: &MsgContainer{
+		Msgs: map[Round][]*SignedMessage{
+			1: {
+				TestingSignedMsg,
+			},
+		},
+	},
+	prepareContainer: &MsgContainer{
+		Msgs: map[Round][]*SignedMessage{
+			1: {
+				TestingSignedMsg,
+			},
+		},
+	},
+	commitContainer: &MsgContainer{
+		Msgs: map[Round][]*SignedMessage{
+			1: {
+				TestingSignedMsg,
+			},
+		},
+	},
+	roundChangeContainer: &MsgContainer{
+		Msgs: map[Round][]*SignedMessage{
+			1: {
+				TestingSignedMsg,
+			},
+		},
+	},
+	Decided:      false,
+	decidedValue: []byte{1, 2, 3, 4},
+}

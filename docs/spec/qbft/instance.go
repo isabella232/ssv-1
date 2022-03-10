@@ -1,6 +1,7 @@
 package qbft
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/utils"
 	"github.com/pkg/errors"
@@ -16,10 +17,10 @@ type Instance struct {
 	config     Config
 	valueCheck proposedValueCheck
 
-	proposeContainer     MsgContainer
-	prepareContainer     MsgContainer
-	commitContainer      MsgContainer
-	roundChangeContainer MsgContainer
+	proposeContainer     *MsgContainer
+	prepareContainer     *MsgContainer
+	commitContainer      *MsgContainer
+	roundChangeContainer *MsgContainer
 
 	Decided      bool
 	decidedValue []byte
@@ -95,14 +96,14 @@ func (i *Instance) Encode() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not encode State")
 	}
-	m["State"] = byts
+	m["State"] = hex.EncodeToString(byts)
 
 	if i.proposeContainer != nil {
 		byts, err = i.proposeContainer.Encode()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not encode proposeContainer")
 		}
-		m["propose_container"] = byts
+		m["propose_container"] = hex.EncodeToString(byts)
 	}
 
 	if i.prepareContainer != nil {
@@ -110,7 +111,7 @@ func (i *Instance) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "could not encode prepareContainer")
 		}
-		m["prepare_container"] = byts
+		m["prepare_container"] = hex.EncodeToString(byts)
 	}
 
 	if i.commitContainer != nil {
@@ -118,7 +119,7 @@ func (i *Instance) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "could not encode commitContainer")
 		}
-		m["commit_container"] = byts
+		m["commit_container"] = hex.EncodeToString(byts)
 	}
 
 	if i.roundChangeContainer != nil {
@@ -126,16 +127,96 @@ func (i *Instance) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "could not encode roundChangeContainer")
 		}
-		m["round_change_container"] = byts
+		m["round_change_container"] = hex.EncodeToString(byts)
 	}
 
 	m["Decided"] = i.Decided
-	m["decided_value"] = i.decidedValue
-	m["start_value"] = i.startValue
+	m["decided_value"] = hex.EncodeToString(i.decidedValue)
+	m["start_value"] = hex.EncodeToString(i.startValue)
 	return json.Marshal(m)
 }
 
 // Decode implementation
 func (i *Instance) Decode(data []byte) error {
-	panic("implement")
+	m := make(map[string]interface{})
+	if err := json.Unmarshal(data, &m); err != nil {
+		return errors.Wrap(err, "could not unmarshal instance data")
+	}
+
+	if m["State"] != nil {
+		i.State = State{}
+		data, err := hex.DecodeString(m["State"].(string))
+		if err != nil {
+			return errors.New("could not decode instance state hex")
+		}
+		if err := i.State.Decode(data); err != nil {
+			return errors.Wrap(err, "could not decode instance state")
+		}
+	}
+
+	if m["propose_container"] != nil {
+		i.proposeContainer = &MsgContainer{}
+		data, err := hex.DecodeString(m["propose_container"].(string))
+		if err != nil {
+			return errors.New("could not decode propose_container hex")
+		}
+		if err := i.proposeContainer.Decode(data); err != nil {
+			return errors.Wrap(err, "could not decode instance proposeContainer")
+		}
+	}
+
+	if m["prepare_container"] != nil {
+		i.prepareContainer = &MsgContainer{}
+		data, err := hex.DecodeString(m["prepare_container"].(string))
+		if err != nil {
+			return errors.New("could not decode prepare_container hex")
+		}
+		if err := i.prepareContainer.Decode(data); err != nil {
+			return errors.Wrap(err, "could not decode instance prepareContainer")
+		}
+	}
+
+	if m["commit_container"] != nil {
+		i.commitContainer = &MsgContainer{}
+		data, err := hex.DecodeString(m["commit_container"].(string))
+		if err != nil {
+			return errors.New("could not decode commit_container hex")
+		}
+		if err := i.commitContainer.Decode(data); err != nil {
+			return errors.Wrap(err, "could not decode instance commitContainer")
+		}
+	}
+
+	if m["round_change_container"] != nil {
+		i.roundChangeContainer = &MsgContainer{}
+		data, err := hex.DecodeString(m["round_change_container"].(string))
+		if err != nil {
+			return errors.New("could not decode round_change_container hex")
+		}
+		if err := i.roundChangeContainer.Decode(data); err != nil {
+			return errors.Wrap(err, "could not decode instance roundChangeContainer")
+		}
+	}
+
+	if m["Decided"] != nil {
+		i.Decided = m["Decided"].(bool)
+	}
+
+	if m["decided_value"] != nil {
+		data, err := hex.DecodeString(m["decided_value"].(string))
+		if err != nil {
+			return errors.New("could not decode decided_value hex")
+		}
+		i.decidedValue = data
+	}
+
+	if m["start_value"] != nil {
+		data, err := hex.DecodeString(m["start_value"].(string))
+		if err != nil {
+			return errors.New("could not decode start_value hex")
+		}
+		i.startValue = data
+	}
+
+	return nil
 }

@@ -5,12 +5,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponProposal(state State, config Config, signedProposal *SignedMessage, proposeMsgContainer MsgContainer) error {
+func uponProposal(state State, config Config, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
 	valCheck := config.GetValueCheck()
 	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.Committee); err != nil {
 		return errors.New("proposal invalid")
 	}
-	if !proposeMsgContainer.AddIfDoesntExist(signedProposal) {
+
+	addedMsg, err := proposeMsgContainer.AddIfDoesntExist(signedProposal)
+	if err != nil {
+		return errors.Wrap(err, "could not add proposal msg to container")
+	}
+	if !addedMsg {
 		return nil // uponProposal was already called
 	}
 

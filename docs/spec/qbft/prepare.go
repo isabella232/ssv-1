@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
+func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer *MsgContainer) error {
 	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return errors.New("not proposal accepted for prepare")
@@ -24,11 +24,15 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 		return errors.Wrap(err, "invalid prepare msg")
 	}
 
-	if !prepareMsgContainer.AddIfDoesntExist(signedPrepare) {
+	addedMsg, err := prepareMsgContainer.AddIfDoesntExist(signedPrepare)
+	if err != nil {
+		return errors.Wrap(err, "could not add prepare msg to container")
+	}
+	if !addedMsg {
 		return nil // uponPrepare was already called
 	}
 
-	if !state.Share.HasQuorum(len(prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.Round))) {
+	if !state.Share.HasQuorum(len(prepareMsgContainer.MessagesForRound(state.Round))) {
 		return nil // no quorum yet
 	}
 
@@ -54,7 +58,7 @@ func getRoundChangeJustification(state State, config Config, prepareMsgContainer
 		return nil
 	}
 
-	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.LastPreparedRound)
+	prepareMsgs := prepareMsgContainer.MessagesForRound(state.LastPreparedRound)
 	validPrepares := validPreparesForHeightRoundAndDigest(
 		state,
 		config,
