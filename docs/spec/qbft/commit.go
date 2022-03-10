@@ -7,7 +7,7 @@ import (
 )
 
 // uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state State, config Config, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
+func uponCommit(state State, config IConfig, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
@@ -105,7 +105,7 @@ func createCommit(state State, value []byte) *SignedMessage {
 
 func validateCommit(
 	state State,
-	config Config,
+	config IConfig,
 	signedCommit *SignedMessage,
 	height uint64,
 	round Round,

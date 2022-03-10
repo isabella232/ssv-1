@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer *MsgContainer) error {
+func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer *MsgContainer) error {
 	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return errors.New("not proposal accepted for prepare")
@@ -53,7 +53,7 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 	return nil
 }
 
-func getRoundChangeJustification(state State, config Config, prepareMsgContainer MsgContainer) *SignedMessage {
+func getRoundChangeJustification(state State, config IConfig, prepareMsgContainer MsgContainer) *SignedMessage {
 	if state.LastPreparedValue == nil {
 		return nil
 	}
@@ -77,7 +77,7 @@ func getRoundChangeJustification(state State, config Config, prepareMsgContainer
 // validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific Height and round
 func validPreparesForHeightRoundAndDigest(
 	state State,
-	config Config,
+	config IConfig,
 	prepareMessages []*SignedMessage,
 	height uint64,
 	round Round,
@@ -100,7 +100,7 @@ func validPreparesForHeightRoundAndDigest(
 // https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
 func validSignedPrepareForHeightRoundAndValue(
 	state State,
-	config Config,
+	config IConfig,
 	signedPrepare *SignedMessage,
 	height uint64,
 	round Round,

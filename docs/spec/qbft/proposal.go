@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponProposal(state State, config Config, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
+func uponProposal(state State, config IConfig, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
 	valCheck := config.GetValueCheck()
 	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.Committee); err != nil {
 		return errors.New("proposal invalid")
@@ -38,7 +38,7 @@ func uponProposal(state State, config Config, signedProposal *SignedMessage, pro
 
 func isValidProposal(
 	state State,
-	config Config,
+	config IConfig,
 	signedProposal *SignedMessage,
 	valCheck proposedValueCheck,
 	operators []*types.Operator,
@@ -82,7 +82,7 @@ func isValidProposal(
 // isProposalJustification returns nil if the signed proposal msg is justified
 func isProposalJustification(
 	state State,
-	config Config,
+	config IConfig,
 	roundChangeMsgs []*SignedMessage,
 	prepareMsgs []*SignedMessage,
 	height uint64,
@@ -158,7 +158,7 @@ func proposer(state State, round Round) types.OperatorID {
 	panic("implement")
 }
 
-func createProposal(state State, config Config, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
+func createProposal(state State, config IConfig, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
 	/**
 	  	Proposal(
 	                        signProposal(

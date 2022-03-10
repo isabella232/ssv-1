@@ -56,28 +56,28 @@ var testingInstanceStruct = &Instance{
 		LastPreparedValue:               []byte{1, 2, 3, 4},
 		ProposalAcceptedForCurrentRound: TestingSignedMsg,
 	},
-	proposeContainer: &MsgContainer{
+	ProposeContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
 				TestingSignedMsg,
 			},
 		},
 	},
-	prepareContainer: &MsgContainer{
+	PrepareContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
 				TestingSignedMsg,
 			},
 		},
 	},
-	commitContainer: &MsgContainer{
+	CommitContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
 				TestingSignedMsg,
 			},
 		},
 	},
-	roundChangeContainer: &MsgContainer{
+	RoundChangeContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
 				TestingSignedMsg,
@@ -85,5 +85,12 @@ var testingInstanceStruct = &Instance{
 		},
 	},
 	Decided:      false,
-	decidedValue: []byte{1, 2, 3, 4},
+	DecidedValue: []byte{1, 2, 3, 4},
+}
+var testingControllerStruct = &Controller{
+	Identifier: []byte{1, 2, 3, 4},
+	Height:     1,
+	StoredInstances: [HistoricalInstanceCapacity]*Instance{
+		testingInstanceStruct,
+	},
 }

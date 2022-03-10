@@ -14,7 +14,7 @@ type signing interface {
 	GetSignatureDomainType() types.DomainType
 }
 
-type Config interface {
+type IConfig interface {
 	signing
 	// GetValueCheck returns value check instance
 	GetValueCheck() proposedValueCheck
@@ -22,6 +22,45 @@ type Config interface {
 	GetNetwork() Network
 	// GetTimer returns round timer
 	GetTimer() Timer
+}
+
+type config struct {
+	signer     types.SSVSigner
+	signingPK  []byte
+	domain     types.DomainType
+	valueCheck proposedValueCheck
+	storage    Storage
+	network    Network
+}
+
+// GetSigner returns a signer instance
+func (c *config) GetSigner() types.SSVSigner {
+	return c.signer
+}
+
+// GetSigningPubKey returns the public key used to sign all QBFT messages
+func (c *config) GetSigningPubKey() []byte {
+	return c.signingPK
+}
+
+// GetSignatureDomainType returns the domain type used for signatures
+func (c *config) GetSignatureDomainType() types.DomainType {
+	return c.domain
+}
+
+// GetValueCheck returns value check instance
+func (c *config) GetValueCheck() proposedValueCheck {
+	return c.valueCheck
+}
+
+// GetNetwork returns a p2p Network instance
+func (c *config) GetNetwork() Network {
+	return c.network
+}
+
+// GetTimer returns round timer
+func (c *config) GetTimer() Timer {
+	return nil
 }
 
 type State struct {

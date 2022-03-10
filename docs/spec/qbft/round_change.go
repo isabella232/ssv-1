@@ -7,7 +7,7 @@ import (
 
 func uponRoundChange(
 	state State,
-	config Config,
+	config IConfig,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer *MsgContainer,
 	valCheck proposedValueCheck,
@@ -74,7 +74,7 @@ func hasReceivedPartialQuorum(state State, roundChangeMsgContainer *MsgContainer
 
 func hasReceivedProposalJustification(
 	state State,
-	config Config,
+	config IConfig,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer *MsgContainer,
 	valCheck proposedValueCheck,
@@ -105,7 +105,7 @@ func hasReceivedProposalJustification(
 // isReceivedProposalJustification - returns nil if we have a quorum of round change msgs and highest justified value
 func isReceivedProposalJustification(
 	state State,
-	config Config,
+	config IConfig,
 	roundChanges, prepares []*SignedMessage,
 	newRound Round,
 	value []byte,
@@ -134,7 +134,7 @@ func isReceivedProposalJustification(
 	return nil
 }
 
-func validRoundChange(state State, config Config, signedMsg *SignedMessage, height uint64, round Round) error {
+func validRoundChange(state State, config IConfig, signedMsg *SignedMessage, height uint64, round Round) error {
 	if signedMsg.Message.MsgType != RoundChangeMsgType {
 		return errors.New("round change msg type is wrong")
 	}
