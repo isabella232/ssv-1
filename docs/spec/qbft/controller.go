@@ -146,28 +146,6 @@ func (c *Controller) canStartInstance(value []byte) error {
 
 // Encode implementation
 func (c *Controller) Encode() ([]byte, error) {
-	//m := make(map[string]interface{})
-	//
-	//m["id"] = hex.EncodeToString(c.Identifier)
-	//m["Height"] = c.Height
-	//
-	//instances := make([]string, 0)
-	//for _, i := range c.StoredInstances {
-	//	if i == nil {
-	//		continue
-	//	}
-	//	byts, err := i.Encode()
-	//	if err != nil {
-	//		return nil, errors.Wrap(err, "could not encode instance")
-	//	}
-	//	instances = append(instances, hex.EncodeToString(byts))
-	//}
-	//instancesByts, err := json.Marshal(instances)
-	//if err != nil {
-	//	return nil, errors.New("could not marshal instances bytes")
-	//}
-	//m["instances"] = hex.EncodeToString(instancesByts)
-
 	return json.Marshal(c)
 }
 
@@ -181,13 +159,13 @@ func (c *Controller) Decode(data []byte) error {
 	for _, i := range c.StoredInstances {
 		if i != nil {
 			i.valueCheck = c.valueCheck
-			i.config = &config{
-				signer:     c.signer,
-				signingPK:  nil,
-				domain:     nil,
-				valueCheck: c.valueCheck,
-				storage:    c.storage,
-				network:    c.network,
+			i.config = &Config{
+				Signer:     c.signer,
+				SigningPK:  nil,
+				Domain:     nil,
+				ValueCheck: c.valueCheck,
+				Storage:    c.storage,
+				Network:    c.network,
 			}
 		}
 	}

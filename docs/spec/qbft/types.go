@@ -5,11 +5,12 @@ import "github.com/bloxapp/ssv/docs/spec/types"
 type Round uint64
 
 const (
-	NoRound    = 0 // NoRound represents a nil/ zero round
-	FirstRound = 1 // FirstRound value is the first round in any QBFT instance start
+	NoRound     = 0 // NoRound represents a nil/ zero round
+	FirstRound  = 1 // FirstRound value is the first round in any QBFT instance start
+	FirstHeight = 0
 )
 
-// Network is a collection of funcs for the QBFT network
+// Network is a collection of funcs for the QBFT Network
 type Network interface {
 	Broadcast(msg types.Encoder) error
 	BroadcastDecided(msg types.Encoder) error

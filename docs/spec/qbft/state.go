@@ -6,11 +6,11 @@ import (
 )
 
 type signing interface {
-	// GetSigner returns a signer instance
+	// GetSigner returns a Signer instance
 	GetSigner() types.SSVSigner
 	// GetSigningPubKey returns the public key used to sign all QBFT messages
 	GetSigningPubKey() []byte
-	// GetSignatureDomainType returns the domain type used for signatures
+	// GetSignatureDomainType returns the Domain type used for signatures
 	GetSignatureDomainType() types.DomainType
 }
 
@@ -24,42 +24,42 @@ type IConfig interface {
 	GetTimer() Timer
 }
 
-type config struct {
-	signer     types.SSVSigner
-	signingPK  []byte
-	domain     types.DomainType
-	valueCheck proposedValueCheck
-	storage    Storage
-	network    Network
+type Config struct {
+	Signer     types.SSVSigner
+	SigningPK  []byte
+	Domain     types.DomainType
+	ValueCheck proposedValueCheck
+	Storage    Storage
+	Network    Network
 }
 
-// GetSigner returns a signer instance
-func (c *config) GetSigner() types.SSVSigner {
-	return c.signer
+// GetSigner returns a Signer instance
+func (c *Config) GetSigner() types.SSVSigner {
+	return c.Signer
 }
 
 // GetSigningPubKey returns the public key used to sign all QBFT messages
-func (c *config) GetSigningPubKey() []byte {
-	return c.signingPK
+func (c *Config) GetSigningPubKey() []byte {
+	return c.SigningPK
 }
 
-// GetSignatureDomainType returns the domain type used for signatures
-func (c *config) GetSignatureDomainType() types.DomainType {
-	return c.domain
+// GetSignatureDomainType returns the Domain type used for signatures
+func (c *Config) GetSignatureDomainType() types.DomainType {
+	return c.Domain
 }
 
 // GetValueCheck returns value check instance
-func (c *config) GetValueCheck() proposedValueCheck {
-	return c.valueCheck
+func (c *Config) GetValueCheck() proposedValueCheck {
+	return c.ValueCheck
 }
 
 // GetNetwork returns a p2p Network instance
-func (c *config) GetNetwork() Network {
-	return c.network
+func (c *Config) GetNetwork() Network {
+	return c.Network
 }
 
 // GetTimer returns round timer
-func (c *config) GetTimer() Timer {
+func (c *Config) GetTimer() Timer {
 	return nil
 }
 

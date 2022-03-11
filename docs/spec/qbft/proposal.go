@@ -8,7 +8,7 @@ import (
 func uponProposal(state State, config IConfig, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
 	valCheck := config.GetValueCheck()
 	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.Committee); err != nil {
-		return errors.New("proposal invalid")
+		return errors.Wrap(err, "proposal invalid")
 	}
 
 	addedMsg, err := proposeMsgContainer.AddIfDoesntExist(signedProposal)

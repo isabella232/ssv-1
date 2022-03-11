@@ -28,6 +28,14 @@ type Instance struct {
 	StartValue   []byte
 }
 
+func NewInstance(config IConfig) *Instance {
+	ret := &Instance{}
+	ret.config = config
+	ret.processMsgF = utils.NewThreadSafeF()
+	ret.startOnce = sync.Once{}
+	return ret
+}
+
 // Start is an interface implementation
 func (i *Instance) Start(value []byte, height uint64) {
 	i.startOnce.Do(func() {
