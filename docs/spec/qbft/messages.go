@@ -17,13 +17,20 @@ const (
 	DecidedMsgType
 )
 
-type ProposalData interface {
-	// GetData returns the data for which this QBFT instance tries to decide, can be any arbitrary data
-	GetData() []byte
-	// GetRoundChangeJustification returns a signed message with quorum as justification for the round change
-	GetRoundChangeJustification() []*SignedMessage
-	// GetPrepareJustification returns a signed message with quorum as justification for a prepared round change
-	GetPrepareJustification() []*SignedMessage
+type ProposalData struct {
+	Data                     []byte
+	RoundChangeJustification []*SignedMessage
+	PrepareJustification     []*SignedMessage
+}
+
+// Encode returns a msg encoded bytes or error
+func (d *ProposalData) Encode() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+// Decode returns error if decoding failed
+func (d *ProposalData) Decode(data []byte) error {
+	return json.Unmarshal(data, &d)
 }
 
 type PrepareData interface {
@@ -54,8 +61,12 @@ type Message struct {
 }
 
 // GetProposalData returns proposal specific data
-func (msg *Message) GetProposalData() ProposalData {
-	panic("implement")
+func (msg *Message) GetProposalData() (*ProposalData, error) {
+	ret := &ProposalData{}
+	if err := ret.Decode(msg.Data); err != nil {
+		return nil, errors.Wrap(err, "could not decode proposal data from message")
+	}
+	return ret, nil
 }
 
 // GetPrepareData returns prepare specific data
@@ -113,7 +124,19 @@ func (signedMsg *SignedMessage) GetSigners() []types.OperatorID {
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
 func (signedMsg *SignedMessage) MatchedSigners(ids []types.OperatorID) bool {
-	panic("implement")
+	for _, id := range signedMsg.Signers {
+		found := false
+		for _, id2 := range ids {
+			if id == id2 {
+				found = true
+			}
+		}
+
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 // Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)

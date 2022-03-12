@@ -11,7 +11,7 @@ func happyFlow() *SpecTest {
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       []byte{1, 2, 3, 4},
+			Data:       proposalDataByts([]byte{1, 2, 3, 4}, nil, nil),
 		}),
 	}
 	return &SpecTest{

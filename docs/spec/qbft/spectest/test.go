@@ -33,6 +33,15 @@ var signMsg = func(msg *qbft.Message) *qbft.SignedMessage {
 		Signature: sig.Serialize(),
 	}
 }
+var proposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
+	d := &qbft.ProposalData{
+		Data:                     data,
+		RoundChangeJustification: rcj,
+		PrepareJustification:     pj,
+	}
+	ret, _ := d.Encode()
+	return ret
+}
 var testingSK1 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}

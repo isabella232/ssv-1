@@ -28,7 +28,12 @@ func uponProposal(state State, config IConfig, signedProposal *SignedMessage, pr
 	}
 	state.Round = newRound
 
-	prepare := createPrepare(state, newRound, signedProposal.Message.GetProposalData().GetData())
+	proposalData, err := signedProposal.Message.GetProposalData()
+	if err != nil {
+		return errors.Wrap(err, "could not get proposal data")
+	}
+
+	prepare := createPrepare(state, newRound, proposalData.Data)
 	if err := config.GetNetwork().Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
@@ -58,14 +63,19 @@ func isValidProposal(
 	if !signedProposal.MatchedSigners([]types.OperatorID{proposer(state, signedProposal.Message.Round)}) {
 		return errors.New("proposal leader invalid")
 	}
+
+	proposalData, err := signedProposal.Message.GetProposalData()
+	if err != nil {
+		return errors.Wrap(err, "could not get proposal data")
+	}
 	if err := isProposalJustification(
 		state,
 		config,
-		signedProposal.Message.GetProposalData().GetRoundChangeJustification(),
-		signedProposal.Message.GetProposalData().GetPrepareJustification(),
+		proposalData.RoundChangeJustification,
+		proposalData.PrepareJustification,
 		state.Height,
 		signedProposal.Message.Round,
-		signedProposal.Message.GetProposalData().GetData(),
+		proposalData.Data,
 		valCheck,
 		signedProposal.Signers[0], // already verified sig so we know there is 1 signer
 	); err != nil {
@@ -155,7 +165,8 @@ func isProposalJustification(
 }
 
 func proposer(state State, round Round) types.OperatorID {
-	panic("implement")
+	// TODO - https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/29ae5a44551466453a84d4d17b9e083ecf189d97/dafny/spec/L1/node_auxiliary_functions.dfy#L304-L323
+	return 1
 }
 
 func createProposal(state State, config IConfig, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {

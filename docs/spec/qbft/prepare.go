@@ -12,13 +12,17 @@ func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prep
 		return errors.New("not proposal accepted for prepare")
 	}
 
+	acceptedProposalData, err := state.ProposalAcceptedForCurrentRound.Message.GetProposalData()
+	if err != nil {
+		return errors.Wrap(err, "could not get accepted proposal data")
+	}
 	if err := validSignedPrepareForHeightRoundAndValue(
 		state,
 		config,
 		signedPrepare,
 		state.Height,
 		state.Round,
-		state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData(),
+		acceptedProposalData.Data,
 		state.Share.Committee,
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
@@ -40,7 +44,7 @@ func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prep
 		return nil // already moved to commit stage
 	}
 
-	proposedValue := state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData()
+	proposedValue := acceptedProposalData.Data
 
 	state.LastPreparedValue = proposedValue
 	state.LastPreparedRound = state.Round
