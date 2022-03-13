@@ -6,29 +6,37 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer MsgContainer) error {
+func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer *MsgContainer) error {
 	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return errors.New("not proposal accepted for prepare")
 	}
 
+	acceptedProposalData, err := state.ProposalAcceptedForCurrentRound.Message.GetProposalData()
+	if err != nil {
+		return errors.Wrap(err, "could not get accepted proposal data")
+	}
 	if err := validSignedPrepareForHeightRoundAndValue(
 		state,
 		config,
 		signedPrepare,
 		state.Height,
 		state.Round,
-		state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData(),
+		acceptedProposalData.Data,
 		state.Share.Committee,
 	); err != nil {
 		return errors.Wrap(err, "invalid prepare msg")
 	}
 
-	if !prepareMsgContainer.AddIfDoesntExist(signedPrepare) {
+	addedMsg, err := prepareMsgContainer.AddIfDoesntExist(signedPrepare)
+	if err != nil {
+		return errors.Wrap(err, "could not add prepare msg to container")
+	}
+	if !addedMsg {
 		return nil // uponPrepare was already called
 	}
 
-	if !state.Share.HasQuorum(len(prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.Round))) {
+	if !state.Share.HasQuorum(len(prepareMsgContainer.MessagesForRound(state.Round))) {
 		return nil // no quorum yet
 	}
 
@@ -36,7 +44,7 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 		return nil // already moved to commit stage
 	}
 
-	proposedValue := state.ProposalAcceptedForCurrentRound.Message.GetProposalData().GetData()
+	proposedValue := acceptedProposalData.Data
 
 	state.LastPreparedValue = proposedValue
 	state.LastPreparedRound = state.Round
@@ -49,12 +57,12 @@ func uponPrepare(state State, config Config, signedPrepare *SignedMessage, prepa
 	return nil
 }
 
-func getRoundChangeJustification(state State, config Config, prepareMsgContainer MsgContainer) *SignedMessage {
+func getRoundChangeJustification(state State, config IConfig, prepareMsgContainer MsgContainer) *SignedMessage {
 	if state.LastPreparedValue == nil {
 		return nil
 	}
 
-	prepareMsgs := prepareMsgContainer.MessagesForHeightAndRound(state.Height, state.LastPreparedRound)
+	prepareMsgs := prepareMsgContainer.MessagesForRound(state.LastPreparedRound)
 	validPrepares := validPreparesForHeightRoundAndDigest(
 		state,
 		config,
@@ -73,7 +81,7 @@ func getRoundChangeJustification(state State, config Config, prepareMsgContainer
 // validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific Height and round
 func validPreparesForHeightRoundAndDigest(
 	state State,
-	config Config,
+	config IConfig,
 	prepareMessages []*SignedMessage,
 	height uint64,
 	round Round,
@@ -96,7 +104,7 @@ func validPreparesForHeightRoundAndDigest(
 // https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
 func validSignedPrepareForHeightRoundAndValue(
 	state State,
-	config Config,
+	config IConfig,
 	signedPrepare *SignedMessage,
 	height uint64,
 	round Round,
@@ -125,17 +133,34 @@ func validSignedPrepareForHeightRoundAndValue(
 	return nil
 }
 
-func createPrepare(state State, newRound Round, value []byte) *SignedMessage {
-	/**
-	Prepare(
-	                    signPrepare(
-	                        UnsignedPrepare(
-	                            |current.blockchain|,
-	                            newRound,
-	                            digest(m.proposedBlock)),
-	                        current.id
-	                        )
-	                );
-	*/
-	panic("implement")
+/**
+Prepare(
+                    signPrepare(
+                        UnsignedPrepare(
+                            |current.blockchain|,
+                            newRound,
+                            digest(m.proposedBlock)),
+                        current.id
+                        )
+                );
+*/
+func createPrepare(state State, config IConfig, newRound Round, value []byte) (*SignedMessage, error) {
+	msg := &Message{
+		MsgType:    PrepareMsgType,
+		Height:     state.Height,
+		Round:      newRound,
+		Identifier: state.ID,
+		Data:       value,
+	}
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed signing prepare msg")
+	}
+
+	signedMsg := &SignedMessage{
+		Signature: sig,
+		Signers:   []types.OperatorID{state.Share.OperatorID},
+		Message:   msg,
+	}
+	return signedMsg, nil
 }

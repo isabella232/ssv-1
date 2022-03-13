@@ -13,31 +13,39 @@ type proposedValueCheck func(data []byte) error
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
 	State      State
-	config     Config
+	config     IConfig
 	valueCheck proposedValueCheck
 
-	proposeContainer     MsgContainer
-	prepareContainer     MsgContainer
-	commitContainer      MsgContainer
-	roundChangeContainer MsgContainer
+	ProposeContainer     *MsgContainer
+	PrepareContainer     *MsgContainer
+	CommitContainer      *MsgContainer
+	RoundChangeContainer *MsgContainer
 
 	Decided      bool
-	decidedValue []byte
+	DecidedValue []byte
 	processMsgF  *utils.ThreadSafeF
 	startOnce    sync.Once
-	startValue   []byte
+	StartValue   []byte
+}
+
+func NewInstance(config IConfig) *Instance {
+	ret := &Instance{}
+	ret.config = config
+	ret.processMsgF = utils.NewThreadSafeF()
+	ret.startOnce = sync.Once{}
+	return ret
 }
 
 // Start is an interface implementation
 func (i *Instance) Start(value []byte, height uint64) {
 	i.startOnce.Do(func() {
-		i.startValue = value
+		i.StartValue = value
 		i.State.Round = FirstRound
 		i.State.Height = height
 
 		// propose if this node is the proposer
 		if proposer(i.State, FirstRound) == i.State.Share.OperatorID {
-			proposal, err := createProposal(i.State, i.config, i.startValue, nil, nil)
+			proposal, err := createProposal(i.State, i.config, i.StartValue, nil, nil)
 			if err != nil {
 				// TODO log
 			}
@@ -53,20 +61,20 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
 		case ProposalMsgType:
-			return uponProposal(i.State, i.config, msg, i.proposeContainer)
+			return uponProposal(i.State, i.config, msg, i.ProposeContainer)
 		case PrepareMsgType:
-			return uponPrepare(i.State, i.config, msg, i.prepareContainer, i.commitContainer)
+			return uponPrepare(i.State, i.config, msg, i.PrepareContainer, i.CommitContainer)
 		case CommitMsgType:
-			decided, decidedValue, aggregatedCommit, err = uponCommit(i.State, i.config, msg, i.commitContainer)
+			decided, decidedValue, aggregatedCommit, err = uponCommit(i.State, i.config, msg, i.CommitContainer)
 			i.Decided = decided
 			if decided {
-				i.decidedValue = decidedValue
+				i.DecidedValue = decidedValue
 			}
 
 			// TODO - Roberto comment: we should send a Decided msg here
 			return err
 		case RoundChangeMsgType:
-			return uponRoundChange(i.State, i.config, msg, i.roundChangeContainer, i.valueCheck)
+			return uponRoundChange(i.State, i.config, msg, i.RoundChangeContainer, i.valueCheck)
 		default:
 			return errors.New("signed message type not supported")
 		}
@@ -74,12 +82,12 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	if res != nil {
 		return false, nil, nil, res.(error)
 	}
-	return i.Decided, i.decidedValue, aggregatedCommit, nil
+	return i.Decided, i.DecidedValue, aggregatedCommit, nil
 }
 
 // IsDecided interface implementation
 func (i *Instance) IsDecided() (bool, []byte) {
-	return i.Decided, i.decidedValue
+	return i.Decided, i.DecidedValue
 }
 
 // GetHeight interface implementation
@@ -89,45 +97,10 @@ func (i *Instance) GetHeight() uint64 {
 
 // Encode implementation
 func (i *Instance) Encode() ([]byte, error) {
-	m := make(map[string]interface{})
-
-	byts, err := i.State.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode State")
-	}
-	m["State"] = byts
-
-	byts, err = i.proposeContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode proposeContainer")
-	}
-	m["propose_container"] = byts
-
-	byts, err = i.prepareContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode prepareContainer")
-	}
-	m["prepare_container"] = byts
-
-	byts, err = i.commitContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode commitContainer")
-	}
-	m["commit_container"] = byts
-
-	byts, err = i.roundChangeContainer.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode roundChangeContainer")
-	}
-	m["round_change_container"] = byts
-
-	m["Decided"] = i.Decided
-	m["decided_value"] = i.decidedValue
-	m["start_value"] = i.startValue
-	return json.Marshal(m)
+	return json.Marshal(i)
 }
 
 // Decode implementation
 func (i *Instance) Decode(data []byte) error {
-	panic("implement")
+	return json.Unmarshal(data, &i)
 }

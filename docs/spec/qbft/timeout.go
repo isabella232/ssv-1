@@ -7,7 +7,7 @@ type Timer interface {
 	TimeoutForRound(round Round)
 }
 
-func uponRoundTimeout(state State, config Config) error {
+func uponRoundTimeout(state State, config IConfig) error {
 	state.Round++
 	roundChange := createRoundChange(state, state.Round)
 

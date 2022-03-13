@@ -1,20 +1,22 @@
 package qbft
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/types"
+	"github.com/pkg/errors"
 )
 
 type signing interface {
-	// GetSigner returns a signer instance
+	// GetSigner returns a Signer instance
 	GetSigner() types.SSVSigner
 	// GetSigningPubKey returns the public key used to sign all QBFT messages
 	GetSigningPubKey() []byte
-	// GetSignatureDomainType returns the domain type used for signatures
+	// GetSignatureDomainType returns the Domain type used for signatures
 	GetSignatureDomainType() types.DomainType
 }
 
-type Config interface {
+type IConfig interface {
 	signing
 	// GetValueCheck returns value check instance
 	GetValueCheck() proposedValueCheck
@@ -22,6 +24,45 @@ type Config interface {
 	GetNetwork() Network
 	// GetTimer returns round timer
 	GetTimer() Timer
+}
+
+type Config struct {
+	Signer     types.SSVSigner
+	SigningPK  []byte
+	Domain     types.DomainType
+	ValueCheck proposedValueCheck
+	Storage    Storage
+	Network    Network
+}
+
+// GetSigner returns a Signer instance
+func (c *Config) GetSigner() types.SSVSigner {
+	return c.Signer
+}
+
+// GetSigningPubKey returns the public key used to sign all QBFT messages
+func (c *Config) GetSigningPubKey() []byte {
+	return c.SigningPK
+}
+
+// GetSignatureDomainType returns the Domain type used for signatures
+func (c *Config) GetSignatureDomainType() types.DomainType {
+	return c.Domain
+}
+
+// GetValueCheck returns value check instance
+func (c *Config) GetValueCheck() proposedValueCheck {
+	return c.ValueCheck
+}
+
+// GetNetwork returns a p2p Network instance
+func (c *Config) GetNetwork() Network {
+	return c.Network
+}
+
+// GetTimer returns round timer
+func (c *Config) GetTimer() Timer {
+	return nil
 }
 
 type State struct {
@@ -35,8 +76,13 @@ type State struct {
 }
 
 // GetRoot returns the state's deterministic root
-func (s *State) GetRoot() []byte {
-	panic("implement")
+func (s *State) GetRoot() ([]byte, error) {
+	marshaledRoot, err := s.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode state")
+	}
+	ret := sha256.Sum256(marshaledRoot)
+	return ret[:], nil
 }
 
 // Encode returns a msg encoded bytes or error

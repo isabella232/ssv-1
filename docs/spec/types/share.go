@@ -6,12 +6,11 @@ import (
 
 // Share holds all info about the QBFT/ SSV Committee for msg signing and verification
 type Share struct {
-	OperatorID    OperatorID
-	PubKey        ValidatorPK
-	Committee     []*Operator
-	Quorum        uint64
-	PartialQuorum uint64
-	DomainType    DomainType
+	OperatorID            OperatorID
+	PubKey                ValidatorPK
+	Committee             []*Operator
+	Quorum, PartialQuorum uint64
+	DomainType            DomainType
 }
 
 // HasQuorum returns true if at least 2f+1 items are present (cnt is the number of items). It assumes nothing about those items, not their type or structure

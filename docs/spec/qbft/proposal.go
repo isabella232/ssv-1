@@ -5,12 +5,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponProposal(state State, config Config, signedProposal *SignedMessage, proposeMsgContainer MsgContainer) error {
+func uponProposal(state State, config IConfig, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
 	valCheck := config.GetValueCheck()
 	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.Committee); err != nil {
-		return errors.New("proposal invalid")
+		return errors.Wrap(err, "proposal invalid")
 	}
-	if !proposeMsgContainer.AddIfDoesntExist(signedProposal) {
+
+	addedMsg, err := proposeMsgContainer.AddIfDoesntExist(signedProposal)
+	if err != nil {
+		return errors.Wrap(err, "could not add proposal msg to container")
+	}
+	if !addedMsg {
 		return nil // uponProposal was already called
 	}
 
@@ -23,7 +28,16 @@ func uponProposal(state State, config Config, signedProposal *SignedMessage, pro
 	}
 	state.Round = newRound
 
-	prepare := createPrepare(state, newRound, signedProposal.Message.GetProposalData().GetData())
+	proposalData, err := signedProposal.Message.GetProposalData()
+	if err != nil {
+		return errors.Wrap(err, "could not get proposal data")
+	}
+
+	prepare, err := createPrepare(state, config, newRound, proposalData.Data)
+	if err != nil {
+		return errors.Wrap(err, "could not create prepare msg")
+	}
+
 	if err := config.GetNetwork().Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}
@@ -33,7 +47,7 @@ func uponProposal(state State, config Config, signedProposal *SignedMessage, pro
 
 func isValidProposal(
 	state State,
-	config Config,
+	config IConfig,
 	signedProposal *SignedMessage,
 	valCheck proposedValueCheck,
 	operators []*types.Operator,
@@ -53,14 +67,19 @@ func isValidProposal(
 	if !signedProposal.MatchedSigners([]types.OperatorID{proposer(state, signedProposal.Message.Round)}) {
 		return errors.New("proposal leader invalid")
 	}
+
+	proposalData, err := signedProposal.Message.GetProposalData()
+	if err != nil {
+		return errors.Wrap(err, "could not get proposal data")
+	}
 	if err := isProposalJustification(
 		state,
 		config,
-		signedProposal.Message.GetProposalData().GetRoundChangeJustification(),
-		signedProposal.Message.GetProposalData().GetPrepareJustification(),
+		proposalData.RoundChangeJustification,
+		proposalData.PrepareJustification,
 		state.Height,
 		signedProposal.Message.Round,
-		signedProposal.Message.GetProposalData().GetData(),
+		proposalData.Data,
 		valCheck,
 		signedProposal.Signers[0], // already verified sig so we know there is 1 signer
 	); err != nil {
@@ -77,7 +96,7 @@ func isValidProposal(
 // isProposalJustification returns nil if the signed proposal msg is justified
 func isProposalJustification(
 	state State,
-	config Config,
+	config IConfig,
 	roundChangeMsgs []*SignedMessage,
 	prepareMsgs []*SignedMessage,
 	height uint64,
@@ -150,10 +169,11 @@ func isProposalJustification(
 }
 
 func proposer(state State, round Round) types.OperatorID {
-	panic("implement")
+	// TODO - https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/29ae5a44551466453a84d4d17b9e083ecf189d97/dafny/spec/L1/node_auxiliary_functions.dfy#L304-L323
+	return 1
 }
 
-func createProposal(state State, config Config, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
+func createProposal(state State, config IConfig, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
 	/**
 	  	Proposal(
 	                        signProposal(

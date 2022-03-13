@@ -30,8 +30,8 @@ func (i instances) FindInstance(height uint64) *Instance {
 type Controller struct {
 	Identifier []byte
 	Height     uint64 // incremental Height for instances
-	// storedInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
-	storedInstances instances
+	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
+	StoredInstances instances
 	signer          types.SSVSigner
 	valueCheck      proposedValueCheck
 	storage         Storage
@@ -45,7 +45,7 @@ func NewController(
 	network Network,
 ) *Controller {
 	return &Controller{
-		storedInstances: instances{},
+		StoredInstances: instances{},
 		signer:          signer,
 		valueCheck:      valueCheck,
 		storage:         storage,
@@ -106,7 +106,7 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 }
 
 func (c *Controller) InstanceForHeight(height uint64) *Instance {
-	return c.storedInstances.FindInstance(height)
+	return c.StoredInstances.FindInstance(height)
 }
 
 func (c *Controller) bumpHeight() {
@@ -126,7 +126,7 @@ func (c *Controller) addAndStoreNewInstance() Instance {
 func (c *Controller) canStartInstance(value []byte) error {
 	if c.Height != 0 {
 		// check prev instance if prev instance is not the first instance
-		inst := c.storedInstances.FindInstance(c.Height)
+		inst := c.StoredInstances.FindInstance(c.Height)
 		if inst == nil {
 			return errors.New("could not find previous instance")
 		}
@@ -146,25 +146,28 @@ func (c *Controller) canStartInstance(value []byte) error {
 
 // Encode implementation
 func (c *Controller) Encode() ([]byte, error) {
-	m := make(map[string]interface{})
-
-	m["id"] = c.Identifier
-	m["Height"] = c.Height
-
-	instances := make([][]byte, 0)
-	for _, i := range c.storedInstances {
-		byts, err := i.Encode()
-		if err != nil {
-			return nil, errors.Wrap(err, "could not encode instance")
-		}
-		instances = append(instances, byts)
-	}
-	m["instances"] = instances
-
-	return json.Marshal(m)
+	return json.Marshal(c)
 }
 
 // Decode implementation
 func (c *Controller) Decode(data []byte) error {
-	panic("implement")
+	err := json.Unmarshal(data, &c)
+	if err != nil {
+		return errors.Wrap(err, "could not decode controller")
+	}
+
+	for _, i := range c.StoredInstances {
+		if i != nil {
+			i.valueCheck = c.valueCheck
+			i.config = &Config{
+				Signer:     c.signer,
+				SigningPK:  nil,
+				Domain:     nil,
+				ValueCheck: c.valueCheck,
+				Storage:    c.storage,
+				Network:    c.network,
+			}
+		}
+	}
+	return nil
 }
