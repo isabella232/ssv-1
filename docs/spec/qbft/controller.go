@@ -158,7 +158,6 @@ func (c *Controller) Decode(data []byte) error {
 
 	for _, i := range c.StoredInstances {
 		if i != nil {
-			i.valueCheck = c.valueCheck
 			i.config = &Config{
 				Signer:     c.signer,
 				SigningPK:  nil,
