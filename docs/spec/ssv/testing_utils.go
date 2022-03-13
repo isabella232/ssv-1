@@ -58,8 +58,10 @@ func newTestingValidator() *Validator {
 	signer := newTestingKeyManager()
 	dutyRunner := newTestingDutyRunner()
 	return &Validator{
-		valCheck: &types.BeaconDataCheck{KeyManager: signer},
-		signer:   signer,
+		valCheck: func(data []byte) error {
+			return nil
+		},
+		signer: signer,
 		share: &types.Share{
 			PubKey:     testingValidatorPK[:],
 			Committee:  committee,

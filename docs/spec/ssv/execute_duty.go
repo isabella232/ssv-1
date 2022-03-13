@@ -25,11 +25,6 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		}
 		input.Duty = duty
 		input.AttestationData = attData
-
-		// validate input
-		if err := v.valCheck.CheckAttestationData(attData); err != nil {
-			return errors.Wrap(err, "GetAttestationData returned invalid data")
-		}
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
 	}
@@ -37,6 +32,11 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 	byts, err := input.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode input")
+	}
+
+	// validate input
+	if err := v.valCheck(byts); err != nil {
+		return errors.Wrap(err, "StartDuty input data invalid")
 	}
 
 	if err := dutyRunner.StartNewInstance(byts); err != nil {

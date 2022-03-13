@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -20,13 +19,13 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return nil
 	}
 
+	if err := v.valCheck(decidedValueByts); err != nil {
+		return errors.Wrap(err, "decided value is invalid")
+	}
+
 	decidedValue := &consensusData{}
 	if err := decidedValue.Decode(decidedValueByts); err != nil {
 		return errors.Wrap(err, "failed to parse decided value to consensusData")
-	}
-
-	if err := v.validateDecidedValue(decidedValue); err != nil {
-		return errors.Wrap(err, "decided value is invalid")
 	}
 
 	postConsensusMsg, err := dutyRunner.DecideRunningInstance(decidedValue, v.signer)
@@ -54,13 +53,4 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "can't broadcast partial sig")
 	}
 	return nil
-}
-
-func (v *Validator) validateDecidedValue(decidedValue *consensusData) error {
-	switch decidedValue.Duty.Type {
-	case beacon.RoleTypeAttester:
-		return v.valCheck.CheckAttestationData(decidedValue.AttestationData)
-	default:
-		return errors.New("can't validate unknown decided value")
-	}
 }

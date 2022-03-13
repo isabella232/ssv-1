@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
@@ -15,5 +16,5 @@ type Validator struct {
 	share       *types.Share
 	dutyRunners DutyRunners
 	signer      types.KeyManager
-	valCheck    *types.BeaconDataCheck
+	valCheck    qbft.ProposedValueCheck
 }
