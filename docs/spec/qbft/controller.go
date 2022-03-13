@@ -9,13 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// HistoricalInstanceCapacity represents the upper bound of instances a controller can process messages for as messages are not
+// HistoricalInstanceCapacity represents the upper bound of InstanceContainer a controller can process messages for as messages are not
 // guaranteed to arrive in a timely fashion, we physically limit how far back the controller will process messages for
 const HistoricalInstanceCapacity int = 5
 
-type instances [HistoricalInstanceCapacity]*Instance
+type InstanceContainer [HistoricalInstanceCapacity]*Instance
 
-func (i instances) FindInstance(height uint64) *Instance {
+func (i InstanceContainer) FindInstance(height uint64) *Instance {
 	for _, inst := range i {
 		if inst != nil {
 			if inst.GetHeight() == height {
@@ -26,12 +26,22 @@ func (i instances) FindInstance(height uint64) *Instance {
 	return nil
 }
 
-// Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT instances
+// addNewInstance will add the new instance at index 0, pushing all other stored InstanceContainer one index up (ejecting last one if existing)
+func (i *InstanceContainer) addNewInstance(instance *Instance) {
+	for idx := HistoricalInstanceCapacity - 1; idx > 0; idx-- {
+		i[idx] = i[idx-1]
+	}
+	i[0] = instance
+}
+
+// Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT InstanceContainer
 type Controller struct {
 	Identifier []byte
-	Height     uint64 // incremental Height for instances
+	Height     uint64 // incremental Height for InstanceContainer
 	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
-	StoredInstances instances
+	StoredInstances InstanceContainer
+	Domain          types.DomainType
+	SigningPK       []byte
 	signer          types.SSVSigner
 	valueCheck      ProposedValueCheck
 	storage         Storage
@@ -45,7 +55,7 @@ func NewController(
 	network Network,
 ) *Controller {
 	return &Controller{
-		StoredInstances: instances{},
+		StoredInstances: InstanceContainer{},
 		signer:          signer,
 		valueCheck:      valueCheck,
 		storage:         storage,
@@ -119,8 +129,10 @@ func (c *Controller) GetIdentifier() []byte {
 }
 
 // addAndStoreNewInstance returns creates a new QBFT instance, stores it in an array and returns it
-func (c *Controller) addAndStoreNewInstance() Instance {
-	panic("implement")
+func (c *Controller) addAndStoreNewInstance() *Instance {
+	i := NewInstance(c.generateConfig())
+	c.StoredInstances.addNewInstance(i)
+	return i
 }
 
 func (c *Controller) canStartInstance(value []byte) error {
@@ -156,17 +168,22 @@ func (c *Controller) Decode(data []byte) error {
 		return errors.Wrap(err, "could not decode controller")
 	}
 
+	config := c.generateConfig()
 	for _, i := range c.StoredInstances {
 		if i != nil {
-			i.config = &Config{
-				Signer:     c.signer,
-				SigningPK:  nil,
-				Domain:     nil,
-				ValueCheck: c.valueCheck,
-				Storage:    c.storage,
-				Network:    c.network,
-			}
+			i.config = config
 		}
 	}
 	return nil
+}
+
+func (c *Controller) generateConfig() IConfig {
+	return &Config{
+		Signer:     c.signer,
+		SigningPK:  c.SigningPK,
+		Domain:     c.Domain,
+		ValueCheck: c.valueCheck,
+		Storage:    c.storage,
+		Network:    c.network,
+	}
 }
