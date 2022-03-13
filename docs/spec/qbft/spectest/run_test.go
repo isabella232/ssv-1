@@ -17,5 +17,13 @@ func runTest(t *testing.T, test *SpecTest) {
 	for _, msg := range test.Messages {
 		_, _, _, err := test.Pre.ProcessMsg(msg)
 		require.NoError(t, err)
+
+		expectedRoot, err := test.Post.State.GetRoot()
+		require.NoError(t, err)
+
+		postRoot, err := test.Pre.State.GetRoot()
+		require.NoError(t, err)
+
+		require.EqualValues(t, expectedRoot, postRoot)
 	}
 }

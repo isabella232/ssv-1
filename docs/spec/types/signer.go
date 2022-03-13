@@ -79,6 +79,6 @@ func (s *SSVKeyManager) SignRoot(data Root, sigType SignatureType, pk []byte) (S
 
 // AddShare saves a share key
 func (s *SSVKeyManager) AddShare(sk *bls.SecretKey) error {
-	s.keys[sk.GetPublicKey().GetHexString()] = sk
+	s.keys[hex.EncodeToString(sk.GetPublicKey().Serialize())] = sk
 	return nil
 }

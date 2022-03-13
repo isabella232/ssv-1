@@ -133,17 +133,34 @@ func validSignedPrepareForHeightRoundAndValue(
 	return nil
 }
 
-func createPrepare(state State, newRound Round, value []byte) *SignedMessage {
-	/**
-	Prepare(
-	                    signPrepare(
-	                        UnsignedPrepare(
-	                            |current.blockchain|,
-	                            newRound,
-	                            digest(m.proposedBlock)),
-	                        current.id
-	                        )
-	                );
-	*/
-	panic("implement")
+/**
+Prepare(
+                    signPrepare(
+                        UnsignedPrepare(
+                            |current.blockchain|,
+                            newRound,
+                            digest(m.proposedBlock)),
+                        current.id
+                        )
+                );
+*/
+func createPrepare(state State, config IConfig, newRound Round, value []byte) (*SignedMessage, error) {
+	msg := &Message{
+		MsgType:    PrepareMsgType,
+		Height:     state.Height,
+		Round:      newRound,
+		Identifier: state.ID,
+		Data:       value,
+	}
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed signing prepare msg")
+	}
+
+	signedMsg := &SignedMessage{
+		Signature: sig,
+		Signers:   []types.OperatorID{state.Share.OperatorID},
+		Message:   msg,
+	}
+	return signedMsg, nil
 }

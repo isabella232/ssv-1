@@ -8,7 +8,7 @@ import (
 )
 
 var AllTests = []*SpecTest{
-	happyFlow(),
+	happyProposalMsg(),
 }
 
 type SpecTest struct {

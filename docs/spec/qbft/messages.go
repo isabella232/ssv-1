@@ -98,7 +98,7 @@ func (msg *Message) Decode(data []byte) error {
 func (msg *Message) GetRoot() ([]byte, error) {
 	marshaledRoot, err := msg.Encode()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not encode PostConsensusMessage")
+		return nil, errors.Wrap(err, "could not encode message")
 	}
 	ret := sha256.Sum256(marshaledRoot)
 	return ret[:], nil

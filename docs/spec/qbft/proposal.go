@@ -33,7 +33,11 @@ func uponProposal(state State, config IConfig, signedProposal *SignedMessage, pr
 		return errors.Wrap(err, "could not get proposal data")
 	}
 
-	prepare := createPrepare(state, newRound, proposalData.Data)
+	prepare, err := createPrepare(state, config, newRound, proposalData.Data)
+	if err != nil {
+		return errors.Wrap(err, "could not create prepare msg")
+	}
+
 	if err := config.GetNetwork().Broadcast(prepare); err != nil {
 		return errors.Wrap(err, "failed to broadcast prepare message")
 	}

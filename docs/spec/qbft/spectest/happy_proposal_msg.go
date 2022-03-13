@@ -2,7 +2,7 @@ package spectest
 
 import "github.com/bloxapp/ssv/docs/spec/qbft"
 
-func happyFlow() *SpecTest {
+func happyProposalMsg() *SpecTest {
 	pre := baseInstance()
 	post := baseInstance()
 	msgs := []*qbft.SignedMessage{
