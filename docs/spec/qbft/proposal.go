@@ -49,7 +49,7 @@ func isValidProposal(
 	state State,
 	config IConfig,
 	signedProposal *SignedMessage,
-	valCheck proposedValueCheck,
+	valCheck ProposedValueCheck,
 	operators []*types.Operator,
 ) error {
 	if signedProposal.Message.MsgType != ProposalMsgType {
@@ -102,7 +102,7 @@ func isProposalJustification(
 	height uint64,
 	round Round,
 	value []byte,
-	valCheck proposedValueCheck,
+	valCheck ProposedValueCheck,
 	roundLeader types.OperatorID,
 ) error {
 	if err := valCheck(value); err != nil {

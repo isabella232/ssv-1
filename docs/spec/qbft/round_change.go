@@ -10,7 +10,7 @@ func uponRoundChange(
 	config IConfig,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer *MsgContainer,
-	valCheck proposedValueCheck,
+	valCheck ProposedValueCheck,
 ) error {
 	// TODO - Roberto comment: could happen we received a round change before we switched the round and this msg will be rejected (lost)
 	if err := validRoundChange(state, config, signedRoundChange, state.Height, state.Round); err != nil {
@@ -77,7 +77,7 @@ func hasReceivedProposalJustification(
 	config IConfig,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer *MsgContainer,
-	valCheck proposedValueCheck,
+	valCheck ProposedValueCheck,
 ) *SignedMessage {
 	roundChanges := roundChangeMsgContainer.MessagesForRound(state.Round)
 
@@ -109,7 +109,7 @@ func isReceivedProposalJustification(
 	roundChanges, prepares []*SignedMessage,
 	newRound Round,
 	value []byte,
-	valCheck proposedValueCheck,
+	valCheck ProposedValueCheck,
 ) error {
 	if err := isProposalJustification(
 		state,
