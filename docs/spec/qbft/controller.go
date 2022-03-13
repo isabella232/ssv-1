@@ -33,14 +33,14 @@ type Controller struct {
 	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	StoredInstances instances
 	signer          types.SSVSigner
-	valueCheck      proposedValueCheck
+	valueCheck      ProposedValueCheck
 	storage         Storage
 	network         Network
 }
 
 func NewController(
 	signer types.SSVSigner,
-	valueCheck proposedValueCheck,
+	valueCheck ProposedValueCheck,
 	storage Storage,
 	network Network,
 ) *Controller {

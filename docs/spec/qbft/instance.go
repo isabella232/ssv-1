@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type proposedValueCheck func(data []byte) error
+type ProposedValueCheck func(data []byte) error
 
 // Instance is a single QBFT instance that starts with a Start call (including a value).
 // Every new msg the ProcessMsg function needs to be called
