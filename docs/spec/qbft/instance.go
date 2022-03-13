@@ -12,9 +12,8 @@ type proposedValueCheck func(data []byte) error
 // Instance is a single QBFT instance that starts with a Start call (including a value).
 // Every new msg the ProcessMsg function needs to be called
 type Instance struct {
-	State      State
-	config     IConfig
-	valueCheck proposedValueCheck
+	State  State
+	config IConfig
 
 	ProposeContainer     *MsgContainer
 	PrepareContainer     *MsgContainer
@@ -74,7 +73,7 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 			// TODO - Roberto comment: we should send a Decided msg here
 			return err
 		case RoundChangeMsgType:
-			return uponRoundChange(i.State, i.config, msg, i.RoundChangeContainer, i.valueCheck)
+			return uponRoundChange(i.State, i.config, msg, i.RoundChangeContainer, i.config.GetValueCheck())
 		default:
 			return errors.New("signed message type not supported")
 		}
