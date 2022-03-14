@@ -14,19 +14,21 @@ var testingMessage = &Message{
 	Data:       []byte{1, 2, 3, 4},
 }
 var TestingSignedMsg = func() *SignedMessage {
-	id := types.OperatorID(1)
+	return signMsg(TestingSK, 1, testingMessage)
+}()
+var signMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *Message) *SignedMessage {
 	domain := types.PrimusTestnet
 	sigType := types.QBFTSigType
 
 	r, _ := types.ComputeSigningRoot(testingMessage, types.ComputeSignatureDomain(domain, sigType))
-	sig := TestingSK.SignByte(r)
+	sig := sk.SignByte(r)
 
 	return &SignedMessage{
 		Message:   testingMessage,
 		Signers:   []types.OperatorID{id},
 		Signature: sig.Serialize(),
 	}
-}()
+}
 var TestingSK = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
@@ -35,7 +37,7 @@ var TestingSK = func() *bls.SecretKey {
 }()
 
 var testingInstanceStruct = &Instance{
-	State: State{
+	State: &State{
 		Share: &types.Share{
 			OperatorID:    1,
 			PubKey:        TestingSK.GetPublicKey().Serialize(),

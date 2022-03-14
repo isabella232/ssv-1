@@ -8,24 +8,23 @@ import (
 )
 
 var AllTests = []*SpecTest{
-	happyProposalMsg(),
+	happyFullFlow(),
 }
 
 type SpecTest struct {
 	Name     string
 	Pre      *qbft.Instance
-	Post     *qbft.Instance
+	PostRoot string
 	Messages []*qbft.SignedMessage
 	err      error
 }
 
-var signMsg = func(msg *qbft.Message) *qbft.SignedMessage {
-	id := types.OperatorID(1)
+var signMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *qbft.Message) *qbft.SignedMessage {
 	domain := types.PrimusTestnet
 	sigType := types.QBFTSigType
 
 	r, _ := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(domain, sigType))
-	sig := testingSK1.SignByte(r)
+	sig := sk.SignByte(r)
 
 	return &qbft.SignedMessage{
 		Message:   msg,
@@ -57,7 +56,7 @@ var testingSK2 = func() *bls.SecretKey {
 var testingSK3 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
-	ret.DeserializeHexStr("b1d73bd5b4aa9d7220cf7f0c28cd05a5fd6482e863e7d41eaa079512b76313c")
+	ret.DeserializeHexStr("600a1293a76ab9dd141cd59c3705b268dbc2590c6bd5b66039ff27bac87e759f")
 	return ret
 }()
 var testingSK4 = func() *bls.SecretKey {
@@ -68,7 +67,7 @@ var testingSK4 = func() *bls.SecretKey {
 }()
 var baseInstance = func() *qbft.Instance {
 	ret := qbft.NewInstance(testingConfig)
-	ret.State = qbft.State{
+	ret.State = &qbft.State{
 		Share: &types.Share{
 			OperatorID:    1,
 			PubKey:        testingSK1.GetPublicKey().Serialize(),

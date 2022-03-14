@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponProposal(state State, config IConfig, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
+func uponProposal(state *State, config IConfig, signedProposal *SignedMessage, proposeMsgContainer *MsgContainer) error {
 	valCheck := config.GetValueCheck()
 	if err := isValidProposal(state, config, signedProposal, valCheck, state.Share.Committee); err != nil {
 		return errors.Wrap(err, "proposal invalid")
@@ -46,7 +46,7 @@ func uponProposal(state State, config IConfig, signedProposal *SignedMessage, pr
 }
 
 func isValidProposal(
-	state State,
+	state *State,
 	config IConfig,
 	signedProposal *SignedMessage,
 	valCheck ProposedValueCheck,
@@ -95,7 +95,7 @@ func isValidProposal(
 
 // isProposalJustification returns nil if the signed proposal msg is justified
 func isProposalJustification(
-	state State,
+	state *State,
 	config IConfig,
 	roundChangeMsgs []*SignedMessage,
 	prepareMsgs []*SignedMessage,
@@ -168,12 +168,12 @@ func isProposalJustification(
 	}
 }
 
-func proposer(state State, round Round) types.OperatorID {
+func proposer(state *State, round Round) types.OperatorID {
 	// TODO - https://github.com/ConsenSys/qbft-formal-spec-and-verification/blob/29ae5a44551466453a84d4d17b9e083ecf189d97/dafny/spec/L1/node_auxiliary_functions.dfy#L304-L323
 	return 1
 }
 
-func createProposal(state State, config IConfig, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
+func createProposal(state *State, config IConfig, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
 	/**
 	  	Proposal(
 	                        signProposal(

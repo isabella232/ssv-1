@@ -223,3 +223,37 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 		require.EqualError(t, Signature(agg.Serialize()).VerifyByOperators(msgRoot, domain, sigType, nodes), "signer not found in operators")
 	})
 }
+
+func TestSignature_Aggregate(t *testing.T) {
+	msgRoot := &testSigningRoot{root: []byte{1, 2, 3, 4}}
+	domain := PrimusTestnet
+	sigType := QBFTSigType
+
+	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
+	require.NoError(t, err)
+
+	sk1 := &bls.SecretKey{}
+	sk1.SetByCSPRNG()
+	sig1 := sk1.SignByte(computedRoot)
+
+	sk2 := &bls.SecretKey{}
+	sk2.SetByCSPRNG()
+	sig2 := sk2.SignByte(computedRoot)
+
+	sig1.Add(sig2)
+	msgRoot.Signature = sig1.Serialize()
+	msgRoot.signers = []OperatorID{1, 2}
+
+	nodes := []*Operator{
+		{
+			OperatorID: 1,
+			PubKey:     sk1.GetPublicKey().Serialize(),
+		},
+		{
+			OperatorID: 2,
+			PubKey:     sk2.GetPublicKey().Serialize(),
+		},
+	}
+
+	require.NoError(t, Signature(msgRoot.Signature).VerifyByOperators(msgRoot, domain, sigType, nodes))
+}

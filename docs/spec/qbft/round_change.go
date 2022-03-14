@@ -6,7 +6,7 @@ import (
 )
 
 func uponRoundChange(
-	state State,
+	state *State,
 	config IConfig,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer *MsgContainer,
@@ -59,7 +59,7 @@ func uponRoundChange(
 	return nil
 }
 
-func hasReceivedPartialQuorum(state State, roundChangeMsgContainer *MsgContainer) (bool, []*SignedMessage) {
+func hasReceivedPartialQuorum(state *State, roundChangeMsgContainer *MsgContainer) (bool, []*SignedMessage) {
 	all := roundChangeMsgContainer.AllMessaged()
 
 	rc := make([]*SignedMessage, 0)
@@ -73,7 +73,7 @@ func hasReceivedPartialQuorum(state State, roundChangeMsgContainer *MsgContainer
 }
 
 func hasReceivedProposalJustification(
-	state State,
+	state *State,
 	config IConfig,
 	signedRoundChange *SignedMessage,
 	roundChangeMsgContainer *MsgContainer,
@@ -104,7 +104,7 @@ func hasReceivedProposalJustification(
 
 // isReceivedProposalJustification - returns nil if we have a quorum of round change msgs and highest justified value
 func isReceivedProposalJustification(
-	state State,
+	state *State,
 	config IConfig,
 	roundChanges, prepares []*SignedMessage,
 	newRound Round,
@@ -134,7 +134,7 @@ func isReceivedProposalJustification(
 	return nil
 }
 
-func validRoundChange(state State, config IConfig, signedMsg *SignedMessage, height uint64, round Round) error {
+func validRoundChange(state *State, config IConfig, signedMsg *SignedMessage, height uint64, round Round) error {
 	if signedMsg.Message.MsgType != RoundChangeMsgType {
 		return errors.New("round change msg type is wrong")
 	}
@@ -190,7 +190,7 @@ func minRound(roundChangeMsgs []*SignedMessage) Round {
 	panic("implement")
 }
 
-func createRoundChange(state State, newRound Round) *SignedMessage {
+func createRoundChange(state *State, newRound Round) *SignedMessage {
 	/**
 	RoundChange(
 	           signRoundChange(
