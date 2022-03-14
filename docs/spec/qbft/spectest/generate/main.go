@@ -7,12 +7,11 @@ import (
 )
 
 func main() {
+	all := map[string]*spectest.SpecTest{}
 	for _, t := range spectest.AllTests {
-		printTest(t)
+		all[t.Name] = t
 	}
-}
 
-func printTest(t *spectest.SpecTest) {
-	byts, _ := json.Marshal(t)
-	fmt.Printf("%s: %s\n", t.Name, string(byts))
+	byts, _ := json.Marshal(all)
+	fmt.Printf("\n\n%s\n\n", string(byts))
 }

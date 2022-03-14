@@ -70,6 +70,21 @@ func (s Signature) Verify(data Root, domain DomainType, sigType SignatureType, p
 	return nil
 }
 
+func (s Signature) Aggregate(other Signature) (Signature, error) {
+	s1 := &bls.Sign{}
+	if err := s1.Deserialize(s); err != nil {
+		return nil, errors.Wrap(err, "failed to deserialize signature")
+	}
+
+	s2 := &bls.Sign{}
+	if err := s2.Deserialize(other); err != nil {
+		return nil, errors.Wrap(err, "failed to deserialize signature")
+	}
+
+	s1.Add(s2)
+	return s1.Serialize(), nil
+}
+
 func ComputeSigningRoot(data Root, domain SignatureDomain) ([]byte, error) {
 	dataRoot, err := data.GetRoot()
 	if err != nil {

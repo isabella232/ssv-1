@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer *MsgContainer) error {
+func uponPrepare(state *State, config IConfig, signedPrepare *SignedMessage, prepareMsgContainer, commitMsgContainer *MsgContainer) error {
 	// TODO - if we receive a prepare before a proposal and return an error we will never process the prepare msg, we still need to add it to the container
 	if state.ProposalAcceptedForCurrentRound == nil {
-		return errors.New("not proposal accepted for prepare")
+		return errors.New("no proposal accepted for prepare")
 	}
 
 	acceptedProposalData, err := state.ProposalAcceptedForCurrentRound.Message.GetProposalData()
@@ -49,7 +49,11 @@ func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prep
 	state.LastPreparedValue = proposedValue
 	state.LastPreparedRound = state.Round
 
-	commitMsg := createCommit(state, proposedValue)
+	commitMsg, err := createCommit(state, config, proposedValue)
+	if err != nil {
+		return errors.Wrap(err, "could not create commit msg")
+	}
+
 	if err := config.GetNetwork().Broadcast(commitMsg); err != nil {
 		return errors.Wrap(err, "failed to broadcast commit message")
 	}
@@ -57,7 +61,7 @@ func uponPrepare(state State, config IConfig, signedPrepare *SignedMessage, prep
 	return nil
 }
 
-func getRoundChangeJustification(state State, config IConfig, prepareMsgContainer MsgContainer) *SignedMessage {
+func getRoundChangeJustification(state *State, config IConfig, prepareMsgContainer MsgContainer) *SignedMessage {
 	if state.LastPreparedValue == nil {
 		return nil
 	}
@@ -80,7 +84,7 @@ func getRoundChangeJustification(state State, config IConfig, prepareMsgContaine
 
 // validPreparesForHeightRoundAndDigest returns an aggregated prepare msg for a specific Height and round
 func validPreparesForHeightRoundAndDigest(
-	state State,
+	state *State,
 	config IConfig,
 	prepareMessages []*SignedMessage,
 	height uint64,
@@ -103,7 +107,7 @@ func validPreparesForHeightRoundAndDigest(
 // validSignedPrepareForHeightRoundAndValue known in dafny spec as validSignedPrepareForHeightRoundAndDigest
 // https://entethalliance.github.io/client-spec/qbft_spec.html#dfn-qbftspecification
 func validSignedPrepareForHeightRoundAndValue(
-	state State,
+	state *State,
 	config IConfig,
 	signedPrepare *SignedMessage,
 	height uint64,
@@ -119,7 +123,12 @@ func validSignedPrepareForHeightRoundAndValue(
 	if signedPrepare.Message.Round != round {
 		return errors.New("msg round wrong")
 	}
-	if bytes.Compare(signedPrepare.Message.GetPrepareData().GetData(), value) != 0 {
+
+	prepareData, err := signedPrepare.Message.GetPrepareData()
+	if err != nil {
+		return errors.Wrap(err, "could not get prepare data")
+	}
+	if bytes.Compare(prepareData.Data, value) != 0 {
 		return errors.New("msg Identifier wrong")
 	}
 
@@ -144,7 +153,7 @@ Prepare(
                         )
                 );
 */
-func createPrepare(state State, config IConfig, newRound Round, value []byte) (*SignedMessage, error) {
+func createPrepare(state *State, config IConfig, newRound Round, value []byte) (*SignedMessage, error) {
 	msg := &Message{
 		MsgType:    PrepareMsgType,
 		Height:     state.Height,

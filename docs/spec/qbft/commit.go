@@ -7,7 +7,7 @@ import (
 )
 
 // uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state State, config IConfig, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
+func uponCommit(state *State, config IConfig, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
@@ -32,27 +32,39 @@ func uponCommit(state State, config IConfig, signedCommit *SignedMessage, commit
 		return false, nil, nil, nil // uponCommit was already called
 	}
 
-	value := signedCommit.Message.GetCommitData().GetData()
-	if quorum, commitMsgs := commitQuorumForValue(state, commitMsgContainer, value); quorum {
+	// calculate commit quorum and act upon it
+	msgCommitData, err := signedCommit.Message.GetCommitData()
+	if err != nil {
+		return false, nil, nil, errors.Wrap(err, "could not get msg commit data")
+	}
+	quorum, commitMsgs, err := commitQuorumForValue(state, commitMsgContainer, msgCommitData.Data)
+	if err != nil {
+		return false, nil, nil, errors.Wrap(err, "could not calculate commit quorum")
+	}
+	if quorum {
 		agg, err := aggregateCommitMsgs(commitMsgs)
 		if err != nil {
 			return false, nil, nil, errors.Wrap(err, "could not aggregate commit msgs")
 		}
-		return true, value, agg, nil
+		return true, msgCommitData.Data, agg, nil
 	}
 	return false, nil, nil, nil
 }
 
-func commitQuorumForValue(state State, commitMsgContainer *MsgContainer, value []byte) (bool, []*SignedMessage) {
+func commitQuorumForValue(state *State, commitMsgContainer *MsgContainer, value []byte) (bool, []*SignedMessage, error) {
 	commitMsgs := commitMsgContainer.MessagesForRound(state.Round)
 	valueFiltered := make([]*SignedMessage, 0)
 	for _, msg := range commitMsgs {
-		if bytes.Equal(msg.Message.GetCommitData().GetData(), value) {
+		commitData, err := msg.Message.GetCommitData()
+		if err != nil {
+			return false, nil, errors.Wrap(err, "could not get msg commit data")
+		}
+		if bytes.Equal(commitData.Data, value) {
 			valueFiltered = append(valueFiltered, msg)
 		}
 	}
 
-	return state.Share.HasQuorum(len(valueFiltered)), valueFiltered
+	return state.Share.HasQuorum(len(valueFiltered)), valueFiltered, nil
 }
 
 func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
@@ -74,37 +86,58 @@ func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
 }
 
 // didSendCommitForHeightAndRound returns true if sent commit msg for specific Height and round
-func didSendCommitForHeightAndRound(state State, commitMsgContainer *MsgContainer) bool {
-	/**
-	!exists m :: && m in current.messagesReceived
-	                            && m.Commit?
-	                            && var uPayload := m.commitPayload.unsignedPayload;
-	                            && uPayload.Height == |current.blockchain|
-	                            && uPayload.round == current.round
-	                            && recoverSignedCommitAuthor(m.commitPayload) == current.id
-	*/
-
-	panic("implement")
+/**
+!exists m :: && m in current.messagesReceived
+                            && m.Commit?
+                            && var uPayload := m.commitPayload.unsignedPayload;
+                            && uPayload.Height == |current.blockchain|
+                            && uPayload.round == current.round
+                            && recoverSignedCommitAuthor(m.commitPayload) == current.id
+*/
+func didSendCommitForHeightAndRound(state *State, commitMsgContainer *MsgContainer) bool {
+	for _, msg := range commitMsgContainer.MessagesForRound(state.Round) {
+		if msg.MatchedSigners([]types.OperatorID{state.Share.OperatorID}) {
+			return true
+		}
+	}
+	return false
 }
 
-func createCommit(state State, value []byte) *SignedMessage {
-	/**
-	Commit(
-	                    signCommit(
-	                        UnsignedCommit(
-	                            |current.blockchain|,
-	                            current.round,
-	                            signHash(hashBlockForCommitSeal(proposedBlock), current.id),
-	                            digest(proposedBlock)),
-	                            current.id
-	                        )
-	                    );
-	*/
-	panic("implement")
+/**
+Commit(
+                    signCommit(
+                        UnsignedCommit(
+                            |current.blockchain|,
+                            current.round,
+                            signHash(hashBlockForCommitSeal(proposedBlock), current.id),
+                            digest(proposedBlock)),
+                            current.id
+                        )
+                    );
+*/
+func createCommit(state *State, config IConfig, value []byte) (*SignedMessage, error) {
+	msg := &Message{
+		MsgType:    CommitMsgType,
+		Height:     state.Height,
+		Round:      state.Round,
+		Identifier: state.ID,
+		Data:       value,
+	}
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed signing commit msg")
+	}
+
+	signedMsg := &SignedMessage{
+		Signature: sig,
+		Signers:   []types.OperatorID{state.Share.OperatorID},
+		Message:   msg,
+	}
+	return signedMsg, nil
 }
 
 func validateCommit(
-	state State,
+	state *State,
 	config IConfig,
 	signedCommit *SignedMessage,
 	height uint64,
@@ -121,7 +154,16 @@ func validateCommit(
 	if signedCommit.Message.Round != round {
 		return errors.New("commit round is wrong")
 	}
-	if !bytes.Equal(proposedMsg.Message.GetCommitData().GetData(), signedCommit.Message.GetCommitData().GetData()) {
+
+	proposedCommitData, err := proposedMsg.Message.GetCommitData()
+	if err != nil {
+		return errors.Wrap(err, "could not get proposed commit data")
+	}
+	msgCommitData, err := signedCommit.Message.GetCommitData()
+	if err != nil {
+		return errors.Wrap(err, "could not get msg commit data")
+	}
+	if !bytes.Equal(proposedCommitData.Data, msgCommitData.Data) {
 		return errors.New("proposed data different than commit msg data")
 	}
 
