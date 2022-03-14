@@ -66,7 +66,7 @@ var testingSK4 = func() *bls.SecretKey {
 	return ret
 }()
 var baseInstance = func() *qbft.Instance {
-	ret := qbft.NewInstance(testingConfig)
+	ret := qbft.NewInstance(TestingConfig)
 	ret.State = &qbft.State{
 		Share: &types.Share{
 			OperatorID:    1,
@@ -115,7 +115,7 @@ var baseInstance = func() *qbft.Instance {
 	return ret
 }
 
-var testingConfig = &qbft.Config{
+var TestingConfig = &qbft.Config{
 	Signer:    testingKeyManager(),
 	SigningPK: testingSK1.GetPublicKey().Serialize(),
 	Domain:    types.PrimusTestnet,

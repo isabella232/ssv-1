@@ -1,20 +1,21 @@
-package spectest
+package main
 
 import (
 	"encoding/hex"
+	"github.com/bloxapp/ssv/docs/spec/qbft/spectest"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestAll(t *testing.T) {
-	for _, test := range AllTests {
+	for _, test := range spectest.AllTests {
 		t.Run(test.Name, func(t *testing.T) {
 			runTest(t, test)
 		})
 	}
 }
 
-func runTest(t *testing.T, test *SpecTest) {
+func runTest(t *testing.T, test *spectest.SpecTest) {
 	for _, msg := range test.Messages {
 		_, _, _, err := test.Pre.ProcessMsg(msg)
 		require.NoError(t, err)
