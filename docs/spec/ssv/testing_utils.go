@@ -123,6 +123,9 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 
 func newTestingQBFTController(identifier []byte) *qbft.Controller {
 	ret := qbft.NewController(
+		[]byte{1, 2, 3, 4},
+		testingShare,
+		types.PrimusTestnet,
 		newTestingKeyManager(),
 		func(data []byte) error {
 			return nil
@@ -133,12 +136,11 @@ func newTestingQBFTController(identifier []byte) *qbft.Controller {
 	ret.Height = 0
 	ret.Identifier = identifier
 	ret.Domain = types.PrimusTestnet
-	ret.SigningPK = testingSK1.GetPublicKey().Serialize()
 	return ret
 }
 
 func newTestingQBFTInstance() *qbft.Instance {
-	ret := qbft.NewInstance(testingQBFTConfig)
+	ret := qbft.NewInstance(testingQBFTConfig, nil, nil)
 	ret.State = &qbft.State{
 		Share:                           testingShare,
 		ID:                              []byte{1, 2, 3, 4},
