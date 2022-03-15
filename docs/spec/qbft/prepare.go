@@ -87,7 +87,7 @@ func validPreparesForHeightRoundAndDigest(
 	state *State,
 	config IConfig,
 	prepareMessages []*SignedMessage,
-	height uint64,
+	height Height,
 	round Round,
 	value []byte,
 	operators []*types.Operator) *SignedMessage {
@@ -110,7 +110,7 @@ func validSignedPrepareForHeightRoundAndValue(
 	state *State,
 	config IConfig,
 	signedPrepare *SignedMessage,
-	height uint64,
+	height Height,
 	round Round,
 	value []byte,
 	operators []*types.Operator) error {

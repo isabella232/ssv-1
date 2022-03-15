@@ -15,7 +15,7 @@ const HistoricalInstanceCapacity int = 5
 
 type InstanceContainer [HistoricalInstanceCapacity]*Instance
 
-func (i InstanceContainer) FindInstance(height uint64) *Instance {
+func (i InstanceContainer) FindInstance(height Height) *Instance {
 	for _, inst := range i {
 		if inst != nil {
 			if inst.GetHeight() == height {
@@ -37,7 +37,7 @@ func (i *InstanceContainer) addNewInstance(instance *Instance) {
 // Controller is a QBFT coordinator responsible for starting and following the entire life cycle of multiple QBFT InstanceContainer
 type Controller struct {
 	Identifier []byte
-	Height     uint64 // incremental Height for InstanceContainer
+	Height     Height // incremental Height for InstanceContainer
 	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	StoredInstances InstanceContainer
 	Domain          types.DomainType
@@ -122,7 +122,7 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 	return decided, decidedValue, nil
 }
 
-func (c *Controller) InstanceForHeight(height uint64) *Instance {
+func (c *Controller) InstanceForHeight(height Height) *Instance {
 	return c.StoredInstances.FindInstance(height)
 }
 

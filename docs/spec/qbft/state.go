@@ -69,7 +69,7 @@ type State struct {
 	Share                           *types.Share
 	ID                              []byte // instance Identifier
 	Round                           Round
-	Height                          uint64
+	Height                          Height
 	LastPreparedRound               Round
 	LastPreparedValue               []byte
 	ProposalAcceptedForCurrentRound *SignedMessage

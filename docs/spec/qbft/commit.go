@@ -145,7 +145,7 @@ func validateCommit(
 	state *State,
 	config IConfig,
 	signedCommit *SignedMessage,
-	height uint64,
+	height Height,
 	round Round,
 	proposedMsg *SignedMessage,
 	operators []*types.Operator,
