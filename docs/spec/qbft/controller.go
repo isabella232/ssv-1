@@ -143,7 +143,7 @@ func (c *Controller) addAndStoreNewInstance() *Instance {
 }
 
 func (c *Controller) canStartInstance(value []byte) error {
-	if c.Height != 0 {
+	if c.Height != FirstHeight {
 		// check prev instance if prev instance is not the first instance
 		inst := c.StoredInstances.FindInstance(c.Height)
 		if inst == nil {

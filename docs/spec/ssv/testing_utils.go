@@ -133,7 +133,7 @@ func newTestingQBFTController(identifier []byte) *qbft.Controller {
 		newTestingStorage(),
 		&testingNetwork{},
 	)
-	ret.Height = 0
+	ret.Height = qbft.FirstHeight
 	ret.Identifier = identifier
 	ret.Domain = types.PrimusTestnet
 	return ret

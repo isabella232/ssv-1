@@ -64,12 +64,15 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}
 	newInstance := dr.QBFTController.InstanceForHeight(dr.QBFTController.Height)
+	if newInstance == nil {
+		return errors.New("could not find newly created QBFT instance")
+	}
 
 	dr.DutyExecutionState = &DutyExecutionState{
 		RunningInstance: newInstance,
 		Quorum:          dr.Share.Quorum,
 	}
-	return dr.QBFTController.StartNewInstance(value)
+	return nil
 }
 
 // PostConsensusStateForHeight returns a DutyExecutionState instance for a specific Height
