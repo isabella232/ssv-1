@@ -41,6 +41,20 @@ var proposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
 	ret, _ := d.Encode()
 	return ret
 }
+var prepareDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
+	d := &qbft.PrepareData{
+		Data: data,
+	}
+	ret, _ := d.Encode()
+	return ret
+}
+var commitDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
+	d := &qbft.CommitData{
+		Data: data,
+	}
+	ret, _ := d.Encode()
+	return ret
+}
 var testingSK1 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
