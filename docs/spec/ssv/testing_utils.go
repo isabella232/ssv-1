@@ -108,7 +108,7 @@ func newTestingQBFTController(identifier []byte) *qbft.Controller {
 
 func newTestingQBFTInstance() *qbft.Instance {
 	return &qbft.Instance{
-		State: qbft.State{
+		State: &qbft.State{
 			Height: 1,
 		},
 		Decided: false,
