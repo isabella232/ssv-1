@@ -173,24 +173,36 @@ func proposer(state *State, round Round) types.OperatorID {
 	return 1
 }
 
-func createProposal(state *State, config IConfig, value []byte, roundChanged, prepares []*SignedMessage) (*SignedMessage, error) {
-	/**
-	  	Proposal(
-	                        signProposal(
-	                            UnsignedProposal(
-	                                |current.blockchain|,
-	                                newRound,
-	                                digest(block)),
-	                            current.id),
-	                        block,
-	                        extractSignedRoundChanges(roundChanges),
-	                        extractSignedPrepares(prepares));
-	*/
-	panic("implement")
-	msg := &Message{}
+/**
+  	Proposal(
+                        signProposal(
+                            UnsignedProposal(
+                                |current.blockchain|,
+                                newRound,
+                                digest(block)),
+                            current.id),
+                        block,
+                        extractSignedRoundChanges(roundChanges),
+                        extractSignedPrepares(prepares));
+*/
+func createProposal(state *State, config IConfig, value []byte, roundChanges, prepares []*SignedMessage) (*SignedMessage, error) {
+	proposalData := &ProposalData{
+		Data:                     value,
+		RoundChangeJustification: roundChanges,
+		PrepareJustification:     prepares,
+	}
+	dataByts, err := proposalData.Encode()
+
+	msg := &Message{
+		MsgType:    ProposalMsgType,
+		Height:     state.Height,
+		Round:      state.Round,
+		Identifier: state.ID,
+		Data:       dataByts,
+	}
 	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed signing proposal msg")
+		return nil, errors.Wrap(err, "failed signing prepare msg")
 	}
 
 	signedMsg := &SignedMessage{

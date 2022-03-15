@@ -116,12 +116,17 @@ Commit(
                     );
 */
 func createCommit(state *State, config IConfig, value []byte) (*SignedMessage, error) {
+	commitData := &CommitData{
+		Data: value,
+	}
+	dataByts, err := commitData.Encode()
+
 	msg := &Message{
 		MsgType:    CommitMsgType,
 		Height:     state.Height,
 		Round:      state.Round,
 		Identifier: state.ID,
-		Data:       value,
+		Data:       dataByts,
 	}
 	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
 	if err != nil {

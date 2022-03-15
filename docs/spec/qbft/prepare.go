@@ -154,12 +154,17 @@ Prepare(
                 );
 */
 func createPrepare(state *State, config IConfig, newRound Round, value []byte) (*SignedMessage, error) {
+	prepareData := &PrepareData{
+		Data: value,
+	}
+	dataByts, err := prepareData.Encode()
+
 	msg := &Message{
 		MsgType:    PrepareMsgType,
 		Height:     state.Height,
 		Round:      newRound,
 		Identifier: state.ID,
-		Data:       value,
+		Data:       dataByts,
 	}
 	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
 	if err != nil {
