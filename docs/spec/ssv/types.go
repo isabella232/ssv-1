@@ -20,7 +20,7 @@ func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *DutyRunner {
 }
 
 type Network interface {
-	Broadcast(message types.MessageEncoder) error
+	Broadcast(message types.Encoder) error
 }
 
 // Storage is a persistent storage for the SSV

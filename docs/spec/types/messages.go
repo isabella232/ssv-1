@@ -47,13 +47,6 @@ const (
 	SSVPostConsensusMsgType
 )
 
-type MessageEncoder interface {
-	// Encode returns a msg encoded bytes or error
-	Encode() ([]byte, error)
-	// Decode returns error if decoding failed
-	Decode(data []byte) error
-}
-
 type Root interface {
 	// GetRoot returns the root used for signing and verification
 	GetRoot() ([]byte, error)

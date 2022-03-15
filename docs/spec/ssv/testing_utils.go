@@ -38,20 +38,65 @@ var testConsensusData = &consensusData{
 }
 var testConsensusDataByts, _ = testConsensusData.Encode()
 var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
-var committee = []*types.Operator{
+var testingCommittee = []*types.Operator{
 	{
 		OperatorID: 1,
-		PubKey:     qbft.TestingSK.GetPublicKey().Serialize(),
+		PubKey:     testingSK1.GetPublicKey().Serialize(),
 	},
 	{
 		OperatorID: 2,
+		PubKey:     testingSK2.GetPublicKey().Serialize(),
 	},
 	{
 		OperatorID: 3,
+		PubKey:     testingSK3.GetPublicKey().Serialize(),
 	},
 	{
 		OperatorID: 4,
+		PubKey:     testingSK4.GetPublicKey().Serialize(),
 	},
+}
+var testingShare = &types.Share{
+	OperatorID:    1,
+	PubKey:        testingSK1.GetPublicKey().Serialize(),
+	DomainType:    types.PrimusTestnet,
+	Quorum:        3,
+	PartialQuorum: 2,
+	Committee:     testingCommittee,
+}
+var testingSK1 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("453d8351a0880da481659260660be34fa8ac7f89fdd75af278c027474fcee285")
+	return ret
+}()
+var testingSK2 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("6bfbd05d17d29c28d62e5c27f9646bc87b012ffd9d60575264def4f0291140dd")
+	return ret
+}()
+var testingSK3 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("600a1293a76ab9dd141cd59c3705b268dbc2590c6bd5b66039ff27bac87e759f")
+	return ret
+}()
+var testingSK4 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("538f613374f85d8d880b30031cab9c4ef82d2c6100850c7d4b097abc5a898790")
+	return ret
+}()
+var testingQBFTConfig = &qbft.Config{
+	Signer:    newTestingKeyManager(),
+	SigningPK: testingSK1.GetPublicKey().Serialize(),
+	Domain:    types.PrimusTestnet,
+	ValueCheck: func(data []byte) error {
+		return nil
+	},
+	Storage: &testingStorage{},
+	Network: &testingNetwork{},
 }
 
 func newTestingValidator() *Validator {
@@ -61,13 +106,8 @@ func newTestingValidator() *Validator {
 		valCheck: func(data []byte) error {
 			return nil
 		},
-		signer: signer,
-		share: &types.Share{
-			PubKey:     testingValidatorPK[:],
-			Committee:  committee,
-			Quorum:     3,
-			DomainType: types.PrimusTestnet,
-		},
+		signer:  signer,
+		share:   testingShare,
 		network: &testingNetwork{},
 		dutyRunners: DutyRunners{
 			beacon.RoleTypeAttester: dutyRunner,
@@ -81,16 +121,6 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 	}
 }
 
-//type testingQBFTController struct {
-//	Instances  map[uint64]*testingQBFTInstance
-//	Height     uint64
-//	Identifier []byte
-//
-//	failProcessMsg     bool
-//	returnDecided      bool
-//	returnDecidedValue []byte
-//}
-
 func newTestingQBFTController(identifier []byte) *qbft.Controller {
 	ret := qbft.NewController(
 		newTestingKeyManager(),
@@ -98,20 +128,48 @@ func newTestingQBFTController(identifier []byte) *qbft.Controller {
 			return nil
 		},
 		newTestingStorage(),
-		nil,
+		&testingNetwork{},
 	)
 	ret.Height = 0
 	ret.Identifier = identifier
-	ret.StartNewInstance([]byte{1, 2, 3, 4})
+	ret.Domain = types.PrimusTestnet
+	ret.SigningPK = testingSK1.GetPublicKey().Serialize()
 	return ret
 }
 
 func newTestingQBFTInstance() *qbft.Instance {
-	return &qbft.Instance{
-		State: &qbft.State{
-			Height: 1,
-		},
-		Decided: false,
+	ret := qbft.NewInstance(testingQBFTConfig)
+	ret.State = &qbft.State{
+		Share:                           testingShare,
+		ID:                              []byte{1, 2, 3, 4},
+		Round:                           qbft.FirstRound,
+		Height:                          qbft.FirstHeight,
+		LastPreparedRound:               qbft.NoRound,
+		LastPreparedValue:               nil,
+		ProposalAcceptedForCurrentRound: nil,
+	}
+	ret.ProposeContainer = &qbft.MsgContainer{
+		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
+	}
+	ret.PrepareContainer = &qbft.MsgContainer{
+		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
+	}
+	ret.CommitContainer = &qbft.MsgContainer{
+		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
+	}
+	ret.RoundChangeContainer = &qbft.MsgContainer{
+		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
+	}
+	return ret
+}
+
+func newTestingDutyRunner() *DutyRunner {
+	return &DutyRunner{
+		BeaconRoleType: beacon.RoleTypeAttester,
+		ValidatorPK:    testingValidatorPK[:],
+		Share:          testingShare,
+		QBFTController: newTestingQBFTController([]byte{1, 2, 3, 4}),
+		storage:        newTestingStorage(),
 	}
 }
 
@@ -142,63 +200,22 @@ func (s *testingStorage) SaveHighestDecided(signedMsg *qbft.SignedMessage) error
 //	return s.storage[hex.EncodeToString(signedMsg.Message.Identifier)], errors.New("can't find role")
 //}
 
-func newTestingDutyRunner() *DutyRunner {
-	return &DutyRunner{
-		State: &DutyRunnerState{
-			BeaconRoleType: beacon.RoleTypeAttester,
-			Share: types.Share{
-				PubKey:     testingValidatorPK[:],
-				Committee:  committee,
-				Quorum:     3,
-				OperatorID: 1,
-			},
-			QBFTController: newTestingQBFTController([]byte{1, 2, 3, 4}),
-		},
-		storage: newTestingStorage(),
-	}
-}
-
 type testingNetwork struct {
 }
 
-func (net *testingNetwork) Broadcast(message types.MessageEncoder) error {
+func (net *testingNetwork) Broadcast(message types.Encoder) error {
 	return nil
 }
 
-type testingKeyManager struct {
-	sk     *bls.SecretKey
-	domain types.DomainType
+func (net *testingNetwork) BroadcastDecided(msg types.Encoder) error {
+	return nil
 }
 
 func newTestingKeyManager() types.KeyManager {
-	threshold.Init()
-	sk := &bls.SecretKey{}
-	sk.SetByCSPRNG()
-	return &testingKeyManager{
-		sk:     sk,
-		domain: types.PrimusTestnet,
-	}
-}
-
-// IsAttestationSlashable returns error if attestation data is slashable
-func (km *testingKeyManager) IsAttestationSlashable(data *spec.AttestationData) error {
-	return nil
-}
-
-func (km *testingKeyManager) SignRoot(data types.Root, sigType types.SignatureType, pk []byte) (types.Signature, error) {
-	root, _ := types.ComputeSigningRoot(data, types.ComputeSignatureDomain(km.domain, sigType))
-	return km.sk.SignByte(root).Serialize(), nil
-}
-
-func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
-	sig := spec.BLSSignature{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6}
-	att := &spec.Attestation{
-		Data:      data,
-		Signature: sig,
-	}
-	return att, sig[:], nil
-}
-
-func (km *testingKeyManager) AddShare(shareKey *bls.SecretKey) error {
-	return nil
+	ret := types.NewSSVKeyManager(types.PrimusTestnet)
+	ret.AddShare(testingSK1)
+	ret.AddShare(testingSK2)
+	ret.AddShare(testingSK3)
+	ret.AddShare(testingSK4)
+	return ret
 }

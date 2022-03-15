@@ -30,7 +30,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 	}
 	postCons.SetFinished()
 
-	switch dutyRunner.State.BeaconRoleType {
+	switch dutyRunner.BeaconRoleType {
 	case beacon.RoleTypeAttester:
 		att, err := postCons.ReconstructAttestationSig()
 		if err != nil {
@@ -40,7 +40,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 			return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
 		}
 	default:
-		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.State.BeaconRoleType.String())
+		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 	}
 	return nil
 }

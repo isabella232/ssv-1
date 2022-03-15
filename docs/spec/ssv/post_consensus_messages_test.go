@@ -24,10 +24,7 @@ func TestValidator_signPostConsensusMsg(t *testing.T) {
 	sk1 := &bls.SecretKey{}
 	sk1.SetByCSPRNG()
 
-	km := &testingKeyManager{
-		sk:     sk1,
-		domain: types.PrimusTestnet,
-	}
+	km := newTestingKeyManager()
 
 	t.Run("valid sig", func(t *testing.T) {
 		v := newTestingValidator()

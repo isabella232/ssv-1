@@ -7,7 +7,7 @@ import (
 )
 
 func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.SignedMessage) error {
-	decided, decidedValueByts, err := dutyRunner.State.QBFTController.ProcessMsg(msg)
+	decided, decidedValueByts, err := dutyRunner.QBFTController.ProcessMsg(msg)
 	if err != nil {
 		return errors.Wrap(err, "failed to process consensus msg")
 	}
@@ -45,7 +45,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 
 	msgToBroadcast := &types.SSVMessage{
 		MsgType: types.SSVPostConsensusMsgType,
-		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.PubKey, dutyRunner.State.BeaconRoleType),
+		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.PubKey, dutyRunner.BeaconRoleType),
 		Data:    data,
 	}
 

@@ -2,8 +2,11 @@ package ssv
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/json"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -14,8 +17,13 @@ const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
 // DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
 // Prev duty must finish before the next one can start.
 type DutyRunner struct {
-	State   *DutyRunnerState
-	storage Storage
+	BeaconRoleType beacon.RoleType
+	ValidatorPK    []byte
+	Share          *types.Share
+	// DutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
+	DutyExecutionState *DutyExecutionState
+	QBFTController     *qbft.Controller
+	storage            Storage
 }
 
 // CanStartNewDuty returns nil if:
@@ -25,23 +33,23 @@ type DutyRunner struct {
 // else returns an error
 // Will return error if not same role type
 func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
-	if dr.State.DutyExecutionState == nil {
+	if dr.DutyExecutionState == nil {
 		return nil
 	}
 
-	if dr.State.BeaconRoleType != duty.Type {
+	if dr.BeaconRoleType != duty.Type {
 		return errors.New("duty runner role != duty.MsgType")
 	}
-	if !bytes.Equal(dr.State.Share.PubKey, duty.PubKey[:]) {
+	if !bytes.Equal(dr.ValidatorPK, duty.PubKey[:]) {
 		return errors.New("duty runner validator pk != duty.PubKey")
 	}
 
-	if decided, _ := dr.State.DutyExecutionState.RunningInstance.IsDecided(); !decided {
+	if decided, _ := dr.DutyExecutionState.RunningInstance.IsDecided(); !decided {
 		return errors.New("consensus on duty is running")
 	}
 
-	if !dr.State.DutyExecutionState.HasPostConsensusSigQuorum() &&
-		dr.State.DutyExecutionState.DecidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
+	if !dr.DutyExecutionState.HasPostConsensusSigQuorum() &&
+		dr.DutyExecutionState.DecidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
 		return errors.New("post consensus sig collection is running")
 	}
 	return nil
@@ -52,22 +60,22 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 	if value == nil {
 		return errors.New("new instance value nil")
 	}
-	if err := dr.State.QBFTController.StartNewInstance(value); err != nil {
+	if err := dr.QBFTController.StartNewInstance(value); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}
-	newInstance := dr.State.QBFTController.InstanceForHeight(dr.State.QBFTController.Height)
+	newInstance := dr.QBFTController.InstanceForHeight(dr.QBFTController.Height)
 
-	dr.State.DutyExecutionState = &DutyExecutionState{
+	dr.DutyExecutionState = &DutyExecutionState{
 		RunningInstance: newInstance,
-		Quorum:          dr.State.Share.Quorum,
+		Quorum:          dr.Share.Quorum,
 	}
-	return dr.State.QBFTController.StartNewInstance(value)
+	return dr.QBFTController.StartNewInstance(value)
 }
 
 // PostConsensusStateForHeight returns a DutyExecutionState instance for a specific Height
 func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *DutyExecutionState {
-	if dr.State.DutyExecutionState != nil && dr.State.DutyExecutionState.RunningInstance.GetHeight() == height {
-		return dr.State.DutyExecutionState
+	if dr.DutyExecutionState != nil && dr.DutyExecutionState.RunningInstance.GetHeight() == height {
+		return dr.DutyExecutionState
 	}
 	return nil
 }
@@ -75,28 +83,48 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height uint64) *DutyExecutionS
 // DecideRunningInstance sets the Decided duty and partially signs the Decided data, returns a PostConsensusMessage to be broadcasted or error
 func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
-		Height:  dr.State.DutyExecutionState.RunningInstance.GetHeight(),
-		Signers: []types.OperatorID{dr.State.Share.OperatorID},
+		Height:  dr.DutyExecutionState.RunningInstance.GetHeight(),
+		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
-	switch dr.State.BeaconRoleType {
+	switch dr.BeaconRoleType {
 	case beacon.RoleTypeAttester:
 		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, decidedValue.Duty.PubKey[:])
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign attestation")
 		}
 
-		dr.State.DutyExecutionState.DecidedValue = decidedValue
-		dr.State.DutyExecutionState.SignedAttestation = signedAttestation
-		dr.State.DutyExecutionState.PostConsensusSigRoot = ensureRoot(r)
-		dr.State.DutyExecutionState.CollectedPartialSigs = map[types.OperatorID][]byte{}
+		dr.DutyExecutionState.DecidedValue = decidedValue
+		dr.DutyExecutionState.SignedAttestation = signedAttestation
+		dr.DutyExecutionState.PostConsensusSigRoot = ensureRoot(r)
+		dr.DutyExecutionState.CollectedPartialSigs = map[types.OperatorID][]byte{}
 
-		ret.DutySigningRoot = dr.State.DutyExecutionState.PostConsensusSigRoot
-		ret.DutySignature = dr.State.DutyExecutionState.SignedAttestation.Signature[:]
+		ret.DutySigningRoot = dr.DutyExecutionState.PostConsensusSigRoot
+		ret.DutySignature = dr.DutyExecutionState.SignedAttestation.Signature[:]
 
 		return ret, nil
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
 	}
+}
+
+// GetRoot returns the root used for signing and verification
+func (dr *DutyRunner) GetRoot() ([]byte, error) {
+	marshaledRoot, err := dr.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode DutyRunnerState")
+	}
+	ret := sha256.Sum256(marshaledRoot)
+	return ret[:], nil
+}
+
+// Encode returns the encoded struct in bytes or error
+func (dr *DutyRunner) Encode() ([]byte, error) {
+	return json.Marshal(dr)
+}
+
+// Decode returns error if decoding failed
+func (dr *DutyRunner) Decode(data []byte) error {
+	return json.Unmarshal(data, &dr)
 }
 
 // ensureRoot ensures that DutySigningRoot will have sufficient allocated memory
