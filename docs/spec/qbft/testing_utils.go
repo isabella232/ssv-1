@@ -35,22 +35,22 @@ var TestingSK = func() *bls.SecretKey {
 	ret.SetByCSPRNG()
 	return ret
 }()
-
+var testingShare = &types.Share{
+	OperatorID:    1,
+	PubKey:        TestingSK.GetPublicKey().Serialize(),
+	DomainType:    types.PrimusTestnet,
+	Quorum:        3,
+	PartialQuorum: 2,
+	Committee: []*types.Operator{
+		{
+			OperatorID: 1,
+			PubKey:     TestingSK.GetPublicKey().Serialize(),
+		},
+	},
+}
 var testingInstanceStruct = &Instance{
 	State: &State{
-		Share: &types.Share{
-			OperatorID:    1,
-			PubKey:        TestingSK.GetPublicKey().Serialize(),
-			DomainType:    types.PrimusTestnet,
-			Quorum:        3,
-			PartialQuorum: 2,
-			Committee: []*types.Operator{
-				{
-					OperatorID: 1,
-					PubKey:     TestingSK.GetPublicKey().Serialize(),
-				},
-			},
-		},
+		Share:                           testingShare,
 		ID:                              []byte{1, 2, 3, 4},
 		Round:                           1,
 		Height:                          1,
@@ -91,7 +91,8 @@ var testingInstanceStruct = &Instance{
 }
 var testingControllerStruct = &Controller{
 	Identifier: []byte{1, 2, 3, 4},
-	Height:     1,
+	Height:     Height(1),
+	Share:      testingShare,
 	StoredInstances: [HistoricalInstanceCapacity]*Instance{
 		testingInstanceStruct,
 	},

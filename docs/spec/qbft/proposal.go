@@ -99,7 +99,7 @@ func isProposalJustification(
 	config IConfig,
 	roundChangeMsgs []*SignedMessage,
 	prepareMsgs []*SignedMessage,
-	height uint64,
+	height Height,
 	round Round,
 	value []byte,
 	valCheck ProposedValueCheck,

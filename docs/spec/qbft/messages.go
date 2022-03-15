@@ -72,7 +72,7 @@ type RoundChangeData interface {
 
 type Message struct {
 	MsgType    MessageType
-	Height     uint64 // QBFT instance Height
+	Height     Height // QBFT instance Height
 	Round      Round  // QBFT round for which the msg is for
 	Identifier []byte // instance Identifier this msg belongs to
 	Data       []byte

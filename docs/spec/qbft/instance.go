@@ -45,7 +45,7 @@ func NewInstance(
 }
 
 // Start is an interface implementation
-func (i *Instance) Start(value []byte, height uint64) {
+func (i *Instance) Start(value []byte, height Height) {
 	i.startOnce.Do(func() {
 		i.StartValue = value
 		i.State.Round = FirstRound
@@ -99,7 +99,7 @@ func (i *Instance) IsDecided() (bool, []byte) {
 }
 
 // GetHeight interface implementation
-func (i *Instance) GetHeight() uint64 {
+func (i *Instance) GetHeight() Height {
 	return i.State.Height
 }
 

@@ -3,6 +3,7 @@ package qbft
 import "github.com/bloxapp/ssv/docs/spec/types"
 
 type Round uint64
+type Height int64
 
 const (
 	NoRound     = 0 // NoRound represents a nil/ zero round
