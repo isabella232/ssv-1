@@ -59,7 +59,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		Identifier:      identifier,
-		Height:          FirstHeight,
+		Height:          -1, // as we bump the height when starting the first instance
 		Domain:          domain,
 		Share:           share,
 		StoredInstances: InstanceContainer{},
@@ -143,7 +143,7 @@ func (c *Controller) addAndStoreNewInstance() *Instance {
 }
 
 func (c *Controller) canStartInstance(value []byte) error {
-	if c.Height != FirstHeight {
+	if c.Height > FirstHeight {
 		// check prev instance if prev instance is not the first instance
 		inst := c.StoredInstances.FindInstance(c.Height)
 		if inst == nil {
