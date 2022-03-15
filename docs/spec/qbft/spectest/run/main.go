@@ -31,7 +31,7 @@ func main() {
 		byts, _ := test.Pre.Encode()
 
 		// a little trick we do to instantiate all the internal instance params
-		pre := qbft.NewInstance(spectest.TestingConfig)
+		pre := qbft.NewInstance(spectest.TestingConfig, test.Pre.State.Share, test.Pre.State.ID)
 		pre.Decode(byts)
 		test.Pre = pre
 		runTest(test)

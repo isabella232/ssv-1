@@ -66,7 +66,7 @@ var testingSK4 = func() *bls.SecretKey {
 	return ret
 }()
 var baseInstance = func() *qbft.Instance {
-	ret := qbft.NewInstance(TestingConfig)
+	ret := qbft.NewInstance(TestingConfig, nil, nil)
 	ret.State = &qbft.State{
 		Share: &types.Share{
 			OperatorID:    1,
