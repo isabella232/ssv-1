@@ -2,6 +2,7 @@ package qbft
 
 import (
 	"encoding/json"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/utils"
 	"github.com/pkg/errors"
 	"sync"
@@ -27,11 +28,19 @@ type Instance struct {
 	StartValue   []byte
 }
 
-func NewInstance(config IConfig) *Instance {
+func NewInstance(
+	config IConfig,
+	share *types.Share,
+	identifier []byte,
+) *Instance {
 	ret := &Instance{}
 	ret.config = config
 	ret.processMsgF = utils.NewThreadSafeF()
 	ret.startOnce = sync.Once{}
+	ret.State = &State{
+		Share: share,
+		ID:    identifier,
+	}
 	return ret
 }
 

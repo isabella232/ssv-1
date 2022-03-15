@@ -41,7 +41,7 @@ type Controller struct {
 	// StoredInstances stores the last HistoricalInstanceCapacity in an array for message processing purposes.
 	StoredInstances InstanceContainer
 	Domain          types.DomainType
-	SigningPK       []byte
+	Share           *types.Share
 	signer          types.SSVSigner
 	valueCheck      ProposedValueCheck
 	storage         Storage
@@ -49,12 +49,19 @@ type Controller struct {
 }
 
 func NewController(
+	identifier []byte,
+	share *types.Share,
+	domain types.DomainType,
 	signer types.SSVSigner,
 	valueCheck ProposedValueCheck,
 	storage Storage,
 	network Network,
 ) *Controller {
 	return &Controller{
+		Identifier:      identifier,
+		Height:          FirstHeight,
+		Domain:          domain,
+		Share:           share,
 		StoredInstances: InstanceContainer{},
 		signer:          signer,
 		valueCheck:      valueCheck,
@@ -130,7 +137,7 @@ func (c *Controller) GetIdentifier() []byte {
 
 // addAndStoreNewInstance returns creates a new QBFT instance, stores it in an array and returns it
 func (c *Controller) addAndStoreNewInstance() *Instance {
-	i := NewInstance(c.generateConfig())
+	i := NewInstance(c.generateConfig(), c.Share, c.Identifier)
 	c.StoredInstances.addNewInstance(i)
 	return i
 }
@@ -180,7 +187,7 @@ func (c *Controller) Decode(data []byte) error {
 func (c *Controller) generateConfig() IConfig {
 	return &Config{
 		Signer:     c.signer,
-		SigningPK:  c.SigningPK,
+		SigningPK:  c.Share.PubKey,
 		Domain:     c.Domain,
 		ValueCheck: c.valueCheck,
 		Storage:    c.storage,
