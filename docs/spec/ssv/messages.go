@@ -4,13 +4,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
 
 type PostConsensusMessage struct {
-	Height          uint64
+	Height          qbft.Height
 	DutySignature   []byte // The beacon chain partial signature for a duty
 	DutySigningRoot []byte // the root signed in DutySignature
 	Signers         []types.OperatorID

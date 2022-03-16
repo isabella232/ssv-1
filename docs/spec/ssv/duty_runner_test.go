@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -200,7 +201,7 @@ func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
 	t.Run("returns", func(t *testing.T) {
 		dr := newTestingDutyRunner()
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
-		require.NotNil(t, dr.PostConsensusStateForHeight(1))
+		require.NotNil(t, dr.PostConsensusStateForHeight(qbft.FirstHeight))
 	})
 }
 
@@ -219,6 +220,8 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 			},
 			AttestationData: nil,
 		}
+
+		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
 		_, err := dr.DecideRunningInstance(decidedValue, newTestingKeyManager())
 		require.NoError(t, err)
 		require.NotNil(t, dr.DutyExecutionState.DecidedValue)

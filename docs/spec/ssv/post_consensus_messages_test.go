@@ -20,10 +20,6 @@ import (
 //}
 
 func TestValidator_signPostConsensusMsg(t *testing.T) {
-	threshold.Init()
-	sk1 := &bls.SecretKey{}
-	sk1.SetByCSPRNG()
-
 	km := newTestingKeyManager()
 
 	t.Run("valid sig", func(t *testing.T) {
@@ -40,7 +36,7 @@ func TestValidator_signPostConsensusMsg(t *testing.T) {
 		require.NotNil(t, sig.GetSignature())
 		require.NotNil(t, sig.GetSigners())
 
-		require.NoError(t, sig.GetSignature().Verify(msg, types.PrimusTestnet, types.PostConsensusSigType, sk1.GetPublicKey().Serialize()))
+		require.NoError(t, sig.GetSignature().Verify(msg, types.PrimusTestnet, types.PostConsensusSigType, testingSK1.GetPublicKey().Serialize()))
 	})
 }
 
