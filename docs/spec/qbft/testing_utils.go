@@ -8,8 +8,8 @@ import (
 
 var testingMessage = &Message{
 	MsgType:    ProposalMsgType,
-	Height:     1,
-	Round:      1,
+	Height:     FirstHeight,
+	Round:      FirstRound,
 	Identifier: []byte{1, 2, 3, 4},
 	Data:       []byte{1, 2, 3, 4},
 }
