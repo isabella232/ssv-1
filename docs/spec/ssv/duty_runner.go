@@ -26,6 +26,22 @@ type DutyRunner struct {
 	storage            Storage
 }
 
+func NewDutyRunner(
+	beaconRoleType beacon.RoleType,
+	validatorPK []byte,
+	share *types.Share,
+	qbftController *qbft.Controller,
+	storage Storage,
+) *DutyRunner {
+	return &DutyRunner{
+		BeaconRoleType: beaconRoleType,
+		ValidatorPK:    validatorPK,
+		Share:          share,
+		QBFTController: qbftController,
+		storage:        storage,
+	}
+}
+
 // CanStartNewDuty returns nil if:
 // - no running instance exists or
 // - a QBFT instance Decided and all post consensus sigs collectd or
@@ -41,7 +57,7 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 		return errors.New("duty runner role != duty.MsgType")
 	}
 	if !bytes.Equal(dr.ValidatorPK, duty.PubKey[:]) {
-		return errors.New("duty runner validator pk != duty.PubKey")
+		return errors.New("duty runner validator pk != duty.ValidatorPubKey")
 	}
 
 	if decided, _ := dr.DutyExecutionState.RunningInstance.IsDecided(); !decided {

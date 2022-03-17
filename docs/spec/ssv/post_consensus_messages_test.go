@@ -20,7 +20,7 @@ import (
 //}
 
 func TestValidator_signPostConsensusMsg(t *testing.T) {
-	km := newTestingKeyManager()
+	km := NewTestingKeyManager()
 
 	t.Run("valid sig", func(t *testing.T) {
 		v := newTestingValidator()

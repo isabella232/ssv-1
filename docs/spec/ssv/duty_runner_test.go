@@ -222,7 +222,7 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 		}
 
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
-		_, err := dr.DecideRunningInstance(decidedValue, newTestingKeyManager())
+		_, err := dr.DecideRunningInstance(decidedValue, NewTestingKeyManager())
 		require.NoError(t, err)
 		require.NotNil(t, dr.DutyExecutionState.DecidedValue)
 		require.NotNil(t, dr.DutyExecutionState.SignedAttestation)

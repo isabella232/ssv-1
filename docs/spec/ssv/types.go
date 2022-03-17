@@ -27,6 +27,13 @@ type Network interface {
 type Storage interface {
 }
 
+type BeaconNode interface {
+	// GetAttestationData returns attestation data by the given slot and committee index
+	GetAttestationData(slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error)
+	// SubmitAttestation submit the attestation to the node
+	SubmitAttestation(attestation *phase0.Attestation) error
+}
+
 // consensusData holds all relevant duty and data Decided on by consensus
 type consensusData struct {
 	Duty            *beacon.Duty

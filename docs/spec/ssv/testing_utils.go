@@ -17,11 +17,11 @@ var testingSignedQBFTMsg = func() *qbft.SignedMessage {
 		Height:     qbft.FirstHeight,
 		Round:      qbft.FirstRound,
 		Identifier: []byte{1, 2, 3, 4},
-		Data:       proposalDataByts([]byte{1, 2, 3, 4}, nil, nil),
+		Data:       ProposalDataByts([]byte{1, 2, 3, 4}, nil, nil),
 	}
 	return qbft.SignMsg(testingSK1, 1, msg)
 }()
-var proposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
+var ProposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
 	d := &qbft.ProposalData{
 		Data:                     data,
 		RoundChangeJustification: rcj,
@@ -30,14 +30,14 @@ var proposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
 	ret, _ := d.Encode()
 	return ret
 }
-var prepareDataByts = func(data []byte) []byte {
+var PrepareDataByts = func(data []byte) []byte {
 	d := &qbft.PrepareData{
 		Data: data,
 	}
 	ret, _ := d.Encode()
 	return ret
 }
-var commitDataByts = func(data []byte) []byte {
+var CommitDataByts = func(data []byte) []byte {
 	d := &qbft.CommitData{
 		Data: data,
 	}
@@ -70,7 +70,7 @@ var testConsensusData = &consensusData{
 	Duty:            testDuty,
 	AttestationData: testAttData,
 }
-var testConsensusDataByts, _ = testConsensusData.Encode()
+var TestConsensusDataByts, _ = testConsensusData.Encode()
 var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
 var testingCommittee = []*types.Operator{
 	{
@@ -91,12 +91,13 @@ var testingCommittee = []*types.Operator{
 	},
 }
 var testingShare = &types.Share{
-	OperatorID:    1,
-	PubKey:        testingSK1.GetPublicKey().Serialize(),
-	DomainType:    types.PrimusTestnet,
-	Quorum:        3,
-	PartialQuorum: 2,
-	Committee:     testingCommittee,
+	OperatorID:      1,
+	ValidatorPubKey: testingValidatorPK[:],
+	SharePubKey:     testingSK1.GetPublicKey().Serialize(),
+	DomainType:      types.PrimusTestnet,
+	Quorum:          3,
+	PartialQuorum:   2,
+	Committee:       testingCommittee,
 }
 var testingSK1 = func() *bls.SecretKey {
 	threshold.Init()
@@ -123,7 +124,7 @@ var testingSK4 = func() *bls.SecretKey {
 	return ret
 }()
 var testingQBFTConfig = &qbft.Config{
-	Signer:    newTestingKeyManager(),
+	Signer:    NewTestingKeyManager(),
 	SigningPK: testingSK1.GetPublicKey().Serialize(),
 	Domain:    types.PrimusTestnet,
 	ValueCheck: func(data []byte) error {
@@ -134,7 +135,7 @@ var testingQBFTConfig = &qbft.Config{
 }
 
 func newTestingValidator() *Validator {
-	signer := newTestingKeyManager()
+	signer := NewTestingKeyManager()
 	dutyRunner := newTestingDutyRunner()
 	return &Validator{
 		valCheck: func(data []byte) error {
@@ -143,7 +144,7 @@ func newTestingValidator() *Validator {
 		signer:  signer,
 		share:   testingShare,
 		network: &testingNetwork{},
-		dutyRunners: DutyRunners{
+		DutyRunners: DutyRunners{
 			beacon.RoleTypeAttester: dutyRunner,
 		},
 	}
@@ -155,17 +156,17 @@ func newTestingDutyExecutionState() *DutyExecutionState {
 	}
 }
 
-func newTestingQBFTController(identifier []byte) *qbft.Controller {
+func NewTestingQBFTController(identifier []byte) *qbft.Controller {
 	ret := qbft.NewController(
 		[]byte{1, 2, 3, 4},
 		testingShare,
 		types.PrimusTestnet,
-		newTestingKeyManager(),
+		NewTestingKeyManager(),
 		func(data []byte) error {
 			return nil
 		},
-		newTestingStorage(),
-		&testingNetwork{},
+		NewTestingStorage(),
+		NewTestingNetwork(),
 	)
 	ret.Identifier = identifier
 	ret.Domain = types.PrimusTestnet
@@ -203,8 +204,8 @@ func newTestingDutyRunner() *DutyRunner {
 		BeaconRoleType: beacon.RoleTypeAttester,
 		ValidatorPK:    testingValidatorPK[:],
 		Share:          testingShare,
-		QBFTController: newTestingQBFTController([]byte{1, 2, 3, 4}),
-		storage:        newTestingStorage(),
+		QBFTController: NewTestingQBFTController([]byte{1, 2, 3, 4}),
+		storage:        NewTestingStorage(),
 	}
 }
 
@@ -212,7 +213,7 @@ type testingStorage struct {
 	storage map[string]*qbft.SignedMessage
 }
 
-func newTestingStorage() *testingStorage {
+func NewTestingStorage() *testingStorage {
 	return &testingStorage{
 		storage: make(map[string]*qbft.SignedMessage),
 	}
@@ -236,6 +237,10 @@ func (s *testingStorage) SaveHighestDecided(signedMsg *qbft.SignedMessage) error
 //}
 
 type testingNetwork struct {
+}
+
+func NewTestingNetwork() qbft.Network {
+	return &testingNetwork{}
 }
 
 func (net *testingNetwork) Broadcast(message types.Encoder) error {
@@ -282,7 +287,7 @@ func (km *testingKeyManager) AddShare(shareKey *bls.SecretKey) error {
 	return nil
 }
 
-func newTestingKeyManager() types.KeyManager {
+func NewTestingKeyManager() types.KeyManager {
 	ret := &testingKeyManager{
 		keys:   map[string]*bls.SecretKey{},
 		domain: types.PrimusTestnet,
@@ -292,4 +297,21 @@ func newTestingKeyManager() types.KeyManager {
 	ret.AddShare(testingSK3)
 	ret.AddShare(testingSK4)
 	return ret
+}
+
+type testingBeaconNode struct {
+}
+
+func NewTestingBeaconNode() *testingBeaconNode {
+	return &testingBeaconNode{}
+}
+
+// GetAttestationData returns attestation data by the given slot and committee index
+func (bn *testingBeaconNode) GetAttestationData(slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error) {
+	return testAttData, nil
+}
+
+// SubmitAttestation submit the attestation to the node
+func (bn *testingBeaconNode) SubmitAttestation(attestation *spec.Attestation) error {
+	return nil
 }

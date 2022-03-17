@@ -10,14 +10,14 @@ import (
 func TestValidator_ProcessConsensusMsg(t *testing.T) {
 	t.Run("non decided qbft msg", func(t *testing.T) {
 		v := newTestingValidator()
-		dr := v.dutyRunners[beacon.RoleTypeAttester]
+		dr := v.DutyRunners[beacon.RoleTypeAttester]
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
 		require.NoError(t, v.processConsensusMsg(dr, testingSignedQBFTMsg))
 	})
 
 	t.Run("failed msg processing (wrong identifier)", func(t *testing.T) {
 		v := newTestingValidator()
-		dr := v.dutyRunners[beacon.RoleTypeAttester]
+		dr := v.DutyRunners[beacon.RoleTypeAttester]
 		dr.QBFTController.Identifier = []byte{1, 2, 3, 3}
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
 		require.EqualError(t, v.processConsensusMsg(dr, testingSignedQBFTMsg), "failed to process consensus msg: message doesn't belong to Identifier 01020303")
@@ -34,49 +34,49 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       proposalDataByts(testConsensusDataByts, nil, nil),
+				Data:       ProposalDataByts(TestConsensusDataByts, nil, nil),
 			}),
 			qbft.SignMsg(testingSK1, 1, &qbft.Message{
 				MsgType:    qbft.PrepareMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       prepareDataByts(testConsensusDataByts),
+				Data:       PrepareDataByts(TestConsensusDataByts),
 			}),
 			qbft.SignMsg(testingSK2, 2, &qbft.Message{
 				MsgType:    qbft.PrepareMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       prepareDataByts(testConsensusDataByts),
+				Data:       PrepareDataByts(TestConsensusDataByts),
 			}),
 			qbft.SignMsg(testingSK3, 3, &qbft.Message{
 				MsgType:    qbft.PrepareMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       prepareDataByts(testConsensusDataByts),
+				Data:       PrepareDataByts(TestConsensusDataByts),
 			}),
 			qbft.SignMsg(testingSK1, 1, &qbft.Message{
 				MsgType:    qbft.CommitMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       commitDataByts(testConsensusDataByts),
+				Data:       CommitDataByts(TestConsensusDataByts),
 			}),
 			qbft.SignMsg(testingSK2, 2, &qbft.Message{
 				MsgType:    qbft.CommitMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       commitDataByts(testConsensusDataByts),
+				Data:       CommitDataByts(TestConsensusDataByts),
 			}),
 			qbft.SignMsg(testingSK3, 3, &qbft.Message{
 				MsgType:    qbft.CommitMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       commitDataByts(testConsensusDataByts),
+				Data:       CommitDataByts(TestConsensusDataByts),
 			}),
 		}
 
@@ -86,6 +86,6 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 
 		decidedVal, err := dr.DutyExecutionState.DecidedValue.Encode()
 		require.NoError(t, err)
-		require.EqualValues(t, decidedVal, testConsensusDataByts)
+		require.EqualValues(t, decidedVal, TestConsensusDataByts)
 	})
 }

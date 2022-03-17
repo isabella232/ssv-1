@@ -99,7 +99,7 @@ func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) erro
 }
 
 func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPostConsensusMessage, error) {
-	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.PubKey)
+	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compute PostConsensusMessage root")
 	}

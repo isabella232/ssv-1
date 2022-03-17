@@ -7,7 +7,7 @@ import (
 
 // StartDuty starts a duty for the validator
 func (v *Validator) StartDuty(duty *beacon.Duty) error {
-	dutyRunner := v.dutyRunners[duty.Type]
+	dutyRunner := v.DutyRunners[duty.Type]
 	if dutyRunner == nil {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}

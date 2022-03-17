@@ -12,7 +12,7 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 		return errors.Wrap(err, "message invalid")
 	}
 
-	dutyRunner := v.dutyRunners.DutyRunnerForMsgID(msg.GetID())
+	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
 		return errors.Errorf("could not get duty runner for msg ID %s", msg.GetID().String())
 	}
@@ -38,11 +38,11 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 }
 
 func (v *Validator) validateMessage(msg types.SSVMessage) error {
-	if !v.share.PubKey.MessageIDBelongs(msg.GetID()) {
+	if !v.share.ValidatorPubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}
 
-	dutyRunner := v.dutyRunners.DutyRunnerForMsgID(msg.GetID())
+	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
 		return errors.Errorf("could not get duty runner for msg ID %s", msg.GetID().String())
 	}

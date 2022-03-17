@@ -69,86 +69,9 @@ func (pcs *DutyExecutionState) IsFinished() bool {
 // Encode returns the encoded struct in bytes or error
 func (pcs *DutyExecutionState) Encode() ([]byte, error) {
 	return json.Marshal(pcs)
-
-	//m := make(map[string]interface{})
-	//
-	//if pcs.RunningInstance != nil {
-	//	byts, err := pcs.RunningInstance.Encode()
-	//	if err != nil {
-	//		return nil, errors.Wrap(err, "could not encode RunningInstance")
-	//	}
-	//	m["running_instance"] = byts
-	//}
-	//
-	//if pcs.DecidedValue != nil {
-	//	byts, err := pcs.DecidedValue.Encode()
-	//	if err != nil {
-	//		return nil, errors.Wrap(err, "could not encode DecidedValue")
-	//	}
-	//	m["decided_value"] = byts
-	//}
-	//
-	//if pcs.SignedAttestation != nil {
-	//	byts, err := ssz.Marshal(pcs.SignedAttestation)
-	//	if err != nil {
-	//		return nil, errors.Wrap(err, "could not encode SignedAttestation")
-	//	}
-	//	m["signed_att"] = byts
-	//}
-	//
-	//if pcs.SignedProposal != nil {
-	//	byts, err := ssz.Marshal(pcs.SignedProposal)
-	//	if err != nil {
-	//		return nil, errors.Wrap(err, "could not encode SignedProposal")
-	//	}
-	//	m["signed_proposal"] = byts
-	//}
-	//
-	//m["collected_partial_sigs"] = pcs.CollectedPartialSigs
-	//m["post_consensus_root"] = pcs.PostConsensusSigRoot
-	//m["quorum"] = pcs.Quorum
-	//m["finished"] = pcs.Finished
-	//return json.Marshal(m)
 }
 
 // Decode returns error if decoding failed
 func (pcs *DutyExecutionState) Decode(data []byte) error {
 	return json.Unmarshal(data, &pcs)
-	//m := make(map[string]interface{})
-	//if err := json.Unmarshal(data, &m); err != nil {
-	//	return errors.Wrap(err, "could not unmarshal DutyExecutionState map")
-	//}
-	//
-	//if m["running_instance"] != nil {
-	//	pcs.RunningInstance = &qbft.Instance{}
-	//	if err := pcs.RunningInstance.Decode(m["running_instance"].([]byte)); err != nil {
-	//		return errors.Wrap(err, "could not decode RunningInstance")
-	//	}
-	//}
-	//
-	//if m["decided_value"] != nil {
-	//	pcs.DecidedValue = &consensusData{}
-	//	if err := pcs.DecidedValue.Decode(m["decided_value"].([]byte)); err != nil {
-	//		return errors.Wrap(err, "could not decode DecidedValue")
-	//	}
-	//}
-	//
-	//if m["signed_att"] != nil {
-	//	pcs.SignedAttestation = &spec.Attestation{}
-	//	if err := ssz.Unmarshal(m["signed_att"].([]byte), &pcs.SignedAttestation); err != nil {
-	//		return errors.Wrap(err, "could not decode SignedAttestation")
-	//	}
-	//}
-	//
-	//if m["signed_proposal"] != nil {
-	//	pcs.SignedProposal = &spec.SignedBeaconBlock{}
-	//	if err := ssz.Unmarshal(m["signed_proposal"].([]byte), &pcs.SignedProposal); err != nil {
-	//		return errors.Wrap(err, "could not decode SignedProposal")
-	//	}
-	//}
-	//
-	////if m["collected_partial_sigs"] != nil {
-	////
-	////}
-	//return nil
 }
