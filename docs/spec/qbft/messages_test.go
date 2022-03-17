@@ -6,10 +6,10 @@ import (
 )
 
 func TestSignedMessage_DeepCopy(t *testing.T) {
-	expected, err := TestingSignedMsg.GetRoot()
+	expected, err := testingSignedMsg.GetRoot()
 	require.NoError(t, err)
 
-	c := TestingSignedMsg.DeepCopy()
+	c := testingSignedMsg.DeepCopy()
 	r, err := c.GetRoot()
 	require.NoError(t, err)
 	require.EqualValues(t, expected, r)

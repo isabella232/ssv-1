@@ -7,3 +7,8 @@ Maybe during the peer handshake or something.
 
 - Maybe the data the QBFT comes to a consensus on should have some reference to latest BN finalized block
 so to prevent situations where the operator set changes but the nodes are not aware of it.
+
+
+Alon comments 16.3.22
+- Our QBFT structure is differet (we use instance and controller, spec uses a single state which has all blocks)
+- we do not use blocks

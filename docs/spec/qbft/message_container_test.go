@@ -11,11 +11,11 @@ func TestMsgContainer_AddIfDoesntExist(t *testing.T) {
 			Msgs: map[Round][]*SignedMessage{},
 		}
 
-		added, err := c.AddIfDoesntExist(TestingSignedMsg)
+		added, err := c.AddIfDoesntExist(testingSignedMsg)
 		require.NoError(t, err)
 		require.True(t, added)
 
-		added, err = c.AddIfDoesntExist(TestingSignedMsg)
+		added, err = c.AddIfDoesntExist(testingSignedMsg)
 		require.NoError(t, err)
 		require.False(t, added)
 	})
@@ -25,11 +25,11 @@ func TestMsgContainer_AddIfDoesntExist(t *testing.T) {
 			Msgs: map[Round][]*SignedMessage{},
 		}
 
-		added, err := c.AddIfDoesntExist(TestingSignedMsg)
+		added, err := c.AddIfDoesntExist(testingSignedMsg)
 		require.NoError(t, err)
 		require.True(t, added)
 
-		added, err = c.AddIfDoesntExist(signMsg(TestingSK, 2, testingMessage))
+		added, err = c.AddIfDoesntExist(SignMsg(TestingSK, 2, TestingMessage))
 		require.NoError(t, err)
 		require.True(t, added)
 	})
@@ -39,7 +39,7 @@ func TestMsgContainer_Marshaling(t *testing.T) {
 	c := &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{},
 	}
-	c.Msgs[1] = []*SignedMessage{TestingSignedMsg}
+	c.Msgs[1] = []*SignedMessage{testingSignedMsg}
 
 	byts, err := c.Encode()
 	require.NoError(t, err)
