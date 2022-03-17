@@ -30,6 +30,20 @@ var proposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
 	ret, _ := d.Encode()
 	return ret
 }
+var prepareDataByts = func(data []byte) []byte {
+	d := &qbft.PrepareData{
+		Data: data,
+	}
+	ret, _ := d.Encode()
+	return ret
+}
+var commitDataByts = func(data []byte) []byte {
+	d := &qbft.CommitData{
+		Data: data,
+	}
+	ret, _ := d.Encode()
+	return ret
+}
 var testDuty = &beacon.Duty{
 	Type:                    beacon.RoleTypeAttester,
 	PubKey:                  spec.BLSPubKey{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8},
