@@ -7,7 +7,8 @@ import (
 // Share holds all info about the QBFT/ SSV Committee for msg signing and verification
 type Share struct {
 	OperatorID            OperatorID
-	PubKey                ValidatorPK
+	ValidatorPubKey       ValidatorPK
+	SharePubKey           []byte
 	Committee             []*Operator
 	Quorum, PartialQuorum uint64
 	DomainType            DomainType

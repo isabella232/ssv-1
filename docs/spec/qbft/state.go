@@ -10,8 +10,6 @@ import (
 type signing interface {
 	// GetSigner returns a Signer instance
 	GetSigner() types.SSVSigner
-	// GetSigningPubKey returns the public key used to sign all QBFT messages
-	GetSigningPubKey() []byte
 	// GetSignatureDomainType returns the Domain type used for signatures
 	GetSignatureDomainType() types.DomainType
 }

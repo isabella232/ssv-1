@@ -187,7 +187,7 @@ func (c *Controller) Decode(data []byte) error {
 func (c *Controller) generateConfig() IConfig {
 	return &Config{
 		Signer:     c.signer,
-		SigningPK:  c.Share.PubKey,
+		SigningPK:  c.Share.ValidatorPubKey,
 		Domain:     c.Domain,
 		ValueCheck: c.valueCheck,
 		Storage:    c.storage,
