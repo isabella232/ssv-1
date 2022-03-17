@@ -1,6 +1,7 @@
 package qbft
 
 import (
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/utils/threshold"
 	"github.com/herumi/bls-eth-go-binary/bls"
@@ -35,12 +36,14 @@ var TestingSK = func() *bls.SecretKey {
 	ret.SetByCSPRNG()
 	return ret
 }()
+var testingValidatorPK = spec.BLSPubKey{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}
 var testingShare = &types.Share{
-	OperatorID:    1,
-	PubKey:        TestingSK.GetPublicKey().Serialize(),
-	DomainType:    types.PrimusTestnet,
-	Quorum:        3,
-	PartialQuorum: 2,
+	OperatorID:      1,
+	ValidatorPubKey: testingValidatorPK[:],
+	SharePubKey:     TestingSK.GetPublicKey().Serialize(),
+	DomainType:      types.PrimusTestnet,
+	Quorum:          3,
+	PartialQuorum:   2,
 	Committee: []*types.Operator{
 		{
 			OperatorID: 1,

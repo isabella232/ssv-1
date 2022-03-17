@@ -9,8 +9,8 @@ import (
 func TestState_Decoding(t *testing.T) {
 	state := &State{
 		Share: &types.Share{
-			OperatorID: 1,
-			PubKey:     []byte{1, 2, 3, 4},
+			OperatorID:      1,
+			ValidatorPubKey: []byte{1, 2, 3, 4},
 			Committee: []*types.Operator{
 				{
 					OperatorID: 1,
@@ -44,7 +44,7 @@ func TestState_Decoding(t *testing.T) {
 	require.NoError(t, decodedState.Decode(byts))
 
 	require.EqualValues(t, 1, decodedState.Share.OperatorID)
-	require.EqualValues(t, []byte{1, 2, 3, 4}, decodedState.Share.PubKey)
+	require.EqualValues(t, []byte{1, 2, 3, 4}, decodedState.Share.ValidatorPubKey)
 	require.EqualValues(t, []byte{1, 2, 3, 4}, decodedState.Share.Committee[0].PubKey)
 	require.EqualValues(t, 1, decodedState.Share.Committee[0].OperatorID)
 	require.EqualValues(t, types.PrimusTestnet, decodedState.Share.DomainType)

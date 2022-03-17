@@ -128,7 +128,7 @@ func createCommit(state *State, config IConfig, value []byte) (*SignedMessage, e
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, config.GetSigningPubKey())
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, state.Share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed signing commit msg")
 	}
