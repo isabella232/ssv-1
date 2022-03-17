@@ -11,6 +11,25 @@ import (
 	"github.com/pkg/errors"
 )
 
+var testingSignedQBFTMsg = func() *qbft.SignedMessage {
+	msg := &qbft.Message{
+		MsgType:    qbft.ProposalMsgType,
+		Height:     qbft.FirstHeight,
+		Round:      qbft.FirstRound,
+		Identifier: []byte{1, 2, 3, 4},
+		Data:       proposalDataByts([]byte{1, 2, 3, 4}, nil, nil),
+	}
+	return qbft.SignMsg(testingSK1, 1, msg)
+}()
+var proposalDataByts = func(data []byte, rcj, pj []*qbft.SignedMessage) []byte {
+	d := &qbft.ProposalData{
+		Data:                     data,
+		RoundChangeJustification: rcj,
+		PrepareJustification:     pj,
+	}
+	ret, _ := d.Encode()
+	return ret
+}
 var testDuty = &beacon.Duty{
 	Type:                    beacon.RoleTypeAttester,
 	PubKey:                  spec.BLSPubKey{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8},

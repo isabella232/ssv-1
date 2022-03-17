@@ -2,7 +2,6 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -11,8 +10,9 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 	t.Run("non decided qbft msg", func(t *testing.T) {
 		v := newTestingValidator()
 		dr := v.dutyRunners[beacon.RoleTypeAttester]
+		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
 
-		require.NoError(t, v.processConsensusMsg(dr, qbft.TestingSignedMsg))
+		require.NoError(t, v.processConsensusMsg(dr, testingSignedQBFTMsg))
 	})
 
 	t.Run("failed msg processing", func(t *testing.T) {
