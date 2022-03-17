@@ -10,6 +10,12 @@ type MsgContainer struct {
 	Msgs map[Round][]*SignedMessage
 }
 
+func NewMsgContainer() *MsgContainer {
+	return &MsgContainer{
+		Msgs: map[Round][]*SignedMessage{},
+	}
+}
+
 // AllMessaged returns all messages
 func (c *MsgContainer) AllMessaged() []*SignedMessage {
 	ret := make([]*SignedMessage, 0)

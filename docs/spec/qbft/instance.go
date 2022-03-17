@@ -33,15 +33,18 @@ func NewInstance(
 	share *types.Share,
 	identifier []byte,
 ) *Instance {
-	ret := &Instance{}
-	ret.config = config
-	ret.processMsgF = utils.NewThreadSafeF()
-	ret.startOnce = sync.Once{}
-	ret.State = &State{
-		Share: share,
-		ID:    identifier,
+	return &Instance{
+		State: &State{
+			Share: share,
+			ID:    identifier,
+		},
+		config:               config,
+		ProposeContainer:     NewMsgContainer(),
+		PrepareContainer:     NewMsgContainer(),
+		CommitContainer:      NewMsgContainer(),
+		RoundChangeContainer: NewMsgContainer(),
+		processMsgF:          utils.NewThreadSafeF(),
 	}
-	return ret
 }
 
 // Start is an interface implementation
