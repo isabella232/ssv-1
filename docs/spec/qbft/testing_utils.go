@@ -6,25 +6,25 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-var testingMessage = &Message{
+var TestingMessage = &Message{
 	MsgType:    ProposalMsgType,
 	Height:     FirstHeight,
 	Round:      FirstRound,
 	Identifier: []byte{1, 2, 3, 4},
 	Data:       []byte{1, 2, 3, 4},
 }
-var TestingSignedMsg = func() *SignedMessage {
-	return signMsg(TestingSK, 1, testingMessage)
+var testingSignedMsg = func() *SignedMessage {
+	return SignMsg(TestingSK, 1, TestingMessage)
 }()
-var signMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *Message) *SignedMessage {
+var SignMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *Message) *SignedMessage {
 	domain := types.PrimusTestnet
 	sigType := types.QBFTSigType
 
-	r, _ := types.ComputeSigningRoot(testingMessage, types.ComputeSignatureDomain(domain, sigType))
+	r, _ := types.ComputeSigningRoot(TestingMessage, types.ComputeSignatureDomain(domain, sigType))
 	sig := sk.SignByte(r)
 
 	return &SignedMessage{
-		Message:   testingMessage,
+		Message:   TestingMessage,
 		Signers:   []types.OperatorID{id},
 		Signature: sig.Serialize(),
 	}
@@ -56,33 +56,33 @@ var testingInstanceStruct = &Instance{
 		Height:                          1,
 		LastPreparedRound:               1,
 		LastPreparedValue:               []byte{1, 2, 3, 4},
-		ProposalAcceptedForCurrentRound: TestingSignedMsg,
+		ProposalAcceptedForCurrentRound: testingSignedMsg,
 	},
 	ProposeContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
-				TestingSignedMsg,
+				testingSignedMsg,
 			},
 		},
 	},
 	PrepareContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
-				TestingSignedMsg,
+				testingSignedMsg,
 			},
 		},
 	},
 	CommitContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
-				TestingSignedMsg,
+				testingSignedMsg,
 			},
 		},
 	},
 	RoundChangeContainer: &MsgContainer{
 		Msgs: map[Round][]*SignedMessage{
 			1: {
-				TestingSignedMsg,
+				testingSignedMsg,
 			},
 		},
 	},
