@@ -20,7 +20,7 @@ var SignMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *Message) *Signed
 	domain := types.PrimusTestnet
 	sigType := types.QBFTSigType
 
-	r, _ := types.ComputeSigningRoot(TestingMessage, types.ComputeSignatureDomain(domain, sigType))
+	r, _ := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(domain, sigType))
 	sig := sk.SignByte(r)
 
 	return &SignedMessage{
