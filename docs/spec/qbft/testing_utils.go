@@ -24,7 +24,7 @@ var SignMsg = func(sk *bls.SecretKey, id types.OperatorID, msg *Message) *Signed
 	sig := sk.SignByte(r)
 
 	return &SignedMessage{
-		Message:   TestingMessage,
+		Message:   msg,
 		Signers:   []types.OperatorID{id},
 		Signature: sig.Serialize(),
 	}
