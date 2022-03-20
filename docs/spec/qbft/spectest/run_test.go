@@ -1,23 +1,30 @@
-package main
+package spectest
 
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
-	"github.com/bloxapp/ssv/docs/spec/qbft/spectest"
+	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"testing"
 )
 
-func main() {
-	basedir, _ := os.Getwd()
-	path := filepath.Join(basedir, "docs", "spec", "qbft", "spectest", "run")
-	fileName := "tests.json"
-	fmt.Printf("reading %s/%s\n", path, fileName)
+func TestAll(t *testing.T) {
+	for _, test := range AllTests {
+		t.Run(test.Name, func(t *testing.T) {
+			runTest(t, test)
+		})
+	}
+}
 
-	tests := map[string]*spectest.SpecTest{}
+func TestJson(t *testing.T) {
+	basedir, _ := os.Getwd()
+	path := filepath.Join(basedir, "generate")
+	fileName := "tests.json"
+	tests := map[string]*SpecTest{}
 	byteValue, err := ioutil.ReadFile(path + "/" + fileName)
 	if err != nil {
 		panic(err.Error())
@@ -31,27 +38,21 @@ func main() {
 		byts, _ := test.Pre.Encode()
 
 		// a little trick we do to instantiate all the internal instance params
-		pre := qbft.NewInstance(spectest.TestingConfig, test.Pre.State.Share, test.Pre.State.ID)
+		pre := qbft.NewInstance(testingutils.TestingConfig, test.Pre.State.Share, test.Pre.State.ID)
 		pre.Decode(byts)
 		test.Pre = pre
-		runTest(test)
+		runTest(t, test)
 	}
 }
 
-func runTest(test *spectest.SpecTest) {
+func runTest(t *testing.T, test *SpecTest) {
 	for _, msg := range test.Messages {
 		_, _, _, err := test.Pre.ProcessMsg(msg)
-		if err != nil {
-			panic(err.Error())
-		}
+		require.NoError(t, err)
 	}
 
 	postRoot, err := test.Pre.State.GetRoot()
-	if err != nil {
-		panic(err.Error())
-	}
+	require.NoError(t, err)
 
-	if test.PostRoot != hex.EncodeToString(postRoot) {
-		panic("post state root is wrong")
-	}
+	require.EqualValues(t, test.PostRoot, hex.EncodeToString(postRoot), "post root not valid")
 }
