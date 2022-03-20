@@ -63,12 +63,14 @@ func happyFullFlow() *SpecTest {
 		}), nil),
 
 		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK2, 2, qbft.FirstHeight)),
+		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK3, 3, qbft.FirstHeight)),
 	}
 
 	return &SpecTest{
 		Name:                    "happy full flow",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "",
+		PostDutyRunnerStateRoot: "9dc5eabeeeb2a479e3e5ba6db28b6ffdc2dbcdc3a3aa0a9d523962373cb3ee14",
 	}
 }

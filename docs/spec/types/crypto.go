@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
@@ -97,4 +98,46 @@ func ComputeSigningRoot(data Root, domain SignatureDomain) ([]byte, error) {
 
 func ComputeSignatureDomain(domain DomainType, sigType SignatureType) SignatureDomain {
 	return SignatureDomain(append(domain, sigType...))
+}
+
+// ReconstructSignatures receives a map of user indexes and serialized bls.Sign.
+// It then reconstructs the original threshold signature using lagrange interpolation
+func ReconstructSignatures(signatures map[OperatorID][]byte) (*bls.Sign, error) {
+	reconstructedSig := bls.Sign{}
+
+	idVec := make([]bls.ID, 0)
+	sigVec := make([]bls.Sign, 0)
+
+	for index, signature := range signatures {
+		blsID := bls.ID{}
+		err := blsID.SetDecString(fmt.Sprintf("%d", index))
+		if err != nil {
+			return nil, err
+		}
+
+		idVec = append(idVec, blsID)
+		blsSig := bls.Sign{}
+
+		err = blsSig.Deserialize(signature)
+		if err != nil {
+			return nil, err
+		}
+
+		sigVec = append(sigVec, blsSig)
+	}
+	err := reconstructedSig.Recover(sigVec, idVec)
+	return &reconstructedSig, err
+}
+
+func VerifyReconstructedSignature(sig *bls.Sign, validatorPubKey, root []byte) error {
+	pk := &bls.PublicKey{}
+	if err := pk.Deserialize(validatorPubKey); err != nil {
+		return errors.Wrap(err, "could not deserialize validator pk")
+	}
+
+	// verify reconstructed sig
+	if res := sig.VerifyByte(pk, root); !res {
+		return errors.New("could not reconstruct a valid signature")
+	}
+	return nil
 }

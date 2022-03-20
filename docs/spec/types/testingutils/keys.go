@@ -8,24 +8,24 @@ import (
 var TestingSK1 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
-	ret.DeserializeHexStr("453d8351a0880da481659260660be34fa8ac7f89fdd75af278c027474fcee285")
+	ret.DeserializeHexStr("19153f7f7f004a839750f488fe85984c61e8d8342927e5fa027b72b8a5b23bda")
 	return ret
 }()
 var TestingSK2 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
-	ret.DeserializeHexStr("6bfbd05d17d29c28d62e5c27f9646bc87b012ffd9d60575264def4f0291140dd")
+	ret.DeserializeHexStr("272c5e6350563fee5d8d7f0fb316ec94da8b352c1319fbe1edfc417dffe37ed8")
 	return ret
 }()
 var TestingSK3 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
-	ret.DeserializeHexStr("600a1293a76ab9dd141cd59c3705b268dbc2590c6bd5b66039ff27bac87e759f")
+	ret.DeserializeHexStr("099ab2c89c0f882622288cc88a622c5591573b9f736e6be702097da249b45bac")
 	return ret
 }()
 var TestingSK4 = func() *bls.SecretKey {
 	threshold.Init()
 	ret := &bls.SecretKey{}
-	ret.DeserializeHexStr("538f613374f85d8d880b30031cab9c4ef82d2c6100850c7d4b097abc5a898790")
+	ret.DeserializeHexStr("344de4028bc9a073185bf5bb8e092f93da0a8f914a2392083ea327248324d257")
 	return ret
 }()

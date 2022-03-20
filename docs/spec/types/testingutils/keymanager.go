@@ -33,8 +33,12 @@ func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *b
 		sig := k.SignByte(TestingAttestationRoot)
 		blsSig := spec.BLSSignature{}
 		copy(blsSig[:], sig.Serialize())
+
+		aggregationBitfield := bitfield.NewBitlist(duty.CommitteeLength)
+		aggregationBitfield.SetBitAt(duty.ValidatorCommitteeIndex, true)
+
 		return &spec.Attestation{
-			AggregationBits: bitfield.NewBitlist(128),
+			AggregationBits: aggregationBitfield,
 			Data:            data,
 			Signature:       blsSig,
 		}, TestingAttestationRoot, nil

@@ -38,8 +38,20 @@ func (pcs *DutyExecutionState) AddPartialSig(sigMsg *PostConsensusMessage) error
 }
 
 // ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig
-func (pcs *DutyExecutionState) ReconstructAttestationSig() (*spec.Attestation, error) {
-	panic("implement")
+func (pcs *DutyExecutionState) ReconstructAttestationSig(validatorPubKey []byte) (*spec.Attestation, error) {
+	// Reconstruct signatures
+	signature, err := types.ReconstructSignatures(pcs.CollectedPartialSigs)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to reconstruct signatures")
+	}
+	if err := types.VerifyReconstructedSignature(signature, validatorPubKey, pcs.PostConsensusSigRoot); err != nil {
+		return nil, errors.Wrap(err, "failed to verify reconstruct signature")
+	}
+
+	blsSig := spec.BLSSignature{}
+	copy(blsSig[:], signature.Serialize())
+	pcs.SignedAttestation.Signature = blsSig
+	return pcs.SignedAttestation, nil
 }
 
 func (pcs *DutyExecutionState) HasPostConsensusSigQuorum() bool {

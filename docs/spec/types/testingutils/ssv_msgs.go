@@ -21,7 +21,7 @@ var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusM
 		panic("msg type undefined")
 	}
 
-	msgID := types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey, beacon.RoleTypeAttester)
+	msgID := types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeAttester)
 
 	return &types.SSVMessage{
 		MsgType: msgType,

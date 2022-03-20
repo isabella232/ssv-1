@@ -32,7 +32,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 
 	switch dutyRunner.BeaconRoleType {
 	case beacon.RoleTypeAttester:
-		att, err := postCons.ReconstructAttestationSig()
+		att, err := postCons.ReconstructAttestationSig(v.share.ValidatorPubKey)
 		if err != nil {
 			return errors.Wrap(err, "could not reconstruct post consensus sig")
 		}
