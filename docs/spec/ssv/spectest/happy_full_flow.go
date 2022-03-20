@@ -9,7 +9,6 @@ import (
 
 func happyFullFlow() *SpecTest {
 	dr := testingutils.BaseRunner()
-	dr.StartNewInstance([]byte{1, 2, 3, 4})
 
 	msgs := []*types.SSVMessage{
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
