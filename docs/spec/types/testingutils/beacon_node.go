@@ -1,6 +1,11 @@
 package testingutils
 
-import spec "github.com/attestantio/go-eth2-client/spec/phase0"
+import (
+	"encoding/hex"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/types"
+)
 
 var TestingAttestationData = &spec.AttestationData{
 	Slot:            1,
@@ -15,6 +20,23 @@ var TestingAttestationData = &spec.AttestationData{
 		Root:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
 	},
 }
+var TestingAttestationRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f") //[]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2}
+
+var TestingDuty = &beacon.Duty{
+	Type:                    beacon.RoleTypeAttester,
+	PubKey:                  spec.BLSPubKey{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8},
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingConsensusData = &types.ConsensusData{
+	Duty:            TestingDuty,
+	AttestationData: TestingAttestationData,
+}
+var TestingConsensusDataByts, _ = TestingConsensusData.Encode()
 
 type testingBeaconNode struct {
 }
