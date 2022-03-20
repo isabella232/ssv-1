@@ -67,3 +67,20 @@ var BaseInstance = func() *qbft.Instance {
 	}
 	return ret
 }
+
+func NewTestingQBFTController(identifier []byte) *qbft.Controller {
+	ret := qbft.NewController(
+		[]byte{1, 2, 3, 4},
+		TestingShare,
+		types.PrimusTestnet,
+		NewTestingKeyManager(),
+		func(data []byte) error {
+			return nil
+		},
+		NewTestingStorage(),
+		NewTestingNetwork(),
+	)
+	ret.Identifier = identifier
+	ret.Domain = types.PrimusTestnet
+	return ret
+}

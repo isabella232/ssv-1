@@ -7,6 +7,7 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
+	"github.com/prysmaticlabs/go-bitfield"
 )
 
 type testingKeyManager struct {
@@ -28,11 +29,17 @@ func NewTestingKeyManager() types.KeyManager {
 
 // SignAttestation signs the given attestation
 func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
-	return &spec.Attestation{
-		AggregationBits: nil,
-		Data:            data,
-		Signature:       spec.BLSSignature{},
-	}, nil, nil
+	if k, found := km.keys[hex.EncodeToString(pk)]; found {
+		sig := k.SignByte(TestingAttestationRoot)
+		blsSig := spec.BLSSignature{}
+		copy(blsSig[:], sig.Serialize())
+		return &spec.Attestation{
+			AggregationBits: bitfield.NewBitlist(128),
+			Data:            data,
+			Signature:       blsSig,
+		}, TestingAttestationRoot, nil
+	}
+	return nil, nil, errors.New("pk not found")
 }
 
 // IsAttestationSlashable returns error if attestation is slashable
