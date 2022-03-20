@@ -24,5 +24,5 @@ func runTest(t *testing.T, test *spectest.SpecTest) {
 	postRoot, err := test.Pre.State.GetRoot()
 	require.NoError(t, err)
 
-	require.EqualValues(t, test.PostRoot, hex.EncodeToString(postRoot))
+	require.EqualValues(t, test.PostRoot, hex.EncodeToString(postRoot), "post root not valid")
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
 var TestingAttestationData = &spec.AttestationData{
@@ -38,12 +37,6 @@ var TestingDuty = &beacon.Duty{
 	CommitteeLength:         128,
 	ValidatorCommitteeIndex: 11,
 }
-
-var TestingConsensusData = &types.ConsensusData{
-	Duty:            TestingDuty,
-	AttestationData: TestingAttestationData,
-}
-var TestingConsensusDataByts, _ = TestingConsensusData.Encode()
 
 type testingBeaconNode struct {
 }
