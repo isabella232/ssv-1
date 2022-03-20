@@ -15,10 +15,9 @@ var TestingConfig = &qbft.Config{
 	Storage: NewTestingStorage(),
 	Network: NewTestingNetwork(),
 }
-var TestingValidatorPubKey = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8}
 var TestingShare = &types.Share{
 	OperatorID:      1,
-	ValidatorPubKey: TestingValidatorPubKey,
+	ValidatorPubKey: TestingValidatorPubKey[:],
 	SharePubKey:     TestingSK1.GetPublicKey().Serialize(),
 	DomainType:      types.PrimusTestnet,
 	Quorum:          3,
