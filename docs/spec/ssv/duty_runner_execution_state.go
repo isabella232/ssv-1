@@ -13,7 +13,7 @@ import (
 type DutyExecutionState struct {
 	RunningInstance *qbft.Instance
 
-	DecidedValue *consensusData
+	DecidedValue *types.ConsensusData
 
 	SignedAttestation *spec.Attestation
 	SignedProposal    *spec.SignedBeaconBlock

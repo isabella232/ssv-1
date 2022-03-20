@@ -20,7 +20,7 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 		dr := v.DutyRunners[beacon.RoleTypeAttester]
 		dr.QBFTController.Identifier = []byte{1, 2, 3, 3}
 		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
-		require.EqualError(t, v.processConsensusMsg(dr, testingSignedQBFTMsg), "failed to process consensus msg: message doesn't belong to Identifier 01020303")
+		require.EqualError(t, v.processConsensusMsg(dr, testingSignedQBFTMsg), "failed to process consensus msg: Message doesn't belong to Identifier 01020303")
 	})
 
 	t.Run("decided", func(t *testing.T) {

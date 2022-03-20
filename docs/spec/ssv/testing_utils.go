@@ -66,7 +66,7 @@ var testAttData = &spec.AttestationData{
 		Root:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
 	},
 }
-var testConsensusData = &consensusData{
+var testConsensusData = &types.ConsensusData{
 	Duty:            testDuty,
 	AttestationData: testAttData,
 }
@@ -202,7 +202,6 @@ func newTestingQBFTInstance() *qbft.Instance {
 func newTestingDutyRunner() *DutyRunner {
 	return &DutyRunner{
 		BeaconRoleType: beacon.RoleTypeAttester,
-		ValidatorPK:    testingValidatorPK[:],
 		Share:          testingShare,
 		QBFTController: NewTestingQBFTController([]byte{1, 2, 3, 4}),
 		storage:        NewTestingStorage(),
@@ -226,7 +225,7 @@ func (s *testingStorage) SaveHighestDecided(signedMsg *qbft.SignedMessage) error
 }
 
 //// GetHighestDecided returns the saved Decided value (highest) for a validator PK and role
-//func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleType) (*consensusData, error) {
+//func (s *testingStorage) GetHighestDecided(validatorPK []byte, role beacon.RoleType) (*ConsensusData, error) {
 //	if s.storage[hex.EncodeToString(validatorPK)] == nil {
 //		return nil, errors.New("can't find validator PK")
 //	}

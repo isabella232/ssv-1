@@ -2,7 +2,6 @@ package ssv
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
@@ -12,7 +11,7 @@ import (
 
 type PostConsensusMessage struct {
 	Height          qbft.Height
-	DutySignature   []byte // The beacon chain partial signature for a duty
+	DutySignature   []byte // The beacon chain partial Signature for a duty
 	DutySigningRoot []byte // the root signed in DutySignature
 	Signers         []types.OperatorID
 }
@@ -37,75 +36,31 @@ func (pcsm *PostConsensusMessage) GetRoot() ([]byte, error) {
 }
 
 type SignedPostConsensusMessage struct {
-	message   *PostConsensusMessage
-	signature types.Signature
-	signers   []types.OperatorID
+	Message   *PostConsensusMessage
+	Signature types.Signature
+	Signers   []types.OperatorID
 }
 
 // Encode returns a msg encoded bytes or error
 func (spcsm *SignedPostConsensusMessage) Encode() ([]byte, error) {
-	d := make(map[string]interface{})
-
-	if spcsm.message != nil {
-		data, err := spcsm.message.Encode()
-		if err != nil {
-			return nil, errors.Wrap(err, "could not encode PostConsensusMessage")
-		}
-		d["msg"] = hex.EncodeToString(data)
-	}
-	d["signature"] = hex.EncodeToString(spcsm.signature)
-	d["signers"] = spcsm.signers
-
-	return json.Marshal(d)
+	return json.Marshal(spcsm)
 }
 
 // Decode returns error if decoding failed
 func (spcsm *SignedPostConsensusMessage) Decode(data []byte) error {
-	d := make(map[string]interface{})
-	if err := json.Unmarshal(data, &d); err != nil {
-		return errors.Wrap(err, "could not unmarshal SignedPostConsensusMessage")
-	}
-
-	if d["msg"] != nil {
-		pcm := &PostConsensusMessage{}
-		dataByts, err := hex.DecodeString(d["msg"].(string))
-		if err != nil {
-			return errors.Wrap(err, "could not decode PostConsensusMessage message")
-		}
-		if err := pcm.Decode(dataByts); err != nil {
-			return errors.Wrap(err, "could not unmarshal PostConsensusMessage")
-		}
-		spcsm.message = pcm
-	}
-
-	if d["signature"] != nil {
-		dataByts, err := hex.DecodeString(d["signature"].(string))
-		if err != nil {
-			return errors.Wrap(err, "could not decode SignedPostConsensusMessage signature")
-		}
-		spcsm.signature = dataByts
-	}
-
-	if d["signers"] != nil {
-		spcsm.signers = make([]types.OperatorID, 0)
-		for _, s := range d["signers"].([]interface{}) {
-			spcsm.signers = append(spcsm.signers, types.OperatorID(s.(float64)))
-		}
-	}
-
-	return nil
+	return json.Unmarshal(data, &spcsm)
 }
 
 func (spcsm *SignedPostConsensusMessage) GetSignature() types.Signature {
-	return spcsm.signature
+	return spcsm.Signature
 }
 
 func (spcsm *SignedPostConsensusMessage) GetSigners() []types.OperatorID {
-	return spcsm.signers
+	return spcsm.Signers
 }
 
 func (spcsm *SignedPostConsensusMessage) GetRoot() ([]byte, error) {
-	return spcsm.message.GetRoot()
+	return spcsm.Message.GetRoot()
 }
 
 func (spcsm *SignedPostConsensusMessage) Aggregate(signedMsg types.MessageSignature) error {
@@ -114,7 +69,7 @@ func (spcsm *SignedPostConsensusMessage) Aggregate(signedMsg types.MessageSignat
 	//}
 	//
 	//// verify no matching Signers
-	//for _, signerID := range spcsm.signers {
+	//for _, signerID := range spcsm.Signers {
 	//	for _, toMatchID := range signedMsg.GetSigners() {
 	//		if signerID == toMatchID {
 	//			return errors.New("signer IDs partially/ fully match")
@@ -122,10 +77,10 @@ func (spcsm *SignedPostConsensusMessage) Aggregate(signedMsg types.MessageSignat
 	//	}
 	//}
 	//
-	//allSigners := append(spcsm.signers, signedMsg.GetSigners()...)
+	//allSigners := append(spcsm.Signers, signedMsg.GetSigners()...)
 	//
 	//// verify and aggregate
-	//sig1, err := blsSig(spcsm.signature)
+	//sig1, err := blsSig(spcsm.Signature)
 	//if err != nil {
 	//	return errors.Wrap(err, "could not parse DutySignature")
 	//}
@@ -136,8 +91,8 @@ func (spcsm *SignedPostConsensusMessage) Aggregate(signedMsg types.MessageSignat
 	//}
 	//
 	//sig1.Add(sig2)
-	//spcsm.signature = sig1.Serialize()
-	//spcsm.signers = allSigners
+	//spcsm.Signature = sig1.Serialize()
+	//spcsm.Signers = allSigners
 	//return nil
 	panic("implement")
 }

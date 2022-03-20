@@ -18,7 +18,6 @@ const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
 // Prev duty must finish before the next one can start.
 type DutyRunner struct {
 	BeaconRoleType beacon.RoleType
-	ValidatorPK    []byte
 	Share          *types.Share
 	// DutyExecutionState holds all relevant params for a full duty execution (consensus & post consensus)
 	DutyExecutionState *DutyExecutionState
@@ -28,14 +27,12 @@ type DutyRunner struct {
 
 func NewDutyRunner(
 	beaconRoleType beacon.RoleType,
-	validatorPK []byte,
 	share *types.Share,
 	qbftController *qbft.Controller,
 	storage Storage,
 ) *DutyRunner {
 	return &DutyRunner{
 		BeaconRoleType: beaconRoleType,
-		ValidatorPK:    validatorPK,
 		Share:          share,
 		QBFTController: qbftController,
 		storage:        storage,
@@ -56,7 +53,7 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 	if dr.BeaconRoleType != duty.Type {
 		return errors.New("duty runner role != duty.MsgType")
 	}
-	if !bytes.Equal(dr.ValidatorPK, duty.PubKey[:]) {
+	if !bytes.Equal(dr.Share.ValidatorPubKey, duty.PubKey[:]) {
 		return errors.New("duty runner validator pk != duty.ValidatorPubKey")
 	}
 
@@ -100,14 +97,14 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height qbft.Height) *DutyExecu
 }
 
 // DecideRunningInstance sets the Decided duty and partially signs the Decided data, returns a PostConsensusMessage to be broadcasted or error
-func (dr *DutyRunner) DecideRunningInstance(decidedValue *consensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
+func (dr *DutyRunner) DecideRunningInstance(decidedValue *types.ConsensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
 	ret := &PostConsensusMessage{
 		Height:  dr.DutyExecutionState.RunningInstance.GetHeight(),
 		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
 	switch dr.BeaconRoleType {
 	case beacon.RoleTypeAttester:
-		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, decidedValue.Duty.PubKey[:])
+		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign attestation")
 		}

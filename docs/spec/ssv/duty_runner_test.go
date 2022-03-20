@@ -84,7 +84,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		dr.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
-			DecidedValue: &consensusData{
+			DecidedValue: &ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -109,7 +109,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		dr.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
-			DecidedValue: &consensusData{
+			DecidedValue: &ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -134,7 +134,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		dr.DutyExecutionState = &DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
-			DecidedValue: &consensusData{
+			DecidedValue: &ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -160,7 +160,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			CollectedPartialSigs: make(map[types.OperatorID][]byte),
 			RunningInstance:      inst,
 			Quorum:               3,
-			DecidedValue: &consensusData{
+			DecidedValue: &ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
@@ -212,7 +212,7 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 			CollectedPartialSigs: make(map[types.OperatorID][]byte),
 			Quorum:               3,
 		}
-		decidedValue := &consensusData{
+		decidedValue := &ConsensusData{
 			Duty: &beacon.Duty{
 				Type:   beacon.RoleTypeAttester,
 				Slot:   12,

@@ -23,9 +23,9 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 		return errors.Wrap(err, "decided value is invalid")
 	}
 
-	decidedValue := &consensusData{}
+	decidedValue := &types.ConsensusData{}
 	if err := decidedValue.Decode(decidedValueByts); err != nil {
-		return errors.Wrap(err, "failed to parse decided value to consensusData")
+		return errors.Wrap(err, "failed to parse decided value to ConsensusData")
 	}
 
 	postConsensusMsg, err := dutyRunner.DecideRunningInstance(decidedValue, v.signer)

@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -16,7 +17,7 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Wrap(err, "can't start new duty")
 	}
 
-	input := &consensusData{}
+	input := &types.ConsensusData{}
 	switch dutyRunner.BeaconRoleType {
 	case beacon.RoleTypeAttester:
 		attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)

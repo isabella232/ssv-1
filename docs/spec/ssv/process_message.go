@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ProcessMessage processes network message of all types
+// ProcessMessage processes network Message of all types
 func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	if err := v.validateMessage(msg); err != nil {
-		return errors.Wrap(err, "message invalid")
+		return errors.Wrap(err, "Message invalid")
 	}
 
 	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
@@ -21,13 +21,13 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	case types.SSVConsensusMsgType:
 		signedMsg := &qbft.SignedMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
-			return errors.Wrap(err, "could not get post consensus message from network message")
+			return errors.Wrap(err, "could not get post consensus Message from network Message")
 		}
 		return v.processConsensusMsg(dutyRunner, signedMsg)
 	case types.SSVPostConsensusMsgType:
 		signedMsg := &SignedPostConsensusMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
-			return errors.Wrap(err, "could not get post consensus message from network message")
+			return errors.Wrap(err, "could not get post consensus Message from network Message")
 		}
 		return v.processPostConsensusSig(dutyRunner, signedMsg)
 	case types.SSVSyncMsgType:

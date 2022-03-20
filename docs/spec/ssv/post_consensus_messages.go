@@ -9,7 +9,7 @@ import (
 )
 
 func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *SignedPostConsensusMessage) error {
-	postCons := dutyRunner.PostConsensusStateForHeight(signedMsg.message.Height)
+	postCons := dutyRunner.PostConsensusStateForHeight(signedMsg.Message.Height)
 	if postCons == nil {
 		return errors.New("PostConsensusMessage Height doesn't match duty runner's Height'")
 	}
@@ -18,7 +18,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
-	postCons.AddPartialSig(signedMsg.message)
+	postCons.AddPartialSig(signedMsg.Message)
 
 	if !postCons.HasPostConsensusSigQuorum() {
 		return nil
@@ -55,16 +55,16 @@ func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState,
 	}
 
 	// validate signing root equal to Decided
-	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.message.DutySigningRoot) {
-		return errors.New("post consensus message signing root is wrong")
+	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.Message.DutySigningRoot) {
+		return errors.New("post consensus Message signing root is wrong")
 	}
 
-	if len(SignedMsg.message.Signers) != 1 {
+	if len(SignedMsg.Message.Signers) != 1 {
 		return errors.New("PostConsensusMessage allows 1 signer")
 	}
 
-	if err := v.verifyBeaconPartialSignature(SignedMsg.message); err != nil {
-		return errors.Wrap(err, "could not verify beacon partial signature")
+	if err := v.verifyBeaconPartialSignature(SignedMsg.Message); err != nil {
+		return errors.Wrap(err, "could not verify beacon partial Signature")
 	}
 
 	return nil
@@ -83,19 +83,19 @@ func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) erro
 			}
 			sig := &bls.Sign{}
 			if err := sig.Deserialize(signature); err != nil {
-				return errors.Wrap(err, "could not deserialized signature")
+				return errors.Wrap(err, "could not deserialized Signature")
 			}
 
 			// protect nil root
 			root = ensureRoot(root)
 			// verify
 			if !sig.VerifyByte(pk, root) {
-				return errors.Errorf("could not verify signature from iBFT member %d", signer)
+				return errors.Errorf("could not verify Signature from iBFT member %d", signer)
 			}
 			return nil
 		}
 	}
-	return errors.New("beacon partial signature signer not found")
+	return errors.New("beacon partial Signature signer not found")
 }
 
 func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPostConsensusMessage, error) {
@@ -105,8 +105,8 @@ func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPost
 	}
 
 	return &SignedPostConsensusMessage{
-		message:   msg,
-		signature: signature,
-		signers:   []types.OperatorID{v.share.OperatorID},
+		Message:   msg,
+		Signature: signature,
+		Signers:   []types.OperatorID{v.share.OperatorID},
 	}, nil
 }

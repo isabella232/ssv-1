@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest"
+	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -17,7 +18,7 @@ func TestAll(t *testing.T) {
 }
 
 func runTest(t *testing.T, test *spectest.SpecTest) {
-	v := spectest.BaseValidator()
+	v := testingutils.BaseValidator()
 	v.DutyRunners[beacon.RoleTypeAttester] = test.DutyRunner
 
 	for _, msg := range test.Messages {

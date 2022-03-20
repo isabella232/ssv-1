@@ -40,7 +40,7 @@ func TestConsensusData_Marshaling(t *testing.T) {
 	})
 
 	t.Run("marshal with attestation data", func(t *testing.T) {
-		c := &consensusData{}
+		c := &ConsensusData{}
 		require.NoError(t, c.Decode(expected))
 		require.EqualValues(t, beacon.RoleTypeAttester, c.Duty.Type)
 		require.EqualValues(t, spec.BLSPubKey{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8}, c.Duty.PubKey)
