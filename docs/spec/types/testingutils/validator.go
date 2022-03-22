@@ -1,6 +1,9 @@
 package testingutils
 
-import "github.com/bloxapp/ssv/docs/spec/ssv"
+import (
+	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/ssv"
+)
 
 var BaseValidator = func() *ssv.Validator {
 	ret := ssv.NewValidator(
@@ -13,5 +16,6 @@ var BaseValidator = func() *ssv.Validator {
 			return nil
 		},
 	)
+	ret.DutyRunners[beacon.RoleTypeAttester] = BaseRunner()
 	return ret
 }

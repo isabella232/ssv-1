@@ -70,8 +70,8 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 
 // StartNewInstance starts a new QBFT instance for value
 func (dr *DutyRunner) StartNewInstance(value []byte) error {
-	if value == nil {
-		return errors.New("new instance value nil")
+	if len(value) == 0 {
+		return errors.New("new instance value invalid")
 	}
 	if err := dr.QBFTController.StartNewInstance(value); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")

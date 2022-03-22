@@ -2,7 +2,6 @@ package spectest
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
-	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
@@ -16,49 +15,49 @@ func happyFullFlow() *SpecTest {
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.ProposalDataBytes(ssv.TestConsensusDataByts, nil, nil),
+			Data:       testingutils.ProposalDataBytes(testingutils.TestConsensusDataByts, nil, nil),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(ssv.TestConsensusDataByts),
+			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(ssv.TestConsensusDataByts),
+			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(ssv.TestConsensusDataByts),
+			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(ssv.TestConsensusDataByts),
+			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(ssv.TestConsensusDataByts),
+			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(ssv.TestConsensusDataByts),
+			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusDataByts),
 		}), nil),
 
 		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)),
@@ -70,6 +69,6 @@ func happyFullFlow() *SpecTest {
 		Name:                    "happy full flow",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "9dc5eabeeeb2a479e3e5ba6db28b6ffdc2dbcdc3a3aa0a9d523962373cb3ee14",
+		PostDutyRunnerStateRoot: "3590a2d5c99c1190ddd90ededeea1484abe0b7a0ec8cbdf3f36b2c5590e6da5d",
 	}
 }

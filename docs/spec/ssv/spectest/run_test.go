@@ -67,7 +67,7 @@ func runTest(t *testing.T, test *SpecTest) {
 	require.NoError(t, v.DutyRunners[beacon.RoleTypeAttester].StartNewInstance([]byte{1, 2, 3, 4}))
 
 	for _, msg := range test.Messages {
-		require.NoError(t, v.ProcessMessage(*msg))
+		require.NoError(t, v.ProcessMessage(msg))
 	}
 
 	postRoot, err := test.DutyRunner.DutyExecutionState.GetRoot()

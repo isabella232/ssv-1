@@ -2,7 +2,9 @@ package testingutils
 
 import (
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/ssv"
+	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
 var BaseRunner = func() *ssv.DutyRunner {
@@ -12,4 +14,64 @@ var BaseRunner = func() *ssv.DutyRunner {
 		NewTestingQBFTController([]byte{1, 2, 3, 4}),
 		NewTestingStorage(),
 	)
+}
+
+var DecidedRunner = func() *ssv.DutyRunner {
+	msgs := []*types.SSVMessage{
+		SSVMsg(SignQBFTMsg(TestingSK1, 1, &qbft.Message{
+			MsgType:    qbft.ProposalMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       ProposalDataBytes(TestConsensusDataByts, nil, nil),
+		}), nil),
+		SSVMsg(SignQBFTMsg(TestingSK1, 1, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       PrepareDataBytes(TestConsensusDataByts),
+		}), nil),
+		SSVMsg(SignQBFTMsg(TestingSK2, 2, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       PrepareDataBytes(TestConsensusDataByts),
+		}), nil),
+		SSVMsg(SignQBFTMsg(TestingSK3, 3, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       PrepareDataBytes(TestConsensusDataByts),
+		}), nil),
+		SSVMsg(SignQBFTMsg(TestingSK1, 1, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       CommitDataBytes(TestConsensusDataByts),
+		}), nil),
+		SSVMsg(SignQBFTMsg(TestingSK2, 2, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       CommitDataBytes(TestConsensusDataByts),
+		}), nil),
+		SSVMsg(SignQBFTMsg(TestingSK3, 3, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: []byte{1, 2, 3, 4},
+			Data:       CommitDataBytes(TestConsensusDataByts),
+		}), nil),
+	}
+
+	v := BaseValidator()
+	for _, msg := range msgs {
+		v.ProcessMessage(msg)
+	}
+	return v.DutyRunners[beacon.RoleTypeAttester]
 }

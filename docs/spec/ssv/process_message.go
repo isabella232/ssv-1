@@ -7,7 +7,7 @@ import (
 )
 
 // ProcessMessage processes network Message of all types
-func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
+func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 	if err := v.validateMessage(msg); err != nil {
 		return errors.Wrap(err, "Message invalid")
 	}
@@ -37,7 +37,7 @@ func (v *Validator) ProcessMessage(msg types.SSVMessage) error {
 	}
 }
 
-func (v *Validator) validateMessage(msg types.SSVMessage) error {
+func (v *Validator) validateMessage(msg *types.SSVMessage) error {
 	if !v.share.ValidatorPubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}

@@ -8,6 +8,12 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
+var TestConsensusData = &types.ConsensusData{
+	Duty:            TestingDuty,
+	AttestationData: TestingAttestationData,
+}
+var TestConsensusDataByts, _ = TestConsensusData.Encode()
+
 var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusMessage) *types.SSVMessage {
 	var msgType types.MsgType
 	var data []byte
