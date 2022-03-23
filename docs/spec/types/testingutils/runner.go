@@ -70,8 +70,13 @@ var DecidedRunner = func() *ssv.DutyRunner {
 	}
 
 	v := BaseValidator()
+	if err := v.DutyRunners[beacon.RoleTypeAttester].StartNewInstance([]byte{1, 2, 3, 4}); err != nil {
+		panic(err.Error())
+	}
 	for _, msg := range msgs {
-		v.ProcessMessage(msg)
+		if err := v.ProcessMessage(msg); err != nil {
+			panic(err.Error())
+		}
 	}
 	return v.DutyRunners[beacon.RoleTypeAttester]
 }

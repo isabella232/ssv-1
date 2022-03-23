@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -25,7 +26,7 @@ func TestJson(t *testing.T) {
 	basedir, _ := os.Getwd()
 	path := filepath.Join(basedir, "generate")
 	fileName := "tests.json"
-	tests := map[string]*SpecTest{}
+	tests := map[string]*tests2.SpecTest{}
 	byteValue, err := ioutil.ReadFile(path + "/" + fileName)
 	require.NoError(t, err)
 
@@ -50,21 +51,28 @@ func TestJson(t *testing.T) {
 		require.NoError(t, newContr.Decode(byts))
 		test.DutyRunner.QBFTController = newContr
 
-		if test.DutyRunner.DutyExecutionState != nil && test.DutyRunner.DutyExecutionState.RunningInstance != nil {
-			test.DutyRunner.DutyExecutionState.RunningInstance = fixQBFTInstanceForRun(t, test.DutyRunner.DutyExecutionState.RunningInstance)
-		}
-
 		for idx, i := range test.DutyRunner.QBFTController.StoredInstances {
-			test.DutyRunner.QBFTController.StoredInstances[idx] = fixQBFTInstanceForRun(t, i)
+			if i == nil {
+				continue
+			}
+			fixedInst := fixQBFTInstanceForRun(t, i)
+			test.DutyRunner.QBFTController.StoredInstances[idx] = fixedInst
+
+			if test.DutyRunner.DutyExecutionState != nil &&
+				test.DutyRunner.DutyExecutionState.RunningInstance != nil &&
+				test.DutyRunner.DutyExecutionState.RunningInstance.GetHeight() == fixedInst.GetHeight() {
+				test.DutyRunner.DutyExecutionState.RunningInstance = fixedInst
+			}
 		}
-		runTest(t, test)
+		t.Run(test.Name, func(t *testing.T) {
+			runTest(t, test)
+		})
 	}
 }
 
-func runTest(t *testing.T, test *SpecTest) {
+func runTest(t *testing.T, test *tests2.SpecTest) {
 	v := testingutils.BaseValidator()
 	v.DutyRunners[beacon.RoleTypeAttester] = test.DutyRunner
-	require.NoError(t, v.DutyRunners[beacon.RoleTypeAttester].StartNewInstance([]byte{1, 2, 3, 4}))
 
 	for _, msg := range test.Messages {
 		require.NoError(t, v.ProcessMessage(msg))

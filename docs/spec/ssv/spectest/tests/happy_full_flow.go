@@ -1,4 +1,4 @@
-package spectest
+package tests
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
@@ -6,8 +6,12 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-func happyFullFlow() *SpecTest {
+// HappyFullFlow tests a full consensus + post consensus + duty sig reconstruction flow
+func HappyFullFlow() *SpecTest {
 	dr := testingutils.BaseRunner()
+	if err := dr.StartNewInstance([]byte{1, 2, 3, 4}); err != nil {
+		panic(err.Error())
+	}
 
 	msgs := []*types.SSVMessage{
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
