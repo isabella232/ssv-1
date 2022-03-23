@@ -36,9 +36,26 @@ var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusM
 	}
 }
 
+var PostConsensusAttestationMsgWithWrongRoot = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
+	return postConsensusAttestationMsg(sk, id, height, true)
+}
+
 var PostConsensusAttestationMsg = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
+	return postConsensusAttestationMsg(sk, id, height, false)
+}
+
+var postConsensusAttestationMsg = func(
+	sk *bls.SecretKey,
+	id types.OperatorID,
+	height qbft.Height,
+	wrongRoot bool,
+) *ssv.SignedPostConsensusMessage {
 	signer := NewTestingKeyManager()
 	signedAtt, root, _ := signer.SignAttestation(TestingAttestationData, TestingDuty, sk.GetPublicKey().Serialize())
+
+	if wrongRoot {
+		root = []byte{1, 2, 3, 4}
+	}
 
 	postConsensusMsg := &ssv.PostConsensusMessage{
 		Height:          height,

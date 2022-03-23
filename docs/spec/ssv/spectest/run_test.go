@@ -74,8 +74,18 @@ func runTest(t *testing.T, test *tests2.SpecTest) {
 	v := testingutils.BaseValidator()
 	v.DutyRunners[beacon.RoleTypeAttester] = test.DutyRunner
 
+	var lastErr error
 	for _, msg := range test.Messages {
-		require.NoError(t, v.ProcessMessage(msg))
+		err := v.ProcessMessage(msg)
+		if err != nil {
+			lastErr = err
+		}
+	}
+
+	if len(test.ExpectedError) != 0 {
+		require.EqualError(t, lastErr, test.ExpectedError)
+	} else {
+		require.NoError(t, lastErr)
 	}
 
 	postRoot, err := test.DutyRunner.DutyExecutionState.GetRoot()

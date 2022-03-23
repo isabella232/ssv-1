@@ -10,5 +10,5 @@ type SpecTest struct {
 	DutyRunner              *ssv.DutyRunner
 	Messages                []*types.SSVMessage
 	PostDutyRunnerStateRoot string
-	ExpectedError           error
+	ExpectedError           string
 }

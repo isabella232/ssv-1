@@ -8,4 +8,7 @@ import (
 var AllTests = []*tests2.SpecTest{
 	tests2.HappyFullFlow(),
 	postconsensus.ValidMessage(),
+	postconsensus.NoSigners(),
+	postconsensus.InvaliSignature(),
+	postconsensus.WrongSigningRoot(),
 }
