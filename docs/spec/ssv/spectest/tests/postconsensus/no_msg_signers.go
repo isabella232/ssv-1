@@ -12,7 +12,7 @@ func NoMessageSigners() *tests.SpecTest {
 	dr := testingutils.DecidedRunner()
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsgWithMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{

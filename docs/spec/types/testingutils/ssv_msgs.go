@@ -36,20 +36,24 @@ var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusM
 	}
 }
 
-var PostConsensusAttestationMsgWithMsgSigners = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
-	return postConsensusAttestationMsg(sk, id, height, false, false, true)
+var PostConsensusAttestationMsgWithMsgMultiSigners = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
+	return postConsensusAttestationMsg(sk, id, height, false, false, true, false)
+}
+
+var PostConsensusAttestationMsgWithNoMsgSigners = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
+	return postConsensusAttestationMsg(sk, id, height, false, false, true, false)
 }
 
 var PostConsensusAttestationMsgWithWrongSig = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
-	return postConsensusAttestationMsg(sk, id, height, false, true, false)
+	return postConsensusAttestationMsg(sk, id, height, false, true, false, false)
 }
 
 var PostConsensusAttestationMsgWithWrongRoot = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
-	return postConsensusAttestationMsg(sk, id, height, true, false, false)
+	return postConsensusAttestationMsg(sk, id, height, true, false, false, false)
 }
 
 var PostConsensusAttestationMsg = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
-	return postConsensusAttestationMsg(sk, id, height, false, false, false)
+	return postConsensusAttestationMsg(sk, id, height, false, false, false, false)
 }
 
 var postConsensusAttestationMsg = func(
@@ -59,6 +63,7 @@ var postConsensusAttestationMsg = func(
 	wrongRoot bool,
 	wrongBeaconSig bool,
 	noMsgSigners bool,
+	multiMsgSigners bool,
 ) *ssv.SignedPostConsensusMessage {
 	signer := NewTestingKeyManager()
 	signedAtt, root, _ := signer.SignAttestation(TestingAttestationData, TestingDuty, sk.GetPublicKey().Serialize())
@@ -80,6 +85,9 @@ var postConsensusAttestationMsg = func(
 
 	if noMsgSigners {
 		postConsensusMsg.Signers = []types.OperatorID{}
+	}
+	if multiMsgSigners {
+		postConsensusMsg.Signers = []types.OperatorID{id, 5}
 	}
 
 	sig, _ := signer.SignRoot(postConsensusMsg, types.PostConsensusSigType, sk.GetPublicKey().Serialize())
