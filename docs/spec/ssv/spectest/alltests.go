@@ -11,4 +11,6 @@ var AllTests = []*tests2.SpecTest{
 	postconsensus.NoSigners(),
 	postconsensus.InvaliSignature(),
 	postconsensus.WrongSigningRoot(),
+	postconsensus.WrongBeaconChainSig(),
+	postconsensus.NoMessageSigners(),
 }

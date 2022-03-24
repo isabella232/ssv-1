@@ -36,12 +36,20 @@ var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusM
 	}
 }
 
+var PostConsensusAttestationMsgWithMsgSigners = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
+	return postConsensusAttestationMsg(sk, id, height, false, false, true)
+}
+
+var PostConsensusAttestationMsgWithWrongSig = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
+	return postConsensusAttestationMsg(sk, id, height, false, true, false)
+}
+
 var PostConsensusAttestationMsgWithWrongRoot = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
-	return postConsensusAttestationMsg(sk, id, height, true)
+	return postConsensusAttestationMsg(sk, id, height, true, false, false)
 }
 
 var PostConsensusAttestationMsg = func(sk *bls.SecretKey, id types.OperatorID, height qbft.Height) *ssv.SignedPostConsensusMessage {
-	return postConsensusAttestationMsg(sk, id, height, false)
+	return postConsensusAttestationMsg(sk, id, height, false, false, false)
 }
 
 var postConsensusAttestationMsg = func(
@@ -49,9 +57,15 @@ var postConsensusAttestationMsg = func(
 	id types.OperatorID,
 	height qbft.Height,
 	wrongRoot bool,
+	wrongBeaconSig bool,
+	noMsgSigners bool,
 ) *ssv.SignedPostConsensusMessage {
 	signer := NewTestingKeyManager()
 	signedAtt, root, _ := signer.SignAttestation(TestingAttestationData, TestingDuty, sk.GetPublicKey().Serialize())
+
+	if wrongBeaconSig {
+		signedAtt, _, _ = signer.SignAttestation(TestingAttestationData, TestingDuty, TestingWrongSK.GetPublicKey().Serialize())
+	}
 
 	if wrongRoot {
 		root = []byte{1, 2, 3, 4}
@@ -62,6 +76,10 @@ var postConsensusAttestationMsg = func(
 		DutySignature:   signedAtt.Signature[:],
 		DutySigningRoot: root,
 		Signers:         []types.OperatorID{id},
+	}
+
+	if noMsgSigners {
+		postConsensusMsg.Signers = []types.OperatorID{}
 	}
 
 	sig, _ := signer.SignRoot(postConsensusMsg, types.PostConsensusSigType, sk.GetPublicKey().Serialize())

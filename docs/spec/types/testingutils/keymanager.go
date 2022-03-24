@@ -24,6 +24,7 @@ func NewTestingKeyManager() types.KeyManager {
 	ret.AddShare(TestingSK2)
 	ret.AddShare(TestingSK3)
 	ret.AddShare(TestingSK4)
+	ret.AddShare(TestingWrongSK)
 	return ret
 }
 

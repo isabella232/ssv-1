@@ -29,3 +29,9 @@ var TestingSK4 = func() *bls.SecretKey {
 	ret.DeserializeHexStr("344de4028bc9a073185bf5bb8e092f93da0a8f914a2392083ea327248324d257")
 	return ret
 }()
+var TestingWrongSK = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("344de4028bc9a073185bf5bb8e091f93da0a8f914a2392083ea327248324d256")
+	return ret
+}()

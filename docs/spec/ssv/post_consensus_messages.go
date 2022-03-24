@@ -59,10 +59,6 @@ func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState,
 		return errors.New("post consensus Message signing root is wrong")
 	}
 
-	if len(SignedMsg.Message.Signers) != 1 {
-		return errors.New("PostConsensusMessage allows 1 signer")
-	}
-
 	if err := v.verifyBeaconPartialSignature(SignedMsg.Message); err != nil {
 		return errors.Wrap(err, "could not verify beacon partial Signature")
 	}
@@ -71,6 +67,10 @@ func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState,
 }
 
 func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) error {
+	if len(msg.Signers) != 1 {
+		return errors.New("PostConsensusMessage allows 1 signer")
+	}
+
 	signer := msg.Signers[0]
 	signature := msg.DutySignature
 	root := msg.DutySigningRoot
